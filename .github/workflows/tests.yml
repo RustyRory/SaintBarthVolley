@@ -1,0 +1,46 @@
+name: Tests unitaires et build
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Installer et tester le backend
+        run: |
+          if [ -d "backend" ]; then
+            echo "Installation des dépendances backend..."
+            cd backend
+            npm install
+            echo "Lancement des tests backend..."
+            npm test
+            cd ..
+          else
+            echo "⚠️ Dossier backend introuvable"
+            exit 1
+          fi
+
+      - name: Installer et tester le frontend
+        run: |
+          if [ -d "frontend" ]; then
+            echo "Installation des dépendances frontend..."
+            cd frontend
+            npm install
+            echo "Lancement des tests frontend..."
+            npm test
+            cd ..
+          else
+            echo "Dossier frontend introuvable"
+            exit 1
+          fi

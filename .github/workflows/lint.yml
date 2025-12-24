@@ -1,0 +1,48 @@
+name: Linting du projet
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Lint backend
+        run: |
+          if [ -d "backend" ]; then
+            cd backend
+            npm install eslint prettier --save-dev
+            echo "🔹 Lancement de ESLint..."
+            npx eslint . --ext .js,.ts
+            echo "🔹 Vérification avec Prettier..."
+            npx prettier --check .
+            cd ..
+          else
+            echo "⚠️ Dossier backend introuvable"
+            exit 1
+          fi
+
+      - name: Lint frontend
+        run: |
+          if [ -d "frontend" ]; then
+            cd frontend
+            npm install eslint prettier --save-dev
+            echo "🔹 Lancement de ESLint..."
+            npx eslint . --ext .js,.jsx
+            echo "🔹 Vérification avec Prettier..."
+            npx prettier --check .
+            cd ..
+          else
+            echo "⚠️ Dossier frontend introuvable"
+            exit 1
+          fi
