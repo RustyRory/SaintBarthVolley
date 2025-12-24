@@ -17,9 +17,10 @@ jobs:
           echo "Nom de branche : $BRANCHE"
           echo "Titre de PR : $TITRE"
 
-          # Vérifie si le titre ou la branche contient #<numéro>
-          if [[ "$TITRE" =~ #[0-9]+ ]] || [[ "$BRANCHE" =~ [0-9]+- ]]; then
-            echo "✅ Issue référencée correctement"
+          if [[ "$TITRE" =~ #[0-9]+ ]]; then
+            echo "✅ Issue référencée dans le titre de la PR"
+          elif [[ "$BRANCHE" =~ [0-9]+- ]]; then
+            echo "✅ Issue référencée dans le nom de la branche"
           else
             echo "❌ Aucune référence à une issue détectée"
             echo "💡 Comment corriger :"
