@@ -26,3 +26,4 @@ jobs:
             echo "  - Ajouter #<numéro> dans le titre de la PR"
             echo "  - Ou inclure le numéro de l’issue dans le nom de la branche (ex: feature/123-login-page)"
             exit 1
+          fi

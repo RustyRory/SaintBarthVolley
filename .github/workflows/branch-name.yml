@@ -26,3 +26,4 @@ jobs:
             echo "  - release/x.y.z"
             echo "Exemple : feature/123-login-page"
             exit 1
+          fi
