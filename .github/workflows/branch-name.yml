@@ -1,0 +1,29 @@
+name: Vérification du nom de branche
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier le nom de la branche
+        shell: bash
+        run: |
+          BRANCHE="${{ github.head_ref }}"
+          echo "Nom de branche détecté : $BRANCHE"
+
+          # Regex pour valider le format des branches
+          if [[ "$BRANCHE" =~ ^(feature|feat|fix|hotfix)/[0-9]+-[a-z0-9-]+$ ]] || [[ "$BRANCHE" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "✅ Nom de branche valide : $BRANCHE"
+          else
+            echo "❌ Nom de branche invalide : $BRANCHE"
+            echo "💡 Format attendu :"
+            echo "  - feature/<issue-id>-short-description"
+            echo "  - fix/<issue-id>-short-description"
+            echo "  - hotfix/<issue-id>-short-description"
+            echo "  - release/x.y.z"
+            echo "Exemple : feature/123-login-page"
+            exit 1
+          fi

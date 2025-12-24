@@ -1,0 +1,59 @@
+name: Vérification de la structure du projet
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Vérifier les fichiers et dossiers essentiels
+        run: |
+          MISSING=false
+
+          echo "🔎 Vérification des fichiers racine..."
+          for FILE in README.md CONTRIBUTING.md INSTALL.md LICENSE; do
+            if [ ! -f "$FILE" ]; then
+              echo "❌ Fichier manquant : $FILE"
+              MISSING=true
+            fi
+          done
+
+          echo "🔎 Vérification des dossiers MERN..."
+          for DIR in frontend backend; do
+            if [ ! -d "app/$DIR" ]; then
+              echo "❌ Dossier manquant : $DIR"
+              MISSING=true
+            fi
+          done
+
+          echo "🔎 Vérification des fichiers internes du frontend..."
+          if [ ! -f "app/frontend/package.json" ]; then
+            echo "❌ app/frontend/package.json manquant"
+            MISSING=true
+          fi
+          if [ ! -f "app/frontend/.env.example" ]; then
+            echo "❌ app/frontend/.env.example manquant"
+            MISSING=true
+          fi
+
+          echo "🔎 Vérification des fichiers internes du backend..."
+          if [ ! -f "app/backend/package.json" ]; then
+            echo "❌ app/backend/package.json manquant"
+            MISSING=true
+          fi
+          if [ ! -f "app/backend/.env.example" ]; then
+            echo "❌ app/backend/.env.example manquant"
+            MISSING=true
+          fi
+
+          if [ "$MISSING" = true ]; then
+            echo "💡 Corrigez les fichiers et dossiers manquants avant de merger la PR."
+            exit 1
+          else
+            echo "✅ Tous les fichiers et dossiers essentiels sont présents."
+          fi
