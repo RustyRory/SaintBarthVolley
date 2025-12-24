@@ -25,7 +25,7 @@ jobs:
 
           echo "🔎 Vérification des dossiers MERN..."
           for DIR in frontend backend; do
-            if [ ! -d "$DIR" ]; then
+            if [ ! -d "app/$DIR" ]; then
               echo "❌ Dossier manquant : $DIR"
               MISSING=true
             fi
