@@ -8,27 +8,47 @@ jobs:
   check-ticket:
     runs-on: ubuntu-latest
     steps:
-      - name: Vérifier la référence à une issue
+      - name: Installer GitHub CLI
+        run: sudo apt-get update && sudo apt-get install gh jq -y
+
+      - name: Vérifier la référence à une issue et l'association au projet
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCHE="${{ github.head_ref }}"
           TITRE="${{ github.event.pull_request.title }}"
+          REPO="${{ github.repository }}"
 
           echo "Nom de branche : $BRANCHE"
           echo "Titre de PR : $TITRE"
 
-          echo "$TITRE" | grep -q '#[0-9]\+' && FOUND="true" || FOUND="false"
-          if [ "$FOUND" = "true" ]; then
-            echo "✅ Issue référencée dans le titre de la PR"
+          # Extraire le numéro de l'issue
+          ISSUE_NUMBER=$(echo "$TITRE" | grep -o '#[0-9]\+' | tr -d '#')
+          if [ -z "$ISSUE_NUMBER" ]; then
+            ISSUE_NUMBER=$(echo "$BRANCHE" | grep -o '[0-9]\+')
+          fi
+
+          if [ -z "$ISSUE_NUMBER" ]; then
+            echo "❌ Aucune référence à une issue détectée"
+            echo "💡 Ajouter #<numéro> dans le titre ou le nom de la branche"
+            exit 1
+          fi
+
+          echo "Numéro d'issue détecté : $ISSUE_NUMBER"
+
+          # Vérifier si l'issue est associée au projet GitHub (ID du projet)
+          TARGET_PROJECT_ID=19
+
+          # Récupérer les projets liés à l'issue via l'API GitHub
+          ISSUE_PROJECTS=$(gh api repos/$REPO/issues/$ISSUE_NUMBER/projects \
+            -H "Accept: application/vnd.github.inertia-preview+json" \
+            -q '.[].id')
+
+          if echo "$ISSUE_PROJECTS" | grep -q "$TARGET_PROJECT_ID"; then
+            echo "✅ L'issue #$ISSUE_NUMBER est associée au projet $TARGET_PROJECT_ID"
           else
-            echo "$BRANCHE" | grep -q '[0-9]\+-' && FOUND="true" || FOUND="false"
-            if [ "$FOUND" = "true" ]; then
-              echo "✅ Issue référencée dans le nom de la branche"
-            else
-              echo "❌ Aucune référence à une issue détectée"
-              echo "💡 Comment corriger :"
-              echo "  - Ajouter #<numéro> dans le titre de la PR"
-              echo "  - Ou inclure le numéro de l’issue dans le nom de la branche (ex: feature/123-login-page)"
-              exit 1
-            fi
+            echo "❌ L'issue #$ISSUE_NUMBER n'est pas associée au projet $TARGET_PROJECT_ID"
+            echo "💡 Associez l’issue au projet GitHub : https://github.com/users/RustyRory/projects/19"
+            exit 1
           fi
