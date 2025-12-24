@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
+permissions:
+  issues: read
+  pull-requests: read
+
 jobs:
   check-ticket:
     runs-on: ubuntu-latest
@@ -14,7 +18,7 @@ jobs:
       - name: Vérifier la référence à une issue
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
 
@@ -25,7 +29,6 @@ jobs:
           echo "Nom de branche : $BRANCHE"
           echo "Titre de PR : $TITRE"
 
-          # Extraire le numéro de l'issue depuis le titre ou la branche
           ISSUE_NUMBER=$(echo "$TITRE" | grep -o '#[0-9]\+' | tr -d '#')
           if [ -z "$ISSUE_NUMBER" ]; then
             ISSUE_NUMBER=$(echo "$BRANCHE" | grep -o '[0-9]\+')
@@ -33,16 +36,11 @@ jobs:
 
           if [ -z "$ISSUE_NUMBER" ]; then
             echo "❌ Aucune référence à une issue détectée"
-            echo "💡 Ajouter #<numéro> dans le titre de la PR ou inclure le numéro dans le nom de la branche"
             exit 1
           fi
 
           echo "Numéro d'issue détecté : $ISSUE_NUMBER"
 
-          # Vérifier si l'issue existe dans le repo
-          if ! gh api repos/$REPO/issues/$ISSUE_NUMBER >/dev/null 2>&1; then
-            echo "❌ L'issue #$ISSUE_NUMBER n'existe pas dans le repo $REPO"
-            exit 1
-          fi
+          gh api repos/$REPO/issues/$ISSUE_NUMBER >/dev/null
 
-          echo "✅ L'issue #$ISSUE_NUMBER est correctement référencée et existe dans le repo"
+          echo "✅ L'issue #$ISSUE_NUMBER existe bien dans le repo"
