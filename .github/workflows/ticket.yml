@@ -8,27 +8,41 @@ jobs:
   check-ticket:
     runs-on: ubuntu-latest
     steps:
+      - name: Installer GitHub CLI
+        run: sudo apt-get update && sudo apt-get install gh -y
+
       - name: Vérifier la référence à une issue
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
+
           BRANCHE="${{ github.head_ref }}"
           TITRE="${{ github.event.pull_request.title }}"
+          REPO="${{ github.repository }}"
 
           echo "Nom de branche : $BRANCHE"
           echo "Titre de PR : $TITRE"
 
-          echo "$TITRE" | grep -q '#[0-9]\+' && FOUND="true" || FOUND="false"
-          if [ "$FOUND" = "true" ]; then
-            echo "✅ Issue référencée dans le titre de la PR"
-          else
-            echo "$BRANCHE" | grep -q '[0-9]\+-' && FOUND="true" || FOUND="false"
-            if [ "$FOUND" = "true" ]; then
-              echo "✅ Issue référencée dans le nom de la branche"
-            else
-              echo "❌ Aucune référence à une issue détectée"
-              echo "💡 Comment corriger :"
-              echo "  - Ajouter #<numéro> dans le titre de la PR"
-              echo "  - Ou inclure le numéro de l’issue dans le nom de la branche (ex: feature/123-login-page)"
-              exit 1
-            fi
+          # Extraire le numéro de l'issue depuis le titre ou la branche
+          ISSUE_NUMBER=$(echo "$TITRE" | grep -o '#[0-9]\+' | tr -d '#')
+          if [ -z "$ISSUE_NUMBER" ]; then
+            ISSUE_NUMBER=$(echo "$BRANCHE" | grep -o '[0-9]\+')
           fi
+
+          if [ -z "$ISSUE_NUMBER" ]; then
+            echo "❌ Aucune référence à une issue détectée"
+            echo "💡 Ajouter #<numéro> dans le titre de la PR ou inclure le numéro dans le nom de la branche"
+            exit 1
+          fi
+
+          echo "Numéro d'issue détecté : $ISSUE_NUMBER"
+
+          # Vérifier si l'issue existe dans le repo
+          if ! gh api repos/$REPO/issues/$ISSUE_NUMBER >/dev/null 2>&1; then
+            echo "❌ L'issue #$ISSUE_NUMBER n'existe pas dans le repo $REPO"
+            exit 1
+          fi
+
+          echo "✅ L'issue #$ISSUE_NUMBER est correctement référencée et existe dans le repo"

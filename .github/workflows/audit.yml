@@ -19,10 +19,10 @@ jobs:
 
       - name: Audit backend
         run: |
-          if [ -d "backend" ]; then
-            cd backend
+          if [ -d "app/backend" ]; then
+            cd app/backend
             npm install
-            echo "🔹 Audit des dépendances backend..."
+            echo "Audit des dépendances backend..."
             npm audit --audit-level=high
             cd ..
           else
@@ -32,10 +32,10 @@ jobs:
 
       - name: Audit frontend
         run: |
-          if [ -d "frontend" ]; then
-            cd frontend
+          if [ -d "app/frontend" ]; then
+            cd app/frontend
             npm install
-            echo "🔹 Audit des dépendances frontend..."
+            echo "Audit des dépendances frontend..."
             npm audit --audit-level=high
             cd ..
           else
