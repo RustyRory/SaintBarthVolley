@@ -17,6 +17,7 @@ jobs:
           echo "Nom de branche : $BRANCHE"
           echo "Titre de PR : $TITRE"
 
+          # Vérification robuste
           if [[ "$TITRE" =~ #[0-9]+ ]]; then
             echo "✅ Issue référencée dans le titre de la PR"
           elif [[ "$BRANCHE" =~ [0-9]+- ]]; then
