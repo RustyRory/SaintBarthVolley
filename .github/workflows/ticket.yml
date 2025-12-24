@@ -1,4 +1,4 @@
-name: Vérification de la présence d'une issue
+name: Vérification de la présence d'une issue et association au projet
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ jobs:
   check-ticket:
     runs-on: ubuntu-latest
     steps:
-      - name: Installer GitHub CLI
+      - name: Installer GitHub CLI et jq
         run: sudo apt-get update && sudo apt-get install gh jq -y
 
       - name: Vérifier la référence à une issue et l'association au projet
@@ -31,24 +31,21 @@ jobs:
 
           if [ -z "$ISSUE_NUMBER" ]; then
             echo "❌ Aucune référence à une issue détectée"
-            echo "💡 Ajouter #<numéro> dans le titre ou le nom de la branche"
             exit 1
           fi
 
           echo "Numéro d'issue détecté : $ISSUE_NUMBER"
 
-          # Vérifier si l'issue est associée au projet GitHub (ID du projet)
-          TARGET_PROJECT_ID=19
+          # Vérifier si l'issue est associée au projet GitHub Projects v2
+          PROJECT_NUMBER=19
+          ISSUE_URL="https://github.com/${REPO}/issues/${ISSUE_NUMBER}"
 
-          # Récupérer les projets liés à l'issue via l'API GitHub
-          ISSUE_PROJECTS=$(gh api repos/$REPO/issues/$ISSUE_NUMBER/projects \
-            -H "Accept: application/vnd.github.inertia-preview+json" \
-            -q '.[].id')
+          ITEMS=$(gh project view $PROJECT_NUMBER --json items --jq '.items[].content.url')
 
-          if echo "$ISSUE_PROJECTS" | grep -q "$TARGET_PROJECT_ID"; then
-            echo "✅ L'issue #$ISSUE_NUMBER est associée au projet $TARGET_PROJECT_ID"
+          if echo "$ITEMS" | grep -q "$ISSUE_URL"; then
+            echo "✅ L'issue #$ISSUE_NUMBER est associée au projet $PROJECT_NUMBER"
           else
-            echo "❌ L'issue #$ISSUE_NUMBER n'est pas associée au projet $TARGET_PROJECT_ID"
+            echo "❌ L'issue #$ISSUE_NUMBER n'est pas associée au projet $PROJECT_NUMBER"
             echo "💡 Associez l’issue au projet GitHub : https://github.com/users/RustyRory/projects/19"
             exit 1
           fi
