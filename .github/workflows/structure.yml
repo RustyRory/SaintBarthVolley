@@ -32,22 +32,22 @@ jobs:
           done
 
           echo "🔎 Vérification des fichiers internes du frontend..."
-          if [ ! -f "frontend/package.json" ]; then
-            echo "❌ frontend/package.json manquant"
+          if [ ! -f "app/frontend/package.json" ]; then
+            echo "❌ app/frontend/package.json manquant"
             MISSING=true
           fi
-          if [ ! -f "frontend/.env.example" ]; then
-            echo "❌ frontend/.env.example manquant"
+          if [ ! -f "app/frontend/.env.example" ]; then
+            echo "❌ app/frontend/.env.example manquant"
             MISSING=true
           fi
 
           echo "🔎 Vérification des fichiers internes du backend..."
-          if [ ! -f "backend/package.json" ]; then
-            echo "❌ backend/package.json manquant"
+          if [ ! -f "app/backend/package.json" ]; then
+            echo "❌ app/backend/package.json manquant"
             MISSING=true
           fi
-          if [ ! -f "backend/.env.example" ]; then
-            echo "❌ backend/.env.example manquant"
+          if [ ! -f "app/backend/.env.example" ]; then
+            echo "❌ app/backend/.env.example manquant"
             MISSING=true
           fi
 

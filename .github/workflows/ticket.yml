@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Vérifier la référence à une issue
+        shell: bash
         run: |
           BRANCHE="${{ github.head_ref }}"
           TITRE="${{ github.event.pull_request.title }}"

@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Vérifier le nom de la branche
+        shell: bash
         run: |
           BRANCHE="${{ github.head_ref }}"
           echo "Nom de branche détecté : $BRANCHE"
