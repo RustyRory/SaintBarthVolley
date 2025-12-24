@@ -1,7 +1,7 @@
 name: Vérification de la présence d'une issue
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, synchronize]
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
         run: |
           set -e
 
-          BRANCHE="${{ github.head_ref }}"
+          BRANCHE="${{ github.event.pull_request.head.ref }}"
           TITRE="${{ github.event.pull_request.title }}"
           REPO="${{ github.repository }}"
 
@@ -43,4 +43,4 @@ jobs:
 
           gh api repos/$REPO/issues/$ISSUE_NUMBER >/dev/null
 
-          echo "✅ L'issue #$ISSUE_NUMBER existe bien dans le repo"
+          echo "✅ L'issue #$ISSUE_NUMBER existe bien"
