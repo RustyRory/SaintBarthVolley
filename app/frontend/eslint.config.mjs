@@ -14,7 +14,14 @@ export default defineConfig([
     },
     rules: {
       'prettier/prettier': 'error', // toutes les erreurs de style Prettier seront signalées par ESLint
+      'react/react-in-jsx-scope': 'off',
     },
+    settings: {
+      react: {
+        version: 'detect', // détecte automatiquement la version de React
+      },
+    },
+
   },
   pluginReact.configs.flat.recommended,
 ]);
