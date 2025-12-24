@@ -16,9 +16,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
+
           BRANCHE="${{ github.head_ref }}"
           TITRE="${{ github.event.pull_request.title }}"
           REPO="${{ github.repository }}"
+          PROJECT_NUMBER=19
 
           echo "Nom de branche : $BRANCHE"
           echo "Titre de PR : $TITRE"
@@ -31,21 +34,40 @@ jobs:
 
           if [ -z "$ISSUE_NUMBER" ]; then
             echo "❌ Aucune référence à une issue détectée"
+            echo "💡 Ajouter #<numéro> dans le titre ou le nom de la branche"
             exit 1
           fi
 
           echo "Numéro d'issue détecté : $ISSUE_NUMBER"
 
-          # Vérifier si l'issue est associée au projet GitHub Projects v2
-          PROJECT_NUMBER=19
+          # Vérifier si l'issue existe
+          if ! gh api repos/$REPO/issues/$ISSUE_NUMBER >/dev/null 2>&1; then
+            echo "❌ L'issue #$ISSUE_NUMBER n'existe pas dans le repo $REPO"
+            exit 1
+          fi
+
+          # Vérifier association au projet GitHub (Projects v2)
           ISSUE_URL="https://github.com/${REPO}/issues/${ISSUE_NUMBER}"
 
-          ITEMS=$(gh project view $PROJECT_NUMBER --json items --jq '.items[].content.url')
+          # Récupérer les colonnes du projet
+          COLUMNS=$(gh api projects/$PROJECT_NUMBER/columns \
+            -H "Accept: application/vnd.github.inertia-preview+json" \
+            -q '.[].id')
 
-          if echo "$ITEMS" | grep -q "$ISSUE_URL"; then
-            echo "✅ L'issue #$ISSUE_NUMBER est associée au projet $PROJECT_NUMBER"
+          ISSUE_FOUND=false
+          for col_id in $COLUMNS; do
+              CARDS=$(gh api projects/columns/$col_id/cards \
+                  -H "Accept: application/vnd.github.inertia-preview+json")
+              if echo "$CARDS" | jq -r '.[].content_url' | grep -q "$ISSUE_URL"; then
+                  ISSUE_FOUND=true
+                  break
+              fi
+          done
+
+          if [ "$ISSUE_FOUND" = true ]; then
+            echo "✅ L'issue #$ISSUE_NUMBER est associée au projet GitHub $PROJECT_NUMBER"
           else
-            echo "❌ L'issue #$ISSUE_NUMBER n'est pas associée au projet $PROJECT_NUMBER"
-            echo "💡 Associez l’issue au projet GitHub : https://github.com/users/RustyRory/projects/19"
+            echo "❌ L'issue #$ISSUE_NUMBER n'est pas associée au projet GitHub $PROJECT_NUMBER"
+            echo "💡 Associez l’issue au projet : https://github.com/users/RustyRory/projects/19"
             exit 1
           fi
