@@ -19,12 +19,12 @@ jobs:
 
       - name: Lint backend
         run: |
-          if [ -d "backend" ]; then
-            cd backend
+          if [ -d "app/backend" ]; then
+            cd app/backend
             npm install eslint prettier --save-dev
-            echo "🔹 Lancement de ESLint..."
+            echo "Lancement de ESLint..."
             npx eslint . --ext .js,.ts
-            echo "🔹 Vérification avec Prettier..."
+            echo "Vérification avec Prettier..."
             npx prettier --check .
             cd ..
           else
@@ -34,12 +34,12 @@ jobs:
 
       - name: Lint frontend
         run: |
-          if [ -d "frontend" ]; then
-            cd frontend
+          if [ -d "app/frontend" ]; then
+            cd app/frontend
             npm install eslint prettier --save-dev
-            echo "🔹 Lancement de ESLint..."
+            echo "Lancement de ESLint..."
             npx eslint . --ext .js,.jsx
-            echo "🔹 Vérification avec Prettier..."
+            echo "Vérification avec Prettier..."
             npx prettier --check .
             cd ..
           else

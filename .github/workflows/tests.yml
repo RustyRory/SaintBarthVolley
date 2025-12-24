@@ -19,9 +19,9 @@ jobs:
 
       - name: Installer et tester le backend
         run: |
-          if [ -d "backend" ]; then
+          if [ -d "app/backend" ]; then
             echo "Installation des dépendances backend..."
-            cd backend
+            cd app/backend
             npm install
             echo "Lancement des tests backend..."
             npm test
@@ -33,9 +33,9 @@ jobs:
 
       - name: Installer et tester le frontend
         run: |
-          if [ -d "frontend" ]; then
+          if [ -d "app/frontend" ]; then
             echo "Installation des dépendances frontend..."
-            cd frontend
+            cd app/frontend
             npm install
             echo "Lancement des tests frontend..."
             npm test
