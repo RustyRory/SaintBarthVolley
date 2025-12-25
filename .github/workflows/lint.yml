@@ -27,6 +27,7 @@ jobs:
             echo "Vérification avec Prettier..."
             npx prettier --check .
             cd ..
+            cd ..
           else
             echo "⚠️ Dossier backend introuvable"
             exit 1
@@ -41,6 +42,7 @@ jobs:
             npx eslint . --ext .js,.jsx
             echo "Vérification avec Prettier..."
             npx prettier --check .
+            cd ..
             cd ..
           else
             echo "⚠️ Dossier frontend introuvable"

@@ -25,6 +25,7 @@ jobs:
             echo "Audit des dépendances backend..."
             npm audit --audit-level=high
             cd ..
+            cd ..
           else
             echo "⚠️ Dossier backend introuvable"
             exit 1
@@ -37,6 +38,7 @@ jobs:
             npm install
             echo "Audit des dépendances frontend..."
             npm audit --audit-level=high
+            cd ..
             cd ..
           else
             echo "⚠️ Dossier frontend introuvable"
