@@ -5,6 +5,7 @@
 Cette application front-end est la partie **publique et administrative (back-office)** du site web du club de volley de Saint-Barthélemy-d’Anjou.
 
 Elle permet :
+
 - La consultation des contenus publics (équipes, actualités, résultats, partenaires…)
 - La gestion des contenus via une interface d’administration sécurisée
 - Une navigation fluide et responsive (desktop & mobile)
@@ -46,7 +47,6 @@ frontend/
 └── vite.config.ts
 ```
 
-
 ---
 
 ## 🚀 Lancer le projet
@@ -58,11 +58,13 @@ npm install
 ```
 
 Démarrage en mode développement
+
 ```bash
 npm run dev
 ```
 
 Build de production
+
 ```bash
 npm run build
 ```
@@ -71,8 +73,8 @@ npm run build
 
 - Authentification via JWT (API backend)
 - Rôles :
-    - admin
-    - editor
+  - admin
+  - editor
 - Accès restreint au back-office selon les droits
 
 ### 🎨 UX / UI
@@ -84,6 +86,7 @@ docs/maquettes/
 ```
 
 ⚠️ Toute évolution UI doit respecter :
+
 - La charte graphique existants
 - Les maquettes validées
 - L’accessibilité (contrastes, lisibilité)
@@ -91,11 +94,13 @@ docs/maquettes/
 ### 🧹 Qualité de code
 
 Ce projet est soumis à :
+
 - ESLint
 - Prettier
 - pre-commit hooks
 
 Les linters sont exécutés :
+
 - Avant chaque commit
 - Lors des pipelines CI
 
