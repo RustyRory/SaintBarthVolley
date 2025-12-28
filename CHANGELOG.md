@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Ajout automatique de labels à la PR
     - Vérification des messages de commit
     - Vérification de la structure du projet
-        - Fichiers racine obligatoires 
+        - Fichiers racine 
             - README.md
             - CONTRIBUTING.md
             - INSTALL.md
@@ -50,5 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         - Pre-commit
         - Audit des dépendances
         - Release & versioning
-- 
+- Documentation
+    - Workflow.md
+
 
