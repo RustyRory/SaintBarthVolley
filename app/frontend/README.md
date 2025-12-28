@@ -1,70 +1,118 @@
-# Getting Started with Create React App
+# Frontend – Site officiel du club de volley de Saint-Barthélemy-d’Anjou
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 🎯 Objectif
 
-## Available Scripts
+Cette application front-end est la partie **publique et administrative (back-office)** du site web du club de volley de Saint-Barthélemy-d’Anjou.
 
-In the project directory, you can run:
+Elle permet :
+- La consultation des contenus publics (équipes, actualités, résultats, partenaires…)
+- La gestion des contenus via une interface d’administration sécurisée
+- Une navigation fluide et responsive (desktop & mobile)
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🧱 Stack technique
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **React** (SPA)
+- **TypeScript** (si activé)
+- **Vite** (build & dev server)
+- **React Router** (navigation)
+- **Axios / Fetch** (API)
+- **ESLint** (qualité du code)
+- **Prettier** (formatage)
+- **CSS / Tailwind / SCSS** (selon implémentation)
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📁 Structure des dossiers
 
-### `npm run build`
+```
+frontend/
+├── src/
+│ ├── assets/ # Images, icônes, visuels
+│ ├── components/ # Composants UI réutilisables
+│ ├── pages/ # Pages (Home, Teams, News, Admin…)
+│ ├── layouts/ # Layouts globaux (Public / Admin)
+│ ├── services/ # Appels API
+│ ├── hooks/ # Hooks personnalisés
+│ ├── context/ # Context API / Auth
+│ ├── styles/ # Styles globaux
+│ ├── utils/ # Helpers
+│ └── main.tsx
+├── public/
+├── .eslintrc
+├── .prettierrc
+├── package.json
+└── vite.config.ts
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🚀 Lancer le projet
 
-### `npm run eject`
+### Installation des dépendances
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+npm install
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Démarrage en mode développement
+```bash
+npm run dev
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Build de production
+```bash
+npm run build
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 🔐 Authentification & rôles
 
-## Learn More
+- Authentification via JWT (API backend)
+- Rôles :
+    - admin
+    - editor
+- Accès restreint au back-office selon les droits
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 🎨 UX / UI
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Les maquettes de référence sont disponibles dans :
 
-### Code Splitting
+```bash
+docs/maquettes/
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+⚠️ Toute évolution UI doit respecter :
+- La charte graphique existants
+- Les maquettes validées
+- L’accessibilité (contrastes, lisibilité)
 
-### Analyzing the Bundle Size
+### 🧹 Qualité de code
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Ce projet est soumis à :
+- ESLint
+- Prettier
+- pre-commit hooks
 
-### Making a Progressive Web App
+Les linters sont exécutés :
+- Avant chaque commit
+- Lors des pipelines CI
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### 🔗 Liens utiles
 
-### Advanced Configuration
+- 📐 Maquettes : docs/maquettes/
+- 📄 Cahier des charges : docs/cahier-des-charges/
+- 🗺️ Cartographie : docs/cartographies/
+- 🔁 Workflow Git : docs/workflow/
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 🧠 Bonnes pratiques
 
-### Deployment
+- Composants petits et réutilisables
+- Pas de logique métier dans les composants UI
+- Appels API centralisés
+- Pas de données mockées en dur en production
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### 👥 Contribution
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Merci de lire CONTRIBUTING.md avant toute contribution.
