@@ -1,25 +1,26 @@
 # Workflow Github Actions
 
-### 🎯 Objectif
+### Objectif
 
 - Un workflow Git propre et sécurisé
 - Des branches cohérentes
 - Des issues traçables
+- Vérification des commits
 - Des PR contrôlées
-- Un changelog écrit à la main
+- Un changelog écrit à la main selon norme [Keepachangelog](https://keepachangelog.com/fr/1.0.0/)
 - Des releases propres
 
-### 📦 Ce que GitHub fera pour toi
+### Ce que GitHub fera pour toi
 
 - Bloquer les erreurs
 - Automatiser ce qui est répétitif
-- Te forcer aux bonnes pratiques
+- Forcer aux bonnes pratiques
 
 ## ÉTAPE 1 — Vérification du nom de branche
 
-📄 `.github/workflows/branch-name.yml`
+`.github/workflows/branch-name.yml`
 
-Vérifie que le nom de branche suit la convention :
+Vérifier que le nom de branche suit la convention :
 
 ```
 feature/<issue-id>-short-description
@@ -29,28 +30,25 @@ release/<x.y.z>
 ```
 
 Bloque la PR si le nom est invalide.
-
 Affiche un message clair pour corriger.
 
 ## ÉTAPE 2 — Vérification de la présence d’une issue
 
-📄 `.github/workflows/ticket.yml`
+`.github/workflows/ticket.yml`
 
 Vérifie que le titre de la PR ou le nom de la branche contient une référence à une issue (#<numéro>).
-
 Bloque la PR si aucune issue n’est liée.
 
-## ÉTAPE 3 — Ajout automatique de labels
+## ÉTAPE 3 — Ajout automatique de labels à la PR
 
-📄 `.github/workflows/labels.yml`
+`.github/workflows/labels.yml`
 
-Ajoute automatiquement les labels selon le type de branche : feature, fix, hotfix, release.
-
+Ajoute automatiquement les labels à la PR selon le type de branche : feature, fix, hotfix, release.
 Avertit si aucun label n’est ajouté (nom de branche invalide).
 
 ## ÉTAPE 4 — Vérification des messages de commit
 
-📄 `.github/workflows/commit-message.yml`
+`.github/workflows/commit-message.yml`
 
 Format attendu :
 
@@ -60,7 +58,7 @@ type(nom): Fixes #<issue> - message
 
 - type : feat, fix, docs, chore, refactor, test, hotfix
 - nom : le nom de la fonctionnalité ou du module
-- #num : référence à l’issue
+- #<numéro> : référence à l’issue
 - message : texte libre décrivant le commit
 
 Blocage du push/PR si un commit ne respecte pas le format
@@ -76,7 +74,7 @@ hotfix(prod): Fixes #12 - Correction crash production
 
 ## ÉTAPE 5 — Vérification de la structure du projet
 
-📄 `.github/workflows/structure.yml`
+`.github/workflows/structure.yml`
 
 - Fichiers racine obligatoires : README.md, CONTRIBUTING.md, INSTALL.md, LICENSE
 - Dossiers MERN : frontend et backend
@@ -88,7 +86,7 @@ hotfix(prod): Fixes #12 - Correction crash production
 
 ## ÉTAPE 6 — Tests unitaires et build
 
-📄 `.github/workflows/tests.yml`
+`.github/workflows/tests.yml`
 
 Installe les dépendances et lance les tests pour backend et frontend :
 
@@ -101,7 +99,7 @@ Optionnel : build frontend pour vérifier que l’application compile correcteme
 
 ## ÉTAPE 7 — Linting (ESLint / Prettier)
 
-📄 `.github/workflows/lint.yml`
+`.github/workflows/lint.yml`
 
 Vérifie le style et la cohérence du code :
 
@@ -115,68 +113,37 @@ Bloque la PR si des fichiers ne respectent pas les règles.
 
 ## ÉTAPE 8 — Pre-commit
 
-### Installation Husky
+### Qu'est-ce que pre-commit ?
 
-Dans ton projet racine (Node/MERN) :
+`pre-commit` est un outil qui exécute automatiquement des vérifications avant chaque commit Git pour empêcher d’envoyer du code mal formaté ou non conforme.
 
+Il agit avant que le commit soit créé (en local).
+- outil Python
+- installé avec pip
+- indépendant du stack
+
+### Installation (une seule fois par développeur)
 ```
-npm install husky --save-dev
+pip install pre-commit        
+pre-commit install
 ```
+Cela installe un hook Git dans .git/hooks/pre-commit.
 
-Initialiser Husky :
+### Configuration du projet
 
-```
-npx husky install
-```
+Dans `.pre-commit-config.yaml`, définition de :
 
-Ajouter un script dans package.json pour activer Husky après npm install :
+- quels outils lancer (ESLint, Prettier, etc.)
+- sur quels fichiers
+- dans quel dossier (frontend / backend)
 
-```
-{
-  "scripts": {
-    "prepare": "husky install"
-  }
-}
-```
-
-### Créer le hook pre-commit
-
-Le hook pre-commit s’exécute avant chaque commit.
-
-npx husky add .husky/pre-commit "npm run precommit"
-
-Cela crée .husky/pre-commit qui va lancer la commande npm run precommit.
-
-### Ajouter un script precommit dans package.json
-
-```
-{
-  "scripts": {
-    "precommit": "npm run lint && npm run test"
-  }
-}
-```
-
-`npm run lint` → lance ESLint et Prettier sur tout le projet
-`npm run test` → lance les tests backend et frontend
-
-Par exemple, dans ton package.json :
-
-```
-{
-  "scripts": {
-    "lint": "eslint frontend/**/*.js backend/**/*.js && prettier --check .",
-    "test": "cd backend && npm test && cd ../frontend && npm test",
-    "precommit": "npm run lint && npm run test"
-  }
-}
-```
+Ce fichier est versionné → toute l’équipe a le même comportement.
 
 ### Fonctionnement
 
 - git add .
 - git commit -m "feat(login): Fixes #3 - Ajout page login"
-- Husky déclenche le hook pre-commit :
+- Déclenchement du hook pre-commit :
   - Lint du code
   - Tests unitaires
 - Si une étape échoue, le commit est bloqué et un message s’affiche.
@@ -184,7 +151,7 @@ Par exemple, dans ton package.json :
 
 ## ÉTAPE 9 — Audit des dépendances
 
-📄 `.github/workflows/audit.yml`
+`.github/workflows/audit.yml`
 
 Vérifie automatiquement la sécurité des packages npm :
 
@@ -197,7 +164,7 @@ Bloque la PR si des vulnérabilités critiques sont détectées.
 
 ## ÉTAPE 10 — Release & versioning
 
-📄 `.github/workflows/release.yml`
+`.github/workflows/release.yml`
 
 - Détecte les branches release/x.y.z.
 - Vérifie que la version respecte le format SemVer.
@@ -205,7 +172,7 @@ Bloque la PR si des vulnérabilités critiques sont détectées.
 - Extrait la section correspondante dans CHANGELOG.md.
 - Crée la GitHub Release.
 
-## RÈGLES À RETENIR
+# RÈGLES À RETENIR
 
 - 1 issue = 1 branche
 - Pas de push sur main
@@ -213,7 +180,7 @@ Bloque la PR si des vulnérabilités critiques sont détectées.
 - Release = release/x.y.z
 - Fichiers obligatoire
 
-## Diagramme visuel
+# Diagramme visuel
 
 ```
            ┌───────────────┐
@@ -289,7 +256,7 @@ Bloque la PR si des vulnérabilités critiques sont détectées.
         └──────────────────┘
 ```
 
-## Tableau récapitulatif
+# Tableau récapitulatif
 
 | Workflow                                    | Fichier                                | Déclenchement                                            | Objectif                                                                                                                                                                         | Blocage / Messages                                                |
 | ------------------------------------------- | -------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |

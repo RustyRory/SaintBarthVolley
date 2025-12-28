@@ -1,0 +1,34 @@
+repos:
+  # Frontend ESLint
+  - repo: local
+    hooks:
+      - id: frontend-eslint
+        name: Frontend ESLint
+        entry: bash -c "cd app/frontend && npm run lint"
+        language: system
+        pass_filenames: false
+        types: [javascript]
+
+      - id: frontend-prettier
+        name: Frontend Prettier
+        entry: bash -c "cd app/frontend && npm run format"
+        language: system
+        pass_filenames: false
+        types: [javascript]
+
+  # Backend ESLint
+  - repo: local
+    hooks:
+      - id: backend-eslint
+        name: Backend ESLint
+        entry: bash -c "cd app/backend && npm run lint"
+        language: system
+        pass_filenames: false
+        types: [javascript]
+
+      - id: backend-prettier
+        name: Backend Prettier
+        entry: bash -c "cd app/backend && npm run format"
+        language: system
+        pass_filenames: false
+        types: [javascript]
