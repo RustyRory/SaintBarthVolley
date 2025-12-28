@@ -1,0 +1,47 @@
+name: Audit des dépendances
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Audit backend
+        run: |
+          if [ -d "app/backend" ]; then
+            cd app/backend
+            npm install
+            echo "Audit des dépendances backend..."
+            npm audit --audit-level=high
+            cd ..
+            cd ..
+          else
+            echo "⚠️ Dossier backend introuvable"
+            exit 1
+          fi
+
+      - name: Audit frontend
+        run: |
+          if [ -d "app/frontend" ]; then
+            cd app/frontend
+            npm install
+            echo "Audit des dépendances frontend (non bloquant)..."
+            npm audit --audit-level=high || echo "⚠️ Vulnérabilités connues de react-scripts ignorées"
+            cd ..
+            cd ..
+          else
+            echo "⚠️ Dossier frontend introuvable"
+            exit 1
+          fi
+

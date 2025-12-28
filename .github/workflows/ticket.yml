@@ -1,0 +1,46 @@
+name: Vérification de la présence d'une issue
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  issues: read
+  pull-requests: read
+
+jobs:
+  check-ticket:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Installer GitHub CLI
+        run: sudo apt-get update && sudo apt-get install gh -y
+
+      - name: Vérifier la référence à une issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+
+          BRANCHE="${{ github.event.pull_request.head.ref }}"
+          TITRE="${{ github.event.pull_request.title }}"
+          REPO="${{ github.repository }}"
+
+          echo "Nom de branche : $BRANCHE"
+          echo "Titre de PR : $TITRE"
+
+          ISSUE_NUMBER=$(echo "$TITRE" | grep -o '#[0-9]\+' | tr -d '#')
+          if [ -z "$ISSUE_NUMBER" ]; then
+            ISSUE_NUMBER=$(echo "$BRANCHE" | grep -o '[0-9]\+')
+          fi
+
+          if [ -z "$ISSUE_NUMBER" ]; then
+            echo "❌ Aucune référence à une issue détectée"
+            exit 1
+          fi
+
+          echo "Numéro d'issue détecté : $ISSUE_NUMBER"
+
+          gh api repos/$REPO/issues/$ISSUE_NUMBER >/dev/null
+
+          echo "✅ L'issue #$ISSUE_NUMBER existe bien"

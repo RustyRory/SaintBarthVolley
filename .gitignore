@@ -1,0 +1,90 @@
+####################################
+# Node / npm / yarn / pnpm
+####################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+####################################
+# Environments / secrets
+####################################
+.env
+.env.*
+!.env.example
+
+####################################
+# Builds
+####################################
+dist/
+build/
+coverage/
+
+####################################
+# React / CRA
+####################################
+app/frontend/build/
+app/frontend/.env.local
+app/frontend/.env.development.local
+app/frontend/.env.test.local
+app/frontend/.env.production.local
+
+####################################
+# Logs
+####################################
+logs/
+*.log
+
+####################################
+# Cache / temp
+####################################
+.tmp/
+tmp/
+.cache/
+.eslintcache
+
+####################################
+# OS
+####################################
+.DS_Store
+Thumbs.db
+
+####################################
+# IDE / editors
+####################################
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+####################################
+# Tests
+####################################
+test-results/
+coverage/
+
+####################################
+# Misc
+####################################
+*.pid
+*.seed
+*.pid.lock
+
+####################################
+# Optional: TypeScript (si ajouté plus tard)
+####################################
+*.tsbuildinfo
+
+####################################
+# Docker (si utilisé plus tard)
+####################################
+docker-compose.override.yml

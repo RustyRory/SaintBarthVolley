@@ -1,0 +1,44 @@
+name: Vérification des messages de commit
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - "feature/*"
+      - "fix/*"
+      - "hotfix/*"
+      - "release/*"
+
+jobs:
+  commit-message:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier le format des messages de commit
+        run: |
+          echo "Récupération des commits du dernier push..."
+          # Récupère les commits du dernier push
+          COMMITS=$(git log origin/${GITHUB_REF_NAME}..HEAD --pretty=format:"%s")
+
+          echo "Commits détectés :"
+          echo "$COMMITS"
+
+          INVALID=false
+
+          for COMMIT in $COMMITS; do
+            # Regex pour le format attendu : type(nom): Fixes #<num> - message
+            if ! [[ "$COMMIT" =~ ^(feat|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\):\ Fixes\ #[0-9]+\ -\ .+ ]]; then
+              echo "❌ Commit invalide : $COMMIT"
+              echo "💡 Format attendu : type(nom): Fixes #<issue> - message"
+              INVALID=true
+            else
+              echo "✅ Commit valide : $COMMIT"
+            fi
+          done
+
+          if [ "$INVALID" = true ]; then
+            echo "❌ Au moins un commit ne respecte pas le format attendu."
+            exit 1
+          fi
