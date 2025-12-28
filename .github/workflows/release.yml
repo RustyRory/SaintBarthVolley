@@ -8,31 +8,28 @@ on:
 jobs:
   release:
     if: github.event.pull_request.merged == true &&
-      startsWith(github.head_ref, 'release/')
+      (startsWith(github.head_ref, 'release/') ||
+       startsWith(github.head_ref, 'hotfix/'))
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout complet pour gérer les tags
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Définir VERSION à partir de la branche release/x.y.z
       - name: Définir VERSION
         run: |
-          VERSION="${GITHUB_REF#refs/heads/release/}"
+          VERSION="${GITHUB_HEAD_REF#release/}"
+          VERSION="${VERSION#hotfix/}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Version détectée : $VERSION"
 
-          # Vérifie le format SemVer
           if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "❌ Format de version invalide : $VERSION"
-            echo "💡 Format attendu : release/x.y.z (ex: release/1.2.3)"
             exit 1
           fi
 
-      # Créer et pousser le tag git
       - name: Créer le tag git
         run: |
           git config user.name "github-actions[bot]"
@@ -40,19 +37,15 @@ jobs:
           git tag v${{ env.VERSION }}
           git push origin v${{ env.VERSION }}
 
-      # Extraire la section correspondante dans CHANGELOG.md
       - name: Extraire le changelog
         run: |
           if [ -f CHANGELOG.md ]; then
             sed -n "/## \[${{ env.VERSION }}\]/,/^## \[/p" CHANGELOG.md | sed '$d' > release-notes.md
-            echo "✅ Section changelog extraite pour la release ${{ env.VERSION }}"
           else
-            echo "⚠️ CHANGELOG.md introuvable"
-            echo "💡 Créez CHANGELOG.md avec une section ## [${{ env.VERSION }}]"
+            echo "CHANGELOG.md manquant"
             exit 1
           fi
 
-      # Créer la GitHub Release
       - name: Créer GitHub Release
         uses: softprops/action-gh-release@v2
         with:
