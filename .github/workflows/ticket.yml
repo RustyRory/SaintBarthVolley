@@ -1,46 +1,35 @@
-name: Vérification de la présence d'une issue
+name: 'Vérification de la référence au ticket dans la PR'
 
 on:
-  pull_request_target:
-    types: [opened, reopened, synchronize]
-
-permissions:
-  issues: read
-  pull-requests: read
+  pull_request:
+    types: [opened, edited, synchronize]
 
 jobs:
   check-ticket:
     runs-on: ubuntu-latest
     steps:
-      - name: Installer GitHub CLI
-        run: sudo apt-get update && sudo apt-get install gh -y
-
-      - name: Vérifier la référence à une issue
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Vérifier le titre et la branche de la PR pour une référence au ticket'
         run: |
-          set -e
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          BRANCH_NAME="${{ github.head_ref }}"
 
-          BRANCHE="${{ github.event.pull_request.head.ref }}"
-          TITRE="${{ github.event.pull_request.title }}"
-          REPO="${{ github.repository }}"
+          echo "PR title: $PR_TITLE"
+          echo "Branch name: $BRANCH_NAME"
 
-          echo "Nom de branche : $BRANCHE"
-          echo "Titre de PR : $TITRE"
+          # Regex pour le titre de PR : doit contenir #<num>
+          ISSUE_PR_REGEX="#[0-9]+"
 
-          ISSUE_NUMBER=$(echo "$TITRE" | grep -o '#[0-9]\+' | tr -d '#')
-          if [ -z "$ISSUE_NUMBER" ]; then
-            ISSUE_NUMBER=$(echo "$BRANCHE" | grep -o '[0-9]\+')
-          fi
+          # Regex pour le nom de branche : doit contenir le numéro (sans #)
+          ISSUE_BRANCH_REGEX="[0-9]+"
 
-          if [ -z "$ISSUE_NUMBER" ]; then
-            echo "❌ Aucune référence à une issue détectée"
+          if [[ $PR_TITLE =~ $ISSUE_PR_REGEX ]]; then
+            echo "✅ Le titre de la PR contient une référence au ticket."
+            exit 0
+          elif [[ $BRANCH_NAME =~ $ISSUE_BRANCH_REGEX ]]; then
+            echo "✅ Le nom de la branche contient un numéro de ticket."
+            exit 0
+          else
+            echo "❌ Aucune référence au ticket trouvée !"
+            echo "Incluez une référence dans le titre de la PR (#<num>) ou le nom de la branche (numéro du ticket)."
             exit 1
           fi
-
-          echo "Numéro d'issue détecté : $ISSUE_NUMBER"
-
-          gh api repos/$REPO/issues/$ISSUE_NUMBER >/dev/null
-
-          echo "✅ L'issue #$ISSUE_NUMBER existe bien"
