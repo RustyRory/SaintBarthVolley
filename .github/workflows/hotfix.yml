@@ -1,0 +1,63 @@
+name: 'Workflow Hotfix'
+
+on:
+  push:
+    branches:
+      - 'hotfix/*'
+
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # pour récupérer tous les tags
+
+      - name: 'Configurer Git'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 'Déterminer la version hotfix'
+        id: semver
+        run: |
+          # Récupérer le dernier tag SemVer existant
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          echo "Latest tag: $LATEST_TAG"
+
+          # Incrément patch
+          MAJOR=$(echo $LATEST_TAG | cut -d. -f1)
+          MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+          PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+          PATCH=$((PATCH + 1))
+
+          VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "Hotfix new version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 'Créer un tag git'
+        run: |
+          git tag "v${{ steps.semver.outputs.version }}"
+          git push origin "v${{ steps.semver.outputs.version }}"
+
+      - name: 'Extraire la section du changelog'
+        id: changelog
+        run: |
+          VERSION="${{ steps.semver.outputs.version }}"
+          if [[ -f CHANGELOG.md ]]; then
+            sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md > release_notes.txt
+          else
+            echo "No CHANGELOG.md found" > release_notes.txt
+          fi
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 'Créer une release GitHub'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: 'v${{ steps.semver.outputs.version }}'
+          name: 'Hotfix v${{ steps.semver.outputs.version }}'
+          body: '${{ steps.changelog.outputs.release_notes }}'
