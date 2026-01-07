@@ -1,53 +1,78 @@
-name: Release automatique
+name: 'Release workflow'
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
+  push:
+    branches:
+      - 'release/*'
+
+permissions:
+  contents: write
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true &&
-      (startsWith(github.head_ref, 'release/') ||
-       startsWith(github.head_ref, 'hotfix/'))
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      # 🔹 1. Checkout complet pour récupérer tous les commits et tags
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Définir VERSION
-        run: |
-          VERSION="${GITHUB_HEAD_REF#release/}"
-          VERSION="${VERSION#hotfix/}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Version détectée : $VERSION"
-
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ Format de version invalide : $VERSION"
-            exit 1
-          fi
-
-      - name: Créer le tag git
+      # 🔹 2. Configurer Git pour les commits/tag du bot
+      - name: 'Set up Git'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag v${{ env.VERSION }}
-          git push origin v${{ env.VERSION }}
 
-      - name: Extraire le changelog
+      # 🔹 3. Déterminer la version de release depuis le nom de branche
+      - name: 'Determine release version'
+        id: semver
         run: |
-          if [ -f CHANGELOG.md ]; then
-            sed -n "/## \[${{ env.VERSION }}\]/,/^## \[/p" CHANGELOG.md | sed '$d' > release-notes.md
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          if [[ "$BRANCH_NAME" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "Release version: $VERSION"
           else
-            echo "CHANGELOG.md manquant"
+            echo "❌ Branch name does not match release/x.y.z"
             exit 1
           fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Créer GitHub Release
-        uses: softprops/action-gh-release@v2
+      # 🔹 4. Créer le tag Git (supprime ancien tag si besoin)
+      - name: 'Create git tag'
+        run: |
+          VERSION="v${{ steps.semver.outputs.version }}"
+          echo "Creating tag $VERSION"
+
+          # Supprimer tag local s'il existe
+          git tag -d $VERSION || true
+
+          # Supprimer tag distant s'il existe
+          git push --delete origin $VERSION || true
+
+          # Créer et pousser le tag
+          git tag $VERSION
+          git push origin $VERSION
+
+      # 🔹 5. Extraire la section correspondante dans le CHANGELOG.md
+      - name: 'Extract changelog section'
+        id: changelog
+        run: |
+          VERSION="${{ steps.semver.outputs.version }}"
+          if [[ -f CHANGELOG.md ]]; then
+            sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md > release_notes.txt
+          else
+            echo "No CHANGELOG.md found" > release_notes.txt
+          fi
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # 🔹 6. Créer la GitHub Release
+      - name: 'Create GitHub Release'
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: v${{ env.VERSION }}
-          body_path: release-notes.md
+          tag: v${{ steps.semver.outputs.version }}
+          name: Release v${{ steps.semver.outputs.version }}
+          body: ${{ steps.changelog.outputs.release_notes }}

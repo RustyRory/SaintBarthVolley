@@ -1,59 +1,75 @@
-name: Vérification de la structure du projet
+name: 'Check Project Structure'
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, edited, synchronize]
 
 jobs:
   check-structure:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
+      - name: 'Checkout PR'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
-      - name: Vérifier les fichiers et dossiers essentiels
+      - name: 'Verify project structure'
         run: |
-          MISSING=false
+          echo "🔍 Vérification de la structure du projet"
 
-          echo "🔎 Vérification des fichiers racine..."
-          for FILE in README.md CONTRIBUTING.md INSTALL.md LICENSE; do
+          INVALID=false
+
+          # Fichiers racine obligatoires
+          ROOT_FILES=("README.md" "CONTRIBUTING.md" "INSTALL.md" "LICENSE")
+          for FILE in "${ROOT_FILES[@]}"; do
             if [ ! -f "$FILE" ]; then
-              echo "❌ Fichier manquant : $FILE"
-              MISSING=true
+              echo "❌ Fichier racine manquant : $FILE"
+              INVALID=true
+            else
+              echo "✅ Fichier trouvé : $FILE"
             fi
           done
 
-          echo "🔎 Vérification des dossiers MERN..."
-          for DIR in frontend backend; do
-            if [ ! -d "app/$DIR" ]; then
+          # Dossiers obligatoires
+          DIRS=("app/frontend" "app/backend")
+          for DIR in "${DIRS[@]}"; do
+            if [ ! -d "$DIR" ]; then
               echo "❌ Dossier manquant : $DIR"
-              MISSING=true
+              INVALID=true
+            else
+              echo "✅ Dossier trouvé : $DIR"
             fi
           done
 
-          echo "🔎 Vérification des fichiers internes du frontend..."
-          if [ ! -f "app/frontend/package.json" ]; then
-            echo "❌ app/frontend/package.json manquant"
-            MISSING=true
-          fi
-          if [ ! -f "app/frontend/.env.example" ]; then
-            echo "❌ app/frontend/.env.example manquant"
-            MISSING=true
-          fi
-
-          echo "🔎 Vérification des fichiers internes du backend..."
-          if [ ! -f "app/backend/package.json" ]; then
-            echo "❌ app/backend/package.json manquant"
-            MISSING=true
-          fi
-          if [ ! -f "app/backend/.env.example" ]; then
-            echo "❌ app/backend/.env.example manquant"
-            MISSING=true
+          # Vérification interne frontend
+          if [ -d "app/frontend" ]; then
+            if [ ! -f "app/frontend/package.json" ]; then
+              echo "❌ Fichier manquant dans frontend : package.json"
+              INVALID=true
+            fi
+            if [ ! -f "app/frontend/.env.example" ]; then
+              echo "❌ Fichier manquant dans frontend : .env.example"
+              INVALID=true
+            fi
           fi
 
-          if [ "$MISSING" = true ]; then
-            echo "💡 Corrigez les fichiers et dossiers manquants avant de merger la PR."
+          # Vérification interne backend
+          if [ -d "app/backend" ]; then
+            if [ ! -f "app/backend/package.json" ]; then
+              echo "❌ Fichier manquant dans backend : package.json"
+              INVALID=true
+            fi
+            if [ ! -f "app/backend/.env.example" ]; then
+              echo "❌ Fichier manquant dans backend : .env.example"
+              INVALID=true
+            fi
+          fi
+
+          # Blocage si structure incorrecte
+          if [ "$INVALID" = true ]; then
+            echo ""
+            echo "⚠️ Structure du projet invalide. Veuillez ajouter les fichiers/dossiers manquants."
             exit 1
           else
-            echo "✅ Tous les fichiers et dossiers essentiels sont présents."
+            echo "✅ Structure du projet OK"
           fi

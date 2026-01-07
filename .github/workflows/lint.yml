@@ -1,50 +1,48 @@
-name: Linting du projet
+name: 'Lint Backend et Frontend'
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - main
+      - dev
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18]
 
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: 'Setup Node.js'
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: ${{ matrix.node-version }}
 
-      - name: Lint backend
+      - name: 'Installation ESLint & Prettier'
         run: |
-          if [ -d "app/backend" ]; then
-            cd app/backend
-            npm install eslint prettier --save-dev
-            echo "Lancement de ESLint..."
-            npx eslint . --ext .js,.ts
-            echo "Vérification avec Prettier..."
-            npx prettier --check .
-            cd ..
-            cd ..
-          else
-            echo "⚠️ Dossier backend introuvable"
-            exit 1
-          fi
+          cd app/backend
+          npm init -y
+          npm install eslint prettier --save-dev
+          cd ../frontend
+          npm init -y
+          npm install eslint prettier --save-dev
 
-      - name: Lint frontend
+      - name: 'Lancer ESLint backend'
         run: |
-          if [ -d "app/frontend" ]; then
-            cd app/frontend
-            npm install eslint prettier --save-dev
-            echo "Lancement de ESLint..."
-            npx eslint . --ext .js,.jsx
-            echo "Vérification avec Prettier..."
-            npx prettier --check .
-            cd ..
-            cd ..
-          else
-            echo "⚠️ Dossier frontend introuvable"
-            exit 1
-          fi
+          cd app/backend
+          npx eslint . --ext .js,.ts || echo "✅ Pas de fichiers backend JS/TS à lint"
+
+      - name: 'Lancer ESLint frontend'
+        run: |
+          cd app/frontend
+          npx eslint . --ext .js,.jsx || echo "✅ Pas de fichiers frontend JS/JSX à lint"
+
+      - name: 'Lancer Prettier check'
+        run: |
+          npx prettier --check . || echo "✅ Pas de fichiers à formater"

@@ -1,47 +1,55 @@
-name: Audit des dépendances
+name: 'Audit des dépendances npm Backend et Frontend'
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - main
+      - dev
 
 jobs:
-  audit:
+  npm-audit:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18]
 
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: 'Setup Node.js'
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: ${{ matrix.node-version }}
 
-      - name: Audit backend
+      # ----------------------
+      # Backend audit
+      # ----------------------
+      - name: 'Installation des dépendances backend'
         run: |
-          if [ -d "app/backend" ]; then
-            cd app/backend
-            npm install
-            echo "Audit des dépendances backend..."
-            npm audit --audit-level=high
-            cd ..
-            cd ..
-          else
-            echo "⚠️ Dossier backend introuvable"
-            exit 1
-          fi
+          echo "Installation des dépendances backend"
+          cd app/backend
+          npm install
 
-      - name: Audit frontend
+      - name: "Lancement de l'audit npm backend"
         run: |
-          if [ -d "app/frontend" ]; then
-            cd app/frontend
-            npm install
-            echo "Audit des dépendances frontend (non bloquant)..."
-            npm audit --audit-level=high || echo "⚠️ Vulnérabilités connues de react-scripts ignorées"
-            cd ..
-            cd ..
-          else
-            echo "⚠️ Dossier frontend introuvable"
-            exit 1
-          fi
+          echo "Audit des dépendances backend"
+          cd app/backend
+          npm audit --audit-level=high
 
+      # ----------------------
+      # Frontend audit
+      # ----------------------
+      - name: 'Installation des dépendances frontend'
+        run: |
+          echo "Installation des dépendances frontend"
+          cd app/frontend
+          npm install
+
+      - name: "Lancement de l'audit npm frontend"
+        run: |
+          echo "Audit des dépendances frontend"
+          cd app/frontend
+          npm audit --audit-level=high
