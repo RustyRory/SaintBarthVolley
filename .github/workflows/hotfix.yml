@@ -1,6 +1,5 @@
 name: 'Workflow Hotfix'
 
-
 permissions:
   contents: write
 
@@ -17,7 +16,7 @@ jobs:
       - name: 'Checkout code'
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # pour récupérer tous les tags
+          fetch-depth: 0
 
       - name: 'Configurer Git'
         run: |
@@ -27,26 +26,45 @@ jobs:
       - name: 'Déterminer la version hotfix'
         id: semver
         run: |
-          # Récupérer le dernier tag SemVer existant
-          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
-          echo "Latest tag: $LATEST_TAG"
+          set -e
 
-          # Incrément patch
-          MAJOR=$(echo $LATEST_TAG | cut -d. -f1)
-          MINOR=$(echo $LATEST_TAG | cut -d. -f2)
-          PATCH=$(echo $LATEST_TAG | cut -d. -f3)
-          PATCH=$((PATCH + 1))
+          # Dernier tag vX.Y.Z
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
 
-          VERSION="$MAJOR.$MINOR.$PATCH"
-          echo "Hotfix new version: $VERSION"
+          if [[ -z "$LATEST_TAG" ]]; then
+            echo "Aucun tag trouvé, initialisation à v0.0.1"
+            VERSION="0.0.1"
+          else
+            VERSION="${LATEST_TAG#v}"
+            MAJOR=$(echo "$VERSION" | cut -d. -f1)
+            MINOR=$(echo "$VERSION" | cut -d. -f2)
+            PATCH=$(echo "$VERSION" | cut -d. -f3)
+            PATCH=$((PATCH + 1))
+            VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+
+          TAG="v$VERSION"
+          echo "Nouvelle version candidate : $TAG"
+
+          # Vérifie si le tag existe déjà
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "⚠️ Le tag $TAG existe déjà, skip."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: 'Créer un tag git'
+      - name: 'Créer le tag git'
+        if: steps.semver.outputs.skip != 'true'
         run: |
-          git tag "v${{ steps.semver.outputs.version }}"
-          git push origin "v${{ steps.semver.outputs.version }}"
+          git tag "${{ steps.semver.outputs.tag }}"
+          git push origin "${{ steps.semver.outputs.tag }}"
 
       - name: 'Extraire la section du changelog'
+        if: steps.semver.outputs.skip != 'true'
         id: changelog
         run: |
           VERSION="${{ steps.semver.outputs.version }}"
@@ -60,8 +78,9 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: 'Créer une release GitHub'
+        if: steps.semver.outputs.skip != 'true'
         uses: ncipollo/release-action@v1
         with:
-          tag: 'v${{ steps.semver.outputs.version }}'
-          name: 'Hotfix v${{ steps.semver.outputs.version }}'
+          tag: '${{ steps.semver.outputs.tag }}'
+          name: 'Hotfix ${{ steps.semver.outputs.tag }}'
           body: '${{ steps.changelog.outputs.release_notes }}'
