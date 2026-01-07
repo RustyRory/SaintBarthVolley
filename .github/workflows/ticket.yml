@@ -8,28 +8,26 @@ jobs:
   check-ticket:
     runs-on: ubuntu-latest
     steps:
-      - name: 'Vérifier le titre et la branche de la PR pour une référence au ticket'
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          BRANCH_NAME="${{ github.head_ref }}"
+    - name: 'Vérifier le titre et la branche de la PR pour une référence au ticket'
+      run: |
+        set -e
 
-          echo "PR title: $PR_TITLE"
-          echo "Branch name: $BRANCH_NAME"
+        PR_TITLE="${{ github.event.pull_request.title }}"
+        BRANCH_NAME="${{ github.head_ref }}"
 
-          # Regex pour le titre de PR : doit contenir #<num>
-          ISSUE_PR_REGEX="#[0-9]+"
+        echo "Titre de PR : $PR_TITLE"
+        echo "Nom de branche : $BRANCH_NAME"
 
-          # Regex pour le nom de branche : doit contenir le numéro (sans #)
-          ISSUE_BRANCH_REGEX="[0-9]+"
+        if [[ "$PR_TITLE" =~ #[0-9]+ ]]; then
+          echo "✅ Le titre de la PR contient une référence au ticket."
+          exit 0
+        fi
 
-          if [[ $PR_TITLE =~ $ISSUE_PR_REGEX ]]; then
-            echo "✅ Le titre de la PR contient une référence au ticket."
-            exit 0
-          elif [[ $BRANCH_NAME =~ $ISSUE_BRANCH_REGEX ]]; then
-            echo "✅ Le nom de la branche contient un numéro de ticket."
-            exit 0
-          else
-            echo "❌ Aucune référence au ticket trouvée !"
-            echo "Incluez une référence dans le titre de la PR (#<num>) ou le nom de la branche (numéro du ticket)."
-            exit 1
-          fi
+        if [[ "$BRANCH_NAME" =~ [0-9]+ ]]; then
+          echo "✅ Le nom de la branche contient un numéro de ticket."
+          exit 0
+        fi
+
+        echo "❌ Aucune référence au ticket trouvée !"
+        echo "Incluez une référence dans le titre de la PR (#<num>) ou le nom de la branche."
+        exit 1
