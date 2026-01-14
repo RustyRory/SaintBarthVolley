@@ -1,48 +1,64 @@
-name: Tests unitaires et build
+name: 'Lancer les Tests Backend et Frontend'
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - main
+      - dev
 
 jobs:
-  run-tests:
+  test-backend-frontend:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18] # adapte selon la version Node de ton projet
 
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: 'Setup Node.js'
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: ${{ matrix.node-version }}
 
-      - name: Installer et tester le backend
+      # ----------------------
+      # Backend
+      # ----------------------
+      - name: 'Installer les dépendances backend'
         run: |
-          if [ -d "app/backend" ]; then
-            echo "Installation des dépendances backend..."
-            cd app/backend
-            npm install
-            echo "Lancement des tests backend..."
-            npm test
-            cd ..
-            cd ..
-          else
-            echo "⚠️ Dossier backend introuvable"
-            exit 1
-          fi
+          echo "Installation des dépendances backend"
+          cd app/backend
+          npm install
 
-      - name: Installer et tester le frontend
+      - name: 'Lancer les tests backend'
         run: |
-          if [ -d "app/frontend" ]; then
-            echo "Installation des dépendances frontend..."
-            cd app/frontend
-            npm install
-            echo "Lancement des tests frontend..."
-            npm test
-            cd ..
-            cd ..
-          else
-            echo "Dossier frontend introuvable"
-            exit 1
-          fi
+          echo "Lancement des tests backend"
+          cd app/backend
+          npm test
+
+      # ----------------------
+      # Frontend
+      # ----------------------
+      - name: 'Installer les dépendances frontend'
+        run: |
+          echo "Installation des dépendances frontend"
+          cd app/frontend
+          npm install
+
+      - name: 'Lancer les tests frontend'
+        run: |
+          echo "Lancement des tests frontend"
+          cd app/frontend
+          npm test
+
+      # ----------------------
+      # Optional: build frontend
+      # ----------------------
+      - name: 'Build frontend pour vérification'
+        run: |
+          echo "Building du frontend"
+          cd app/frontend
+          npm run build || { echo "❌ Build frontend échoué"; exit 1; }

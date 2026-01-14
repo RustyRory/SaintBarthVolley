@@ -1,39 +1,51 @@
-name: Ajout automatique de labels
+name: 'Label automatique de la PR selon le type de branche'
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, edited, reopened, synchronize]
 
 permissions:
   contents: read
-  issues: write
   pull-requests: write
+  issues: write
 
 jobs:
-  auto-labels:
+  label-pr:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Ajouter les labels selon le type de branche
-        uses: actions/github-script@v7
+      - name: 'Déterminer le type de branche'
+        id: branch
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch name: $BRANCH"
+
+          if [[ "$BRANCH" =~ ^(feature|feat)/ ]]; then
+            echo "branch_label=feature" >> $GITHUB_OUTPUT
+          elif [[ "$BRANCH" =~ ^fix/ ]]; then
+            echo "branch_label=fix" >> $GITHUB_OUTPUT
+          elif [[ "$BRANCH" =~ ^hotfix/ ]]; then
+            echo "branch_label=hotfix" >> $GITHUB_OUTPUT
+          elif [[ "$BRANCH" =~ ^release/ ]]; then
+            echo "branch_label=release" >> $GITHUB_OUTPUT
+          else
+            echo "branch_label=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 'Ajouter le label à la PR'
+        if: steps.branch.outputs.branch_label != ''
+        uses: actions-ecosystem/action-add-labels@v1
         with:
-          script: |
-            const branch = context.payload.pull_request.head.ref;
-            const prNumber = context.payload.pull_request.number;
-            const labels = [];
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: ${{ steps.branch.outputs.branch_label }}
 
-            // Définition des labels selon le type de branche
-            if (branch.startsWith('feature/') || branch.startsWith('feat/')) labels.push('feature');
-            if (branch.startsWith('fix/')) labels.push('bug');
-            if (branch.startsWith('hotfix/')) labels.push('hotfix');
-            if (branch.startsWith('release/')) labels.push('release');
-
-            if (labels.length > 0) {
-              await github.rest.issues.addLabels({
-                ...context.repo,
-                issue_number: prNumber,
-                labels
-              });
-              console.log(`✅ Labels ajoutés : ${labels.join(', ')}`);
-            } else {
-              console.log(`⚠️ Aucun label ajouté. Vérifiez le nom de branche : ${branch}`);
-            }
+      - name: 'Avertir si le type de branche est inconnu'
+        if: steps.branch.outputs.branch_label == ''
+        run: |
+          echo "⚠️ Impossible d'assigner un label automatiquement."
+          echo "Le nom de la branche ne suit pas la convention:"
+          echo "  feature/<issue>-description"
+          echo "  fix/<issue>-description"
+          echo "  hotfix/<issue>-description"
+          echo "  release/<x.y.z>"
+          echo "Ajouter un label manuellement."

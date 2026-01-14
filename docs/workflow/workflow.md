@@ -1,3 +1,228 @@
+# GitHub – Règles de protection des branches
+
+Ce document décrit **pas à pas** la configuration des **Rulesets GitHub** afin de protéger les branches selon le workflow conventionnel :
+
+- `feature/*` → `dev`
+- `release/*` → `main`
+- `hotfix/*` → `main`
+
+---
+
+## Objectifs
+
+- ❌ Aucun push direct sur `main` et `dev`
+- ✅ Push libre sur `feature/*`
+- ✅ Merges uniquement via **Pull Request**
+- ✅ Sécurisation des branches critiques
+
+---
+
+## Workflow cible
+
+```
+feature/* → PR → dev
+dev → PR → release/*
+release/* → PR → main
+hotfix/* → PR → main
+```
+
+---
+
+## Pré-requis
+
+- Être **Admin** ou **Owner** du repository
+- GitHub Cloud
+- Utilisation des **Rulesets** (nouvelle interface GitHub)
+
+---
+
+## Accès à la configuration
+
+1. Ouvrir le repository GitHub
+2. Aller dans **Settings**
+3. Cliquer sur **Rules**
+4. Cliquer sur **Rulesets**
+5. Cliquer sur **New ruleset**
+6. Choisir **Branch ruleset**
+
+---
+
+## Ruleset : Protection de `main`
+
+### Nom
+
+```
+protect-main
+```
+
+### Target branches
+
+```
+main
+```
+
+### Règles à activer
+
+#### Protection
+
+- ✅ Restrict deletions
+- ✅ Restrict force pushes
+
+#### Pull Requests
+
+- ✅ Require a pull request before merging
+  - Minimum approvals : 1 ou 2
+  - (Optionnel) Require review from Code Owners
+  - (Recommandé) Dismiss stale approvals
+
+#### Checks
+
+- ✅ Require status checks to pass
+  - Sélectionner la CI (ex: build, test)
+
+#### Autres
+
+- ✅ Require conversation resolution
+- (Optionnel) Require signed commits
+
+❌ Ne pas autoriser les push directs
+
+---
+
+## Ruleset : Protection de `dev`
+
+### Nom
+
+```
+protect-dev
+```
+
+### Target branches
+
+```
+dev
+```
+
+### Règles
+
+- ❌ Allow direct pushes
+- ✅ Require pull request before merging
+- ✅ Require status checks
+- ✅ Restrict force pushes
+- ✅ Restrict deletions
+
+---
+
+## Ruleset : Branches de features
+
+### Nom
+
+```
+allow-feature-push
+```
+
+### Target branches
+
+```
+feature/*
+feat/*
+```
+
+### Règles
+
+- ❌ Require pull request
+- ❌ Require approvals
+- ❌ Require status checks
+- ❌ Restrict pushes
+
+👉 Les développeurs peuvent pousser librement sur ces branches.
+
+---
+
+## Ruleset : Branches de release
+
+### Nom
+
+```
+protect-release
+```
+
+### Target branches
+
+```
+release/*
+```
+
+### Règles recommandées
+
+- ❌ Allow force pushes
+- ❌ Allow deletions
+- ❌ Allow direct pushes (optionnel selon politique)
+- ✅ Require pull request (pour merge vers `main`)
+
+---
+
+## Ruleset : Branches de hotfix
+
+### Nom
+
+```
+protect-hotfix
+```
+
+### Target branches
+
+```
+hotfix/*
+```
+
+### Règles
+
+- ❌ Allow direct pushes
+- ❌ Allow force pushes
+- ❌ Allow deletions
+- ✅ Require pull request
+
+---
+
+## Ordre et comportement des Rulesets
+
+- GitHub applique **toutes les règles qui correspondent**
+- Il n’y a **pas de priorité exclusive**
+- Les règles les plus restrictives gagnent
+
+Vérifier dans :
+
+```
+Settings → Rules → Rulesets
+```
+
+---
+
+## Tests recommandés
+
+### Push interdit
+
+```bash
+git push origin main
+git push origin dev
+```
+
+### Push autorisé
+
+```
+git push origin feature/ma-feature
+
+```
+
+### Flux valide
+
+```
+feature/* → dev via PR
+release/* → main via PR
+hotfix/* → main via PR & dev via PR
+```
+
 # Workflow Github Actions
 
 ### Objectif
