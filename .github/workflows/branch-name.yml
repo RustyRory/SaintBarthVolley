@@ -19,7 +19,6 @@ jobs:
           FEATURE_REGEX="^(feat|feature)/[0-9]+-[a-z0-9-]+$"
           FIX_REGEX="^fix/[0-9]+-[a-z0-9-]+$"
           HOTFIX_REGEX="^hotfix/[0-9]+-[a-z0-9-]+$"
-          RELEASE_REGEX="^release/[0-9]+\.[0-9]+\.[0-9]+$"
 
           if [[ $BRANCH =~ $FEATURE_REGEX ]]; then
             echo "✅ Nom de la branche valide (feature)"
@@ -30,9 +29,6 @@ jobs:
           elif [[ $BRANCH =~ $HOTFIX_REGEX ]]; then
             echo "✅ Nom de la branche valide (hotfix)"
             exit 0
-          elif [[ $BRANCH =~ $RELEASE_REGEX ]]; then
-            echo "✅ Nom de la branche valide (release)"
-            exit 0
           else
             echo "❌ Nom de la branche invalide: $BRANCH"
             echo ""
@@ -40,6 +36,5 @@ jobs:
             echo "  feature/<issue-id>-description"
             echo "  fix/<issue-id>-description"
             echo "  hotfix/<issue-id>-description"
-            echo "  release/<x.y.z>"
             exit 1
           fi
