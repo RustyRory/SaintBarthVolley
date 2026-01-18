@@ -85,5 +85,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: '${{ steps.semver.outputs.tag }}'
-          name: 'Release ${{ steps.semver.outputs.tag }}'
+          name: '${{ steps.semver.outputs.tag }}'
           body: '${{ steps.changelog.outputs.release_notes }}'
