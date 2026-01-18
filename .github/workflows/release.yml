@@ -1,78 +1,89 @@
 name: 'Release workflow'
 
-on:
-  push:
-    branches:
-      - 'release/*'
-
 permissions:
   contents: write
 
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
 jobs:
   release:
+    if: >
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'dev'
+
     runs-on: ubuntu-latest
 
     steps:
-      # 🔹 1. Checkout complet pour récupérer tous les commits et tags
       - name: 'Checkout code'
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 🔹 2. Configurer Git pour les commits/tag du bot
-      - name: 'Set up Git'
+      - name: 'Configurer Git'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # 🔹 3. Déterminer la version de release depuis le nom de branche
-      - name: 'Determine release version'
+      - name: 'Déterminer la nouvelle version'
         id: semver
         run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          if [[ "$BRANCH_NAME" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            VERSION="${BASH_REMATCH[1]}"
-            echo "Release version: $VERSION"
+          set -e
+
+          # Récupérer le dernier tag vX.Y.Z
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+
+          if [[ -z "$LATEST_TAG" ]]; then
+            VERSION="0.1.0"
           else
-            echo "❌ Branch name does not match release/x.y.z"
+            VERSION="${LATEST_TAG#v}"
+            MAJOR=$(echo "$VERSION" | cut -d. -f1)
+            MINOR=$(echo "$VERSION" | cut -d. -f2)
+            PATCH=$(echo "$VERSION" | cut -d. -f3)
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+
+          TAG="v$VERSION"
+          echo "Nouvelle release : $TAG"
+
+          # Vérifier si le tag existe déjà
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "❌ Le tag $TAG existe déjà"
             exit 1
           fi
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      # 🔹 4. Créer le tag Git (supprime ancien tag si besoin)
-      - name: 'Create git tag'
+      - name: 'Créer le tag'
         run: |
-          VERSION="v${{ steps.semver.outputs.version }}"
-          echo "Creating tag $VERSION"
+          git tag "${{ steps.semver.outputs.tag }}"
+          git push origin "${{ steps.semver.outputs.tag }}"
 
-          # Supprimer tag local s'il existe
-          git tag -d $VERSION || true
-
-          # Supprimer tag distant s'il existe
-          git push --delete origin $VERSION || true
-
-          # Créer et pousser le tag
-          git tag $VERSION
-          git push origin $VERSION
-
-      # 🔹 5. Extraire la section correspondante dans le CHANGELOG.md
-      - name: 'Extract changelog section'
+      - name: 'Extraire le changelog'
         id: changelog
         run: |
           VERSION="${{ steps.semver.outputs.version }}"
           if [[ -f CHANGELOG.md ]]; then
+            # Extraire la section du changelog correspondant à cette version
             sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md > release_notes.txt
           else
-            echo "No CHANGELOG.md found" > release_notes.txt
+            echo "Release $VERSION" > release_notes.txt
           fi
+
+          # Préparer la sortie pour GitHub Actions
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           cat release_notes.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # 🔹 6. Créer la GitHub Release
-      - name: 'Create GitHub Release'
+      - name: 'Créer la GitHub Release'
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ steps.semver.outputs.version }}
-          name: Release v${{ steps.semver.outputs.version }}
-          body: ${{ steps.changelog.outputs.release_notes }}
+          tag: '${{ steps.semver.outputs.tag }}'
+          name: 'Release ${{ steps.semver.outputs.tag }}'
+          body: '${{ steps.changelog.outputs.release_notes }}'
