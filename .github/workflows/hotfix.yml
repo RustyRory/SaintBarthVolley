@@ -30,10 +30,7 @@ jobs:
         id: semver
         run: |
           set -e
-
-          # Récupérer le dernier tag vX.Y.Z
           LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
-
           if [[ -z "$LATEST_TAG" ]]; then
             VERSION="0.0.1"
           else
@@ -44,39 +41,26 @@ jobs:
             PATCH=$((PATCH + 1))
             VERSION="$MAJOR.$MINOR.$PATCH"
           fi
-
           TAG="v$VERSION"
-
-          # Vérifier si le tag existe déjà
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
-
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: 'Créer le tag et la release si sur main'
         if: steps.semver.outputs.skip != 'true' && github.event.pull_request.base.ref == 'main'
         run: |
-          echo "Récupération du changelog pour ${{ steps.semver.outputs.tag }}"
-          # Extraire le changelog correspondant à la version
-          RELEASE_NOTES=$(awk "/^## \[${{ steps.semver.outputs.tag }}\]/ {flag=1; next} /^## / {flag=0} flag" CHANGELOG.md)
-          echo "$RELEASE_NOTES" > release_notes.md
-
-          # Créer le tag
+          echo "Extraction du changelog pour ${{ steps.semver.outputs.tag }}"
+          if [[ -f CHANGELOG.md ]]; then
+            sed -n "/^## \[${{ steps.semver.outputs.tag }}\]/,/^## /p" CHANGELOG.md > release_notes.txt
+          else
+            echo "${{ steps.semver.outputs.version }}" > release_notes.txt
+          fi
           git tag "${{ steps.semver.outputs.tag }}"
           git push origin "${{ steps.semver.outputs.tag }}"
-
-      - name: 'Créer une release GitHub'
-        if: steps.semver.outputs.skip != 'true' && github.event.pull_request.base.ref == 'main'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: '${{ steps.semver.outputs.tag }}'
-          name: 'Hotfix ${{ steps.semver.outputs.tag }}'
-          body: |
-            $(cat release_notes.md)
 
       - name: 'PR mergée sur dev'
         if: github.event.pull_request.base.ref == 'dev'
