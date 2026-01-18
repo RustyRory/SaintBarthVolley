@@ -10,26 +10,27 @@ jobs:
     steps:
       - name: 'Vérifier le titre et la branche de la PR pour une référence au ticket'
         run: |
+          set -e
+
           PR_TITLE="${{ github.event.pull_request.title }}"
           BRANCH_NAME="${{ github.head_ref }}"
 
-          echo "PR title: $PR_TITLE"
-          echo "Branch name: $BRANCH_NAME"
+          echo "Titre de PR : $PR_TITLE"
+          echo "Nom de branche : $BRANCH_NAME"
 
-          # Regex pour le titre de PR : doit contenir #<num>
-          ISSUE_PR_REGEX="#[0-9]+"
-
-          # Regex pour le nom de branche : doit contenir le numéro (sans #)
-          ISSUE_BRANCH_REGEX="[0-9]+"
-
-          if [[ $PR_TITLE =~ $ISSUE_PR_REGEX ]]; then
-            echo "✅ Le titre de la PR contient une référence au ticket."
+          # Regex pour le commit / titre PR : type(nom): Fixes #<num> - message
+          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\):\ Fixes\ \#[0-9]+\ -\ .+ ]]; then
+            echo "✅ Titre de PR valide avec référence au ticket"
             exit 0
-          elif [[ $BRANCH_NAME =~ $ISSUE_BRANCH_REGEX ]]; then
-            echo "✅ Le nom de la branche contient un numéro de ticket."
-            exit 0
-          else
-            echo "❌ Aucune référence au ticket trouvée !"
-            echo "Incluez une référence dans le titre de la PR (#<num>) ou le nom de la branche (numéro du ticket)."
-            exit 1
           fi
+
+          # Regex pour le nom de branche : feature/123-description, fix/123-description, hotfix/123-description
+          if [[ "$BRANCH_NAME" =~ ^(feature|fix|hotfix)/[0-9]+-.+ ]]; then
+            echo "✅ Nom de branche valide avec référence au ticket"
+            exit 0
+          fi
+
+          echo "❌ Aucune référence valide au ticket trouvée !"
+          echo "Le titre de la PR doit être au format : type(nom): Fixes #<num> - message"
+          echo "Exemple de nom de branche valide : feature/123-description"
+          exit 1

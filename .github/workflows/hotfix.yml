@@ -4,13 +4,16 @@ permissions:
   contents: write
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
-      - 'hotfix/*'
+      - main
+      - dev
 
 jobs:
   hotfix:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'hotfix/')
 
     steps:
       - name: 'Checkout code'
@@ -28,11 +31,10 @@ jobs:
         run: |
           set -e
 
-          # Dernier tag vX.Y.Z
+          # Récupérer le dernier tag vX.Y.Z
           LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
 
           if [[ -z "$LATEST_TAG" ]]; then
-            echo "Aucun tag trouvé, initialisation à v0.0.1"
             VERSION="0.0.1"
           else
             VERSION="${LATEST_TAG#v}"
@@ -44,11 +46,9 @@ jobs:
           fi
 
           TAG="v$VERSION"
-          echo "Nouvelle version candidate : $TAG"
 
-          # Vérifie si le tag existe déjà
+          # Vérifier si le tag existe déjà
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "⚠️ Le tag $TAG existe déjà, skip."
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
@@ -57,30 +57,27 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: 'Créer le tag git'
-        if: steps.semver.outputs.skip != 'true'
+      - name: 'Créer le tag et la release si sur main'
+        if: steps.semver.outputs.skip != 'true' && github.event.pull_request.base.ref == 'main'
         run: |
+          echo "Récupération du changelog pour ${{ steps.semver.outputs.tag }}"
+          # Extraire le changelog correspondant à la version
+          RELEASE_NOTES=$(awk "/^## \[${{ steps.semver.outputs.tag }}\]/ {flag=1; next} /^## / {flag=0} flag" CHANGELOG.md)
+          echo "$RELEASE_NOTES" > release_notes.md
+
+          # Créer le tag
           git tag "${{ steps.semver.outputs.tag }}"
           git push origin "${{ steps.semver.outputs.tag }}"
 
-      - name: 'Extraire la section du changelog'
-        if: steps.semver.outputs.skip != 'true'
-        id: changelog
-        run: |
-          VERSION="${{ steps.semver.outputs.version }}"
-          if [[ -f CHANGELOG.md ]]; then
-            sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md > release_notes.txt
-          else
-            echo "No CHANGELOG.md found" > release_notes.txt
-          fi
-          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
-          cat release_notes.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: 'Créer une release GitHub'
-        if: steps.semver.outputs.skip != 'true'
+        if: steps.semver.outputs.skip != 'true' && github.event.pull_request.base.ref == 'main'
         uses: ncipollo/release-action@v1
         with:
           tag: '${{ steps.semver.outputs.tag }}'
           name: 'Hotfix ${{ steps.semver.outputs.tag }}'
-          body: '${{ steps.changelog.outputs.release_notes }}'
+          body: |
+            $(cat release_notes.md)
+
+      - name: 'PR mergée sur dev'
+        if: github.event.pull_request.base.ref == 'dev'
+        run: echo "PR mergée sur dev, aucune release ni tag créé."
