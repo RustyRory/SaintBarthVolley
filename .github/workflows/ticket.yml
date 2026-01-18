@@ -18,6 +18,12 @@ jobs:
           echo "Titre de PR : $PR_TITLE"
           echo "Nom de branche : $BRANCH_NAME"
 
+          # Autoriser dev et main sans numéro d'issue
+          if [[ "$BRANCH_NAME" == "dev" ]] || [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "✅ PR depuis $BRANCH_NAME, pas besoin de référence à l'issue"
+            exit 0
+          fi
+
           # Regex pour le commit / titre PR : type(nom): Fixes #<num> - message
           if [[ "$PR_TITLE" =~ ^(feat|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\):\ Fixes\ \#[0-9]+\ -\ .+ ]]; then
             echo "✅ Titre de PR valide avec référence au ticket"
@@ -33,4 +39,5 @@ jobs:
           echo "❌ Aucune référence valide au ticket trouvée !"
           echo "Le titre de la PR doit être au format : type(nom): Fixes #<num> - message"
           echo "Exemple de nom de branche valide : feature/123-description"
+          echo "OU la PR doit provenir de dev ou main"
           exit 1

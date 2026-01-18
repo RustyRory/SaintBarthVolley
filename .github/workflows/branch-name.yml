@@ -20,7 +20,14 @@ jobs:
           FIX_REGEX="^fix/[0-9]+-[a-z0-9-]+$"
           HOTFIX_REGEX="^hotfix/[0-9]+-[a-z0-9-]+$"
 
-          if [[ $BRANCH =~ $FEATURE_REGEX ]]; then
+          # Autoriser les branches dev et main
+          if [[ "$BRANCH" == "dev" ]]; then
+            echo "✅ Nom de la branche valide (dev)"
+            exit 0
+          elif [[ "$BRANCH" == "main" ]]; then
+            echo "✅ Nom de la branche valide (main)"
+            exit 0
+          elif [[ $BRANCH =~ $FEATURE_REGEX ]]; then
             echo "✅ Nom de la branche valide (feature)"
             exit 0
           elif [[ $BRANCH =~ $FIX_REGEX ]]; then
@@ -36,5 +43,6 @@ jobs:
             echo "  feature/<issue-id>-description"
             echo "  fix/<issue-id>-description"
             echo "  hotfix/<issue-id>-description"
+            echo "  dev ou main"
             exit 1
           fi
