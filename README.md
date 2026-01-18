@@ -116,7 +116,7 @@ pre-commit install
 
 ## 🔁 Workflow Git
 
-Branches : main, develop, feature/*, release/*, hotfix/*
+Branches : main, dev, feat/, fix/, hotfix/
 
 Commits normalisés (Conventional Commits)
 
@@ -134,8 +134,8 @@ Les contributions sont les bienvenues, même ponctuelles 🙌
 
 ## 📈 Suivi & évolutions
 
-- Roadmap basée sur les saisons sportives
-- Architecture pensée pour évoluer (PWA, extranet adhérents, statistiques avancées)
+Vérifier les l'historique du projet :
+[`Projet Github`](https://github.com/users/RustyRory/projects/19)
 
 ## 🛡️ Sécurité & conformité
 
@@ -147,7 +147,8 @@ Les contributions sont les bienvenues, même ponctuelles 🙌
 ## 📄 Licence
 
 Projet développé bénévolement pour une association sportive.
-Licence à définir (MIT recommandée).
+Licence à définir : 
+[`LICENCE`](/LICENSE)
 
 ## ❤️ Remerciements
 
