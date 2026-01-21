@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const UserSchema = new mongoose.Schema(
   {
@@ -8,17 +8,17 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
-      trim: true,
+      trim: true
     },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ["admin", "editor"], default: "editor" },
+    role: { type: String, enum: ['admin', 'editor'], default: 'editor' },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date, default: null },
-    passwordUpdatedAt: { type: Date, default: null },
+    passwordUpdatedAt: { type: Date, default: null }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 // Comparer un mot de passe
@@ -33,4 +33,4 @@ UserSchema.methods.setPassword = async function (password) {
   this.passwordUpdatedAt = new Date();
 };
 
-export default mongoose.model("User", UserSchema);
+export default mongoose.model('User', UserSchema);
