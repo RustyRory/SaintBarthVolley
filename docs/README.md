@@ -53,8 +53,6 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Uniformiser les pratiques entre développeurs
 - Sécuriser les merges vers `main`
 
-👉 **À consulter avant de commencer à coder**
-
 ---
 
 ## 📝 2. Cahier des charges
@@ -74,8 +72,6 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Justifier les choix techniques
 - Éviter les dérives fonctionnelles (*scope creep*)
 
-👉 **Document de référence fonctionnel (non technique)**
-
 ---
 
 ## 📐 3. UML – Modélisation applicative
@@ -83,10 +79,10 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 📁 **[docs/uml/](/docs/uml/)**
 
 ### Contenu
-- Diagrammes de cas d’utilisation
-- Diagrammes de classes
-- Diagrammes de séquence
-- Diagrammes d’activité (si présents)
+- [Diagrammes de cas d’utilisation](/docs/uml/utilisation.md)
+- [Diagrammes de classes](/docs/uml/classes.md)
+- [Diagrammes de séquence](/docs/uml/sequence.md)
+- [Diagrammes d’activité](/docs/uml/activite.md)
 
 ### Objectifs
 - Décrire le comportement de l’application
@@ -94,8 +90,6 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
   - utilisateur ↔ front
   - front ↔ API
   - API ↔ base de données
-
-👉 **Pont entre le fonctionnel et le code**
 
 ---
 
@@ -114,8 +108,6 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Identifier les dépendances
 - Anticiper les points critiques (scraping, APIs externes)
 
-👉 **Très utile pour l’onboarding et la maintenance**
-
 ---
 
 ## 🎨 5. Maquettes UX / UI
@@ -123,6 +115,7 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 📁 **[docs/maquettes/](/docs/maquettes/)**
 
 ### Contenu
+- Wireframes
 - Maquettes desktop & mobile
 - Parcours utilisateur
 - Pages publiques
@@ -132,8 +125,6 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Aligner design, UX et développement
 - Réduire les allers-retours front-end
 - Garantir la cohérence avec la charte graphique
-
-👉 **Référence principale pour le développement React**
 
 ---
 
@@ -153,5 +144,3 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Garantir la cohérence des schémas
 - Faciliter l’écriture des modèles Mongoose
 - Préparer l’historisation (saisons, archives)
-
-👉 **Document central pour le back-end**
