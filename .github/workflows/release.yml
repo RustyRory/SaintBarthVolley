@@ -1,4 +1,4 @@
-name: 'Release workflow'
+name: 'Release Automatisation'
 
 permissions:
   contents: write
@@ -33,7 +33,6 @@ jobs:
         run: |
           set -e
 
-          # Récupérer le dernier tag vX.Y.Z
           LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
 
           if [[ -z "$LATEST_TAG" ]]; then
@@ -51,7 +50,6 @@ jobs:
           TAG="v$VERSION"
           echo "Nouvelle release : $TAG"
 
-          # Vérifier si le tag existe déjà
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "❌ Le tag $TAG existe déjà"
             exit 1
@@ -60,30 +58,47 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
+      - name: 'Vérifier le CHANGELOG'
+        id: changelog_check
+        run: |
+          set -e
+          VERSION="${{ steps.semver.outputs.version }}"
+
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "❌ CHANGELOG.md est manquant"
+            exit 1
+          fi
+
+          # Extraire la section de la version
+          SECTION=$(sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md)
+
+          if [[ -z "$SECTION" ]]; then
+            echo "❌ Aucune entrée de changelog pour la version $VERSION"
+            exit 1
+          fi
+
+          # Vérifier que la section contient du contenu réel
+          CONTENT=$(echo "$SECTION" | grep -Ev '^(## |\s*$|### )')
+
+          if [[ -z "$CONTENT" ]]; then
+            echo "❌ Le changelog pour la version $VERSION est vide"
+            exit 1
+          fi
+
+          echo "✅ Changelog valide pour la version $VERSION"
+
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$SECTION" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: 'Créer le tag'
         run: |
           git tag "${{ steps.semver.outputs.tag }}"
           git push origin "${{ steps.semver.outputs.tag }}"
-
-      - name: 'Extraire le changelog'
-        id: changelog
-        run: |
-          VERSION="${{ steps.semver.outputs.version }}"
-          if [[ -f CHANGELOG.md ]]; then
-            # Extraire la section du changelog correspondant à cette version
-            sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md > release_notes.txt
-          else
-            echo "Release $VERSION" > release_notes.txt
-          fi
-
-          # Préparer la sortie pour GitHub Actions
-          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
-          cat release_notes.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: 'Créer la GitHub Release'
         uses: ncipollo/release-action@v1
         with:
           tag: '${{ steps.semver.outputs.tag }}'
           name: '${{ steps.semver.outputs.tag }}'
-          body: '${{ steps.changelog.outputs.release_notes }}'
+          body: '${{ steps.changelog_check.outputs.release_notes }}'
