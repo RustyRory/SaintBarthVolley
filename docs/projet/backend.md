@@ -20,7 +20,7 @@ npm init -y
 - Installe les dépendances essentielles :
 
 ```bash
-npm install express mongoose dotenv cors
+npm install express mongoose dotenv cors bcrypt
 ```
 
 - **express** → framework pour créer des routes et serveur
