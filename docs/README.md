@@ -98,10 +98,9 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 📁 **[docs/cartographies/](/docs/cartographies/)**
 
 ### Contenu
-- Cartographie applicative
-- Cartographie des flux de données
-- Séparation Front / Back / Services externes
-- Intégrations tierces (FFVB, SportEasy, Google Maps…)
+- [Cartographie fonctionnelle](/docs/cartographies/fonctionnelle)
+- [Cartographie technique](/docs/cartographies/technique)
+- [Cartographie de déploiement](/docs/cartographies/deploiement)
 
 ### Objectifs
 - Visualiser l’architecture globale

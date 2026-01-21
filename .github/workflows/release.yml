@@ -69,8 +69,13 @@ jobs:
             exit 1
           fi
 
-          # Extraire la section de la version
-          SECTION=$(sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md)
+          # Extraire uniquement la section de la version
+          SECTION=$(awk "
+            BEGIN {found=0}
+            /^## \\[$VERSION\\]/ {found=1}
+            found {print}
+            found && /^## \\[[0-9]/ && !/^## \\[$VERSION\\]/ {exit}
+          " CHANGELOG.md)
 
           if [[ -z "$SECTION" ]]; then
             echo "❌ Aucune entrée de changelog pour la version $VERSION"
@@ -90,6 +95,7 @@ jobs:
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           echo "$SECTION" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
 
       - name: 'Créer le tag'
         run: |
