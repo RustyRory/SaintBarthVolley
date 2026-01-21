@@ -1,4 +1,6 @@
-# **Préparer le projet**
+# Méthodologie backend
+
+## **Préparer le projet**
 
 - Crée un dossier pour ton backend :
 
@@ -43,7 +45,7 @@ Dans ton `package.json`, ajoute un script pour lancer le serveur avec nodemon :
 }
 ```
 
-# **Créer la structure du projet**
+## **Créer la structure du projet**
 
 On va créer cette arborescence :
 
@@ -65,7 +67,7 @@ backend/
 - **models/** → modèles Mongoose (ex : Article)
 - **middlewares/** → fonctions intermédiaires (ex : auth)
 
-# **Installer MongoDB**
+## **Installer MongoDB**
 
 ### Local (sur VPS ou PC)
 
@@ -85,7 +87,7 @@ mongo
 
 On entre dans le shell MongoDB.
 
-# **Configurer la connexion backend**
+## **Configurer la connexion backend**
 
 - Crée un fichier `.env` à la racine de ton projet :
 
@@ -108,12 +110,178 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err =>console.error(err));
 ```
 
-> À ce stade, la base sera automatiquement créée dès que l'on insérera un premier document.
+> La base sera automatiquement créée dès que l'on insérera un premier document.
 > 
 
-# **Créer le serveur de base**
+# **Exemple de création de collection**
 
-**server.js** :
+## **Modèle Mongoose (`User.js`)**
+
+**`src/models/User.js`** :
+
+```jsx
+const mongoose =require('mongoose');
+const bcrypt =require('bcrypt');
+
+constUserSchema =new mongoose.Schema({
+email: {
+type:String,
+required:true,
+unique:true,
+lowercase:true,
+trim:true
+  },
+passwordHash: {type:String,required:true },
+role: {type:String,enum: ['admin','editor'],default:'editor' },
+firstName: {type:String,required:true },
+lastName: {type:String,required:true },
+isActive: {type:Boolean,default:true },
+lastLoginAt: {type:Date,default:null },
+passwordUpdatedAt: {type:Date,default:null }
+}, {timestamps:true });
+
+// Comparer un mot de passe
+UserSchema.methods.comparePassword =asyncfunction(password) {
+returnawait bcrypt.compare(password,this.passwordHash);
+};
+
+// Définir ou changer le mot de passe
+UserSchema.methods.setPassword =asyncfunction(password) {
+const salt =await bcrypt.genSalt(10);
+this.passwordHash =await bcrypt.hash(password, salt);
+this.passwordUpdatedAt =newDate();
+};
+
+module.exports = mongoose.model('User',UserSchema);
+
+```
+
+## **Controller (`usersController.js`)**
+
+**`src/controllers/usersController.js`** :
+
+```jsx
+constUser =require('../models/User');
+
+// GET all users
+exports.getAllUsers =async (req, res) => {
+try {
+const users =awaitUser.find().select('-passwordHash');// Ne jamais renvoyer les passwords
+    res.json(users);
+  }catch (err) {
+    res.status(500).json({message: err.message });
+  }
+};
+
+// GET single user
+exports.getUserById =async (req, res) => {
+try {
+const user =awaitUser.findById(req.params.id).select('-passwordHash');
+if (!user)return res.status(404).json({message:'Utilisateur non trouvé' });
+    res.json(user);
+  }catch (err) {
+    res.status(500).json({message: err.message });
+  }
+};
+
+// POST create user
+exports.createUser =async (req, res) => {
+try {
+const { email, password, role, firstName, lastName } = req.body;
+const user =newUser({ email, role, firstName, lastName });
+await user.setPassword(password);
+await user.save();
+    res.status(201).json({message:'Utilisateur créé',userId: user._id });
+  }catch (err) {
+    res.status(400).json({message: err.message });
+  }
+};
+
+// PUT update user
+exports.updateUser =async (req, res) => {
+try {
+const { email, role, firstName, lastName, isActive, password } = req.body;
+const user =awaitUser.findById(req.params.id);
+if (!user)return res.status(404).json({message:'Utilisateur non trouvé' });
+
+if (email) user.email = email;
+if (role) user.role = role;
+if (firstName) user.firstName = firstName;
+if (lastName) user.lastName = lastName;
+if (isActive !==undefined) user.isActive = isActive;
+if (password)await user.setPassword(password);
+
+await user.save();
+    res.json({message:'Utilisateur mis à jour' });
+  }catch (err) {
+    res.status(400).json({message: err.message });
+  }
+};
+
+// DELETE user
+exports.deleteUser =async (req, res) => {
+try {
+const user =awaitUser.findByIdAndDelete(req.params.id);
+if (!user)return res.status(404).json({message:'Utilisateur non trouvé' });
+    res.json({message:'Utilisateur supprimé' });
+  }catch (err) {
+    res.status(500).json({message: err.message });
+  }
+};
+
+```
+
+## **Routes (`users.js`)**
+
+**`src/routes/users.js`** :
+
+```jsx
+const express =require('express');
+const router = express.Router();
+const usersController =require('../controllers/usersController');
+
+// Routes CRUD utilisateurs
+router.get('/', usersController.getAllUsers);
+router.get('/:id', usersController.getUserById);
+router.post('/', usersController.createUser);
+router.put('/:id', usersController.updateUser);
+router.delete('/:id', usersController.deleteUser);
+
+module.exports = router;
+
+```
+
+# **Importer les routes dans `app.js`**
+
+**`src/app.js`** :
+
+```jsx
+const express =require('express');
+const cors =require('cors');
+
+const app =express();
+
+app.use(cors());
+app.use(express.json());
+
+// Route test
+app.get('/',(req, res) => {
+  res.send('API Volley fonctionne !');
+});
+
+// Importer les routes
+const newsRoutes =require('./routes/news');
+app.use('/api/news', newsRoutes);
+
+const usersRoutes =require('./routes/users');
+app.use('/api/users', usersRoutes);
+
+module.exports = app;
+```
+
+## **`server.js`**
+
+**`server.js`** :
 
 ```jsx
 const dotenv =require('dotenv');
@@ -133,160 +301,99 @@ console.log(`Serveur lancé sur http://localhost:${PORT}`);
     });
   })
   .catch(err =>console.error(err));
+
 ```
 
-- On lit les variables d’environnement avec dotenv
-- On se connecte à MongoDB
-- On démarre le serveur Express
+## **Tester l'API Users**
 
-# **Vérifier que ça fonctionne**
-
-- Lancer le backend (`npm run dev`)
-- Créer un article via l'API (`POST /api/articles`)
-- MongoDB créera automatiquement :
-    - La base `volley`
-    - La collection `articles`
-    - Le document
-
-# **Configurer Express (app.js)**
-
-**src/app.js** :
-
-```jsx
-const express =require('express');
-const cors =require('cors');
-
-const app =express();
-
-// Middlewares globaux
-app.use(cors());
-app.use(express.json());// pour lire le JSON des requêtes
-
-// Exemple route test
-app.get('/',(req, res) => {
-  res.send('API Volley fonctionne !');
-});
-
-// Import des routes
-const articlesRoutes =require('./routes/articles');
-app.use('/api/articles', articlesRoutes);
-
-module.exports = app;
-```
-
-- `express.json()` permet de lire les `req.body` JSON
-- `/api/articles` → endpoint pour gérer les actualités (GET/POST/PUT/DELETE)
-
-# **Créer un modèle Mongoose**
-
-**src/models/Article.js** :
-
-```jsx
-const mongoose =require('mongoose');
-
-constArticleSchema =new mongoose.Schema({
-title: {type:String,required:true },
-content: {type:String,required:true },
-publishedAt: {type:Date,default:Date.now },
-status: {type:String,enum: ['draft','published'],default:'draft' }
-});
-
-module.exports = mongoose.model('Article',ArticleSchema);
-```
-
-- Chaque article a un titre, un contenu, une date et un statut
-- `_id` est automatique
-
-# **Créer un controller**
-
-**src/controllers/articlesController.js** :
-
-```jsx
-constArticle =require('../models/Article');
-
-// GET all articles
-exports.getAllArticles =async (req, res) => {
-try {
-const articles =awaitArticle.find();
-    res.json(articles);
-  }catch (err) {
-    res.status(500).json({message: err.message });
-  }
-};
-
-// POST create article
-exports.createArticle =async (req, res) => {
-const { title, content, status } = req.body;
-try {
-const article =newArticle({ title, content, status });
-await article.save();
-    res.status(201).json(article);
-  }catch (err) {
-    res.status(400).json({message: err.message });
-  }
-};
-
-// PUT update article
-exports.updateArticle =async (req, res) => {
-try {
-const article =awaitArticle.findByIdAndUpdate(req.params.id, req.body, {new:true });
-if (!article)return res.status(404).json({message:'Article non trouvé' });
-    res.json(article);
-  }catch (err) {
-    res.status(400).json({message: err.message });
-  }
-};
-
-// DELETE article
-exports.deleteArticle =async (req, res) => {
-try {
-const article =awaitArticle.findByIdAndDelete(req.params.id);
-if (!article)return res.status(404).json({message:'Article non trouvé' });
-    res.json({message:'Article supprimé' });
-  }catch (err) {
-    res.status(500).json({message: err.message });
-  }
-};
-```
-
-- Chaque fonction correspond à un endpoint REST
-- On utilise `async/await` pour la BDD
-
-# **Créer les routes**
-
-**src/routes/articles.js** :
-
-```jsx
-const express =require('express');
-const router = express.Router();
-const articlesController =require('../controllers/articlesController');
-
-router.get('/', articlesController.getAllArticles);
-router.post('/', articlesController.createArticle);
-router.put('/:id', articlesController.updateArticle);
-router.delete('/:id', articlesController.deleteArticle);
-
-module.exports = router;
-```
-
-- Routes CRUD standard
-
-# **Tester l’API**
-
-- Lancer le serveur :
+1. Lancer le serveur :
 
 ```bash
 npm run dev
 ```
 
-- Dans le navigateur : `http://localhost:5000/` → tu devrais voir :
+2. Tester les routes avec Postman :
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | /api/users | Liste tous les utilisateurs |
+| GET | /api/users/:id | Récupérer un utilisateur |
+| POST | /api/users | Créer un utilisateur |
+| PUT | /api/users/:id | Mettre à jour un utilisateur |
+| DELETE | /api/users/:id | Supprimer un utilisateur |
+
+## **Tester la route “GET /”**
+
+1. Ouvre Postman
+2. Crée une nouvelle requête `GET`
+3. URL : `http://localhost:5000/`
+4. Clique sur **Send**
+
+✅ Tu devrais voir :
 
 ```
 API Volley fonctionne !
 ```
 
-- Tester les routes `/api/articles` avec **Postman** :
-- `GET /api/articles` → liste des articles
-- `POST /api/articles` → crée un article
-- `PUT /api/articles/:id` → modifie un article
-- `DELETE /api/articles/:id` → supprime un article
+> Ça confirme que le serveur tourne et que Express répond.
+> 
+
+## **Tester la collection Users**
+
+### GET all users
+
+- Méthode : `GET`
+- URL : `http://localhost:5000/api/users`
+- Send → tu devrais recevoir un tableau vide `[]` si aucun utilisateur n’existe encore
+
+### POST create user
+
+- Méthode : `POST`
+- URL : `http://localhost:5000/api/users`
+- Body → `raw` → `JSON` :
+
+```json
+{
+"email":"admin@clubvolley.fr",
+"password":"MotDePasseSuperSecret",
+"role":"admin",
+"firstName":"Jean",
+"lastName":"Dupont"
+}
+```
+
+- Clique sur **Send**
+    
+    ✅ Tu devrais recevoir un JSON avec un message de succès et `userId`.
+    
+
+> MongoDB va créer automatiquement la base volley et la collection users.
+> 
+
+### GET single user
+
+- Méthode : `GET`
+- URL : `http://localhost:5000/api/users/<userId>`
+- `<userId>` → l’ID retourné lors du POST
+- Send → tu devrais voir les infos du user (sans le password)
+
+### PUT update user
+
+- Méthode : `PUT`
+- URL : `http://localhost:5000/api/users/<userId>`
+- Body → `raw` → `JSON` :
+
+```json
+{
+"lastName":"Durand",
+"password":"NouveauMotDePasse123"
+}
+```
+
+- Send → succès, l’utilisateur est mis à jour
+
+### DELETE user
+
+- Méthode : `DELETE`
+- URL : `http://localhost:5000/api/users/<userId>`
+- Send → utilisateur supprimé
