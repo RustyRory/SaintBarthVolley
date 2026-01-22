@@ -89,7 +89,6 @@
 | `trainingSchedule` | Horaires                   |
 | `coachIds`         | Références membres coach   |
 | `photo`            | Photo                      |
-| `ffvbTeamCode`     | Code équipe FFVB           |
 | `isArchived`       | Équipe archivée            |
 | `createdAt`        | Date de création           |
 | `updatedAt`        | Date de mise à jour        |
