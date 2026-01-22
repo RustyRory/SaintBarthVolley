@@ -15,9 +15,11 @@ app.get('/', (req, res) => {
 import usersRoutes from './routes/users.js';
 import clubsRoutes from './routes/clubs.js';
 import seasonsRoutes from './routes/seasons.js';
+import teamsRoutes from './routes/teams.js';
 
 app.use('/api/users', usersRoutes);
 app.use('/api/clubs', clubsRoutes);
 app.use('/api/seasons', seasonsRoutes);
+app.use('/api/teams', teamsRoutes);
 
 export default app;

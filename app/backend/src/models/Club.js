@@ -8,7 +8,10 @@ const ClubSchema = new mongoose.Schema(
     clubDescription: { type: String, default: '' },
     ownerDescription: { type: String, default: '' },
     logo: { type: String, default: '' }, // URL ou chemin du logo
-    photo: { type: String, default: '' }, // URL ou chemin de la photo principale
+    photo: {
+      type: String, // URL Nextcloud
+      trim: true
+    },
     email: { type: String, default: '' },
     phone: { type: String, default: '' },
     address: { type: String, default: '' },
