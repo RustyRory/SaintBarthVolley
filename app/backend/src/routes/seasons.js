@@ -4,7 +4,7 @@ import {
   getSeasons,
   getSeasonById,
   updateSeason,
-  deleteSeason
+  deleteSeason,
 } from '../controllers/seasonsController.js';
 
 const router = express.Router();

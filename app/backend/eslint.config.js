@@ -1,17 +1,21 @@
-import eslintPluginPrettier from "eslint-plugin-prettier";
+import js from '@eslint/js';
+import globals from 'globals';
 
 export default [
+  js.configs.recommended,
   {
-    files: ["**/*.js"],
+    files: ['**/*.js'],
     languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-    },
-    plugins: {
-      prettier: eslintPluginPrettier,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+      },
     },
     rules: {
-      "prettier/prettier": "error",
+      // règles backend utiles
+      'no-unused-vars': ['warn'],
+      'no-console': 'off',
     },
   },
 ];
