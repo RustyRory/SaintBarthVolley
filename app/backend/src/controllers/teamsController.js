@@ -37,7 +37,7 @@ export const updateTeam = async (req, res) => {
   try {
     const team = await Team.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     if (!team) {

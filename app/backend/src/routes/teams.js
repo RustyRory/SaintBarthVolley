@@ -5,7 +5,7 @@ import {
   createTeam,
   updateTeam,
   archiveTeam,
-  deleteTeam
+  deleteTeam,
 } from '../controllers/teamsController.js';
 
 const router = express.Router();

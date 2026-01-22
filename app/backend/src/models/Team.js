@@ -5,23 +5,23 @@ const trainingScheduleSchema = new mongoose.Schema(
     day: {
       type: String,
       enum: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
-      required: true
+      required: true,
     },
     startTime: {
       type: String, // HH:mm
-      required: true
+      required: true,
     },
     endTime: {
       type: String, // HH:mm
-      required: true
+      required: true,
     },
     location: {
       type: String,
       required: true,
-      trim: true
-    }
+      trim: true,
+    },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const teamSchema = new mongoose.Schema(
@@ -29,46 +29,46 @@ const teamSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     category: {
       type: String,
       enum: ['Jeunes', 'Séniors', 'Loisirs'],
-      required: true
+      required: true,
     },
     gender: {
       type: String,
       enum: ['Masculin', 'Féminin', 'Mixte'],
-      required: true
+      required: true,
     },
     level: {
       type: String,
-      trim: true
+      trim: true,
     },
     seasonId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Season',
-      required: true
+      required: true,
     },
     trainingSchedule: [trainingScheduleSchema],
     coachIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }
+        ref: 'User',
+      },
     ],
     photo: {
       type: String, // URL Nextcloud
-      trim: true
+      trim: true,
     },
     isArchived: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
 const Team = mongoose.model('Team', teamSchema);

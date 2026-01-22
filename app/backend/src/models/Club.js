@@ -10,7 +10,7 @@ const ClubSchema = new mongoose.Schema(
     logo: { type: String, default: '' }, // URL ou chemin du logo
     photo: {
       type: String, // URL Nextcloud
-      trim: true
+      trim: true,
     },
     email: { type: String, default: '' },
     phone: { type: String, default: '' },
@@ -23,7 +23,7 @@ const ClubSchema = new mongoose.Schema(
       youtube: { type: String, default: '' },
       sporteasy: { type: String, default: '' },
       website: { type: String, default: '' },
-      other: { type: String, default: '' }
+      other: { type: String, default: '' },
     },
 
     // Informations légales
@@ -36,10 +36,10 @@ const ClubSchema = new mongoose.Schema(
       publicationDate: { type: Date, default: null },
       responsible: { type: String, default: '' },
       hostingProvider: { type: String, default: '' },
-      updatedAt: { type: Date, default: null }
-    }
+      updatedAt: { type: Date, default: null },
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 ); // createdAt et updatedAt automatiques
 
 export default mongoose.model('Club', ClubSchema);

@@ -36,7 +36,7 @@ export const getSeasonById = async (req, res) => {
 export const updateSeason = async (req, res) => {
   try {
     const season = await Season.findByIdAndUpdate(req.params.id, req.body, {
-      new: true
+      new: true,
     });
     if (!season) return res.status(404).json({ message: 'Saison non trouvée' });
     res.json({ message: 'Saison mise à jour', season });
