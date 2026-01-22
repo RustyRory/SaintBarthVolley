@@ -18,6 +18,7 @@ import clubsRoutes from './routes/clubs.js';
 import seasonsRoutes from './routes/seasons.js';
 import teamsRoutes from './routes/teams.js';
 import membersRoutes from './routes/members.js';
+import newsRoutes from './routes/news.js';
 
 // Utiliser les routes
 app.use('/api/users', usersRoutes);
@@ -25,5 +26,6 @@ app.use('/api/clubs', clubsRoutes);
 app.use('/api/seasons', seasonsRoutes);
 app.use('/api/teams', teamsRoutes);
 app.use('/api/members', membersRoutes);
+app.use('/api/news', newsRoutes);
 
 export default app;
