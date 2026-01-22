@@ -14,7 +14,7 @@ export const getAllClubs = async (req, res) => {
 export const getClubById = async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
-    if (!club) return res.status(404).json({ message: 'Club non trouvé' });
+    if (!club) return res.status(404).json({ message: 'Club not found' });
     res.json(club);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -26,7 +26,7 @@ export const createClub = async (req, res) => {
   try {
     const club = new Club(req.body);
     await club.save();
-    res.status(201).json({ message: 'Club créé', clubId: club._id });
+    res.status(201).json({ message: 'Club created', clubId: club._id });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -36,11 +36,11 @@ export const createClub = async (req, res) => {
 export const updateClub = async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
-    if (!club) return res.status(404).json({ message: 'Club non trouvé' });
+    if (!club) return res.status(404).json({ message: 'Club not found' });
 
     Object.assign(club, req.body); // Met à jour tous les champs reçus
     await club.save();
-    res.json({ message: 'Club mis à jour' });
+    res.json({ message: 'Club updated' });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -50,8 +50,8 @@ export const updateClub = async (req, res) => {
 export const deleteClub = async (req, res) => {
   try {
     const club = await Club.findByIdAndDelete(req.params.id);
-    if (!club) return res.status(404).json({ message: 'Club non trouvé' });
-    res.json({ message: 'Club supprimé' });
+    if (!club) return res.status(404).json({ message: 'Club not found' });
+    res.json({ message: 'Club deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

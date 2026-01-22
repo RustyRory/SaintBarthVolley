@@ -155,7 +155,6 @@
 | `albumId`   | Album associé     |
 | `url`       | URL               |
 | `type`      | `photo` / `video` |
-| `order`     | Ordre affichage   |
 | `createdAt` | Date ajout        |
 | `updatedAt` | Date MAJ          |
 
@@ -215,6 +214,7 @@
 | `championshipId`    | Championnat            |
 | `opponentName`      | Adversaire             |
 | `date`              | Date                   |
+| `address`           | Adresse : par défault l'adresse du club (table club)                |
 | `homeAway`          | `home` / `away`        |
 | `status`            | `scheduled` / `played` |
 | `scoreFor`          | Sets gagnés            |
