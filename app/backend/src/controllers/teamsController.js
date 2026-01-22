@@ -15,7 +15,7 @@ export const getTeamById = async (req, res) => {
     const team = await Team.findById(req.params.id).populate('seasonId').populate('coachIds');
 
     if (!team) {
-      return res.status(404).json({ message: 'Équipe non trouvée' });
+      return res.status(404).json({ message: 'Team not found' });
     }
 
     res.json(team);
@@ -41,7 +41,7 @@ export const updateTeam = async (req, res) => {
     });
 
     if (!team) {
-      return res.status(404).json({ message: 'Équipe non trouvée' });
+      return res.status(404).json({ message: 'Team not found' });
     }
 
     res.json(team);
@@ -55,10 +55,10 @@ export const archiveTeam = async (req, res) => {
     const team = await Team.findByIdAndUpdate(req.params.id, { isArchived: true }, { new: true });
 
     if (!team) {
-      return res.status(404).json({ message: 'Équipe non trouvée' });
+      return res.status(404).json({ message: 'Team not found' });
     }
 
-    res.json({ message: 'Équipe archivée', team });
+    res.json({ message: 'Team archived', team });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -69,10 +69,10 @@ export const deleteTeam = async (req, res) => {
     const team = await Team.findByIdAndDelete(req.params.id);
 
     if (!team) {
-      return res.status(404).json({ message: 'Équipe non trouvée' });
+      return res.status(404).json({ message: 'Team not found' });
     }
 
-    res.json({ message: 'Équipe supprimée' });
+    res.json({ message: 'Team deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

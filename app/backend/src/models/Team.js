@@ -4,7 +4,7 @@ const trainingScheduleSchema = new mongoose.Schema(
   {
     day: {
       type: String,
-      enum: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
+      enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
       required: true,
     },
     startTime: {
@@ -33,12 +33,12 @@ const teamSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Jeunes', 'Séniors', 'Loisirs'],
+      enum: ['Young', 'Senior', 'Veteran'],
       required: true,
     },
     gender: {
       type: String,
-      enum: ['Masculin', 'Féminin', 'Mixte'],
+      enum: ['Male', 'Female', 'Mixed'],
       required: true,
     },
     level: {
