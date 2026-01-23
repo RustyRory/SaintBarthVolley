@@ -174,19 +174,18 @@
 | `updatedAt`   | Date MAJ        |
 
 
-## championships_ffvb
+## championships
 
 | Champ           | Description    |
 | --------------- | -------------- |
 | `_id`           | Identifiant    |
-| `seasonId`      | Saison         |
 | `teamId`        | Équipe du club |
 | `federationUrl` | URL FFVB       |
 | `createdAt`     | Date import    |
 | `updatedAt`     | Date MAJ       |
 
 
-## standings_ffvb
+## standings
 
 | Champ            | Description  |
 | ---------------- | ------------ |

@@ -22,6 +22,7 @@ import newsRoutes from './routes/news.js';
 import albumsRoutes from './routes/albums.js';
 import mediasRoutes from './routes/medias.js';
 import partnersRoutes from './routes/partners.js';
+import championshipsRoutes from './routes/championships.js';
 
 // Utiliser les routes
 app.use('/api/users', usersRoutes);
@@ -33,5 +34,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/albums', albumsRoutes);
 app.use('/api/medias', mediasRoutes);
 app.use('/api/partners', partnersRoutes);
+app.use('/api/championships', championshipsRoutes);
 
+// Exporter l'application
 export default app;
