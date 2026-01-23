@@ -89,7 +89,6 @@
 | `trainingSchedule` | Horaires                   |
 | `coachIds`         | Références membres coach   |
 | `photo`            | Photo                      |
-| `ffvbTeamCode`     | Code équipe FFVB           |
 | `isArchived`       | Équipe archivée            |
 | `createdAt`        | Date de création           |
 | `updatedAt`        | Date de mise à jour        |
@@ -156,7 +155,6 @@
 | `albumId`   | Album associé     |
 | `url`       | URL               |
 | `type`      | `photo` / `video` |
-| `order`     | Ordre affichage   |
 | `createdAt` | Date ajout        |
 | `updatedAt` | Date MAJ          |
 
@@ -176,19 +174,18 @@
 | `updatedAt`   | Date MAJ        |
 
 
-## championships_ffvb
+## championships
 
 | Champ           | Description    |
 | --------------- | -------------- |
 | `_id`           | Identifiant    |
-| `seasonId`      | Saison         |
 | `teamId`        | Équipe du club |
 | `federationUrl` | URL FFVB       |
 | `createdAt`     | Date import    |
 | `updatedAt`     | Date MAJ       |
 
 
-## standings_ffvb
+## standings
 
 | Champ            | Description  |
 | ---------------- | ------------ |
@@ -216,6 +213,7 @@
 | `championshipId`    | Championnat            |
 | `opponentName`      | Adversaire             |
 | `date`              | Date                   |
+| `address`           | Adresse : par défault l'adresse du club (table club)                |
 | `homeAway`          | `home` / `away`        |
 | `status`            | `scheduled` / `played` |
 | `scoreFor`          | Sets gagnés            |

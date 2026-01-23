@@ -143,3 +143,24 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Garantir la cohérence des schémas
 - Faciliter l’écriture des modèles Mongoose
 - Préparer l’historisation (saisons, archives)
+
+---
+
+##  7. Backend
+
+📁 **[docs/data-conception/](/docs/project/backend.md/)**
+
+### Contenu
+- Installation et configuration de Node.js et Express
+- Structure du projet backend (server.js, src/app.js, routes, controllers, models, middlewares)
+- Connexion à MongoDB avec Mongoose et configuration des variables d’environnement via .env
+- Création d’une API REST CRUD pour les articles (GET, POST, PUT, DELETE)
+- Exemple de modèle Mongoose (Article) et contrôleur associé
+- Mise en place d’un serveur Express fonctionnel avec test via navigateur ou Postman
+
+### Objectifs
+- Fournir une API backend pour le site du club de volley, capable de gérer les contenus dynamiques (articles, pages, partenaires, équipes, galerie…)
+- Assurer une architecture claire et maintenable pour ajouter facilement de nouvelles fonctionnalités
+- Préparer la connexion avec le frontend React et permettre un back-office sécurisé pour les administrateurs
+- Utiliser MongoDB de manière flexible, avec création automatique des bases et collections à l’insertion de documents
+- Permettre le développement rapide grâce à nodemon et à une configuration simple des routes et contrôleurs
