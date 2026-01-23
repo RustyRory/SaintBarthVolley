@@ -19,8 +19,9 @@ import seasonsRoutes from './routes/seasons.js';
 import teamsRoutes from './routes/teams.js';
 import membersRoutes from './routes/members.js';
 import newsRoutes from './routes/news.js';
-import albumRoutes from './routes/albums.js';
+import albumsRoutes from './routes/albums.js';
 import mediasRoutes from './routes/medias.js';
+import partnersRoutes from './routes/partners.js';
 
 // Utiliser les routes
 app.use('/api/users', usersRoutes);
@@ -29,7 +30,8 @@ app.use('/api/seasons', seasonsRoutes);
 app.use('/api/teams', teamsRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/albums', albumRoutes);
+app.use('/api/albums', albumsRoutes);
 app.use('/api/medias', mediasRoutes);
+app.use('/api/partners', partnersRoutes);
 
 export default app;
