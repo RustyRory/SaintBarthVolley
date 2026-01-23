@@ -16,7 +16,7 @@ const memberSchema = new mongoose.Schema(
       type: [
         {
           type: String,
-          enum: ['owner', 'staff', 'volunteer', 'player', 'coach', 'other'],
+          enum: ['owner', 'staff', 'volunteer', 'referee', 'player', 'coach', 'other'],
         },
       ],
       required: true,

@@ -24,6 +24,7 @@ import mediasRoutes from './routes/medias.js';
 import partnersRoutes from './routes/partners.js';
 import championshipsRoutes from './routes/championships.js';
 import standingsRoutes from './routes/standings.js';
+import matchesRoutes from './routes/matches.js';
 
 // Utiliser les routes
 app.use('/api/users', usersRoutes);
@@ -37,6 +38,7 @@ app.use('/api/medias', mediasRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/championships', championshipsRoutes);
 app.use('/api/standings', standingsRoutes);
+app.use('/api/matches', matchesRoutes);
 
 // Exporter l'application
 export default app;
