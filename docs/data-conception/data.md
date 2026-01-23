@@ -204,16 +204,15 @@
 
 
 
-## matches_ffvb
+## matches
 
 | Champ               | Description            |
 | ------------------- | ---------------------- |
 | `_id`               | Identifiant            |
-| `federationMatchId` | ID FFVB                |
 | `championshipId`    | Championnat            |
 | `opponentName`      | Adversaire             |
 | `date`              | Date                   |
-| `address`           | Adresse : par défault l'adresse du club (table club)                |
+| `address`           | Adresse                |
 | `homeAway`          | `home` / `away`        |
 | `status`            | `scheduled` / `played` |
 | `scoreFor`          | Sets gagnés            |
