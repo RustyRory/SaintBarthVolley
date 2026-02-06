@@ -337,7 +337,8 @@ API Volley fonctionne !
 ```
 
 > Ça confirme que le serveur tourne et que Express répond.
-> 
+
+<img src="./images/getApi.png" />
 
 ## **Tester la collection Users**
 
@@ -346,6 +347,8 @@ API Volley fonctionne !
 - Méthode : `GET`
 - URL : `http://localhost:5000/api/users`
 - Send → un tableau vide `[]` si aucun utilisateur n’existe encore
+
+<img src="./images/getUsers.png" />
 
 ### POST create user
 
@@ -358,8 +361,8 @@ API Volley fonctionne !
 "email":"admin@clubvolley.fr",
 "password":"MotDePasseSuperSecret",
 "role":"admin",
-"firstName":"Jean",
-"lastName":"Dupont"
+"firstName":"Test",
+"lastName":"nom"
 }
 ```
 
@@ -369,7 +372,8 @@ API Volley fonctionne !
     
 
 > MongoDB va créer automatiquement la base volley et la collection users.
-> 
+
+<img src="./images/postUser.png" />
 
 ### GET single user
 
@@ -377,6 +381,8 @@ API Volley fonctionne !
 - URL : `http://localhost:5000/api/users/<userId>`
 - `<userId>` → l’ID retourné lors du POST
 - Send → infos du user (sans le password)
+
+<img src="./images/getUser.png" />
 
 ### PUT update user
 
@@ -393,8 +399,13 @@ API Volley fonctionne !
 
 - Send → succès, l’utilisateur est mis à jour
 
+<img src="./images/putUser.png" />
+
 ### DELETE user
 
 - Méthode : `DELETE`
 - URL : `http://localhost:5000/api/users/<userId>`
 - Send → utilisateur supprimé
+
+
+<img src="./images/delUser.png" />
