@@ -7,13 +7,10 @@ import * as cheerio from 'cheerio';
 import Match from '../models/Match.js';
 import Standing from '../models/Standing.js';
 
-// 🔹 Constantes
-const CHAMPIONSHIP_ID = '6985bd859903c98a455ca98d'; // ton championnat
+// 🔹 Club fixe
 const CLUB_TEAM_NAME = "AS SAINT-BARTHELEMY D'ANJOU V.B.";
-const FFVB_URL =
-  'https://www.ffvbbeach.org/ffvbapp/resu/vbspo_calendrier.php?saison=2025%2F2026&codent=ABCCS&poule=3MB&division=&tour=&calend=COMPLET&x=15&y=15';
 
-// 🔹 Utilitaire pour parser date FR -> ISO
+// 🔹 Utilitaires
 function parseDateFR(dateStr, timeStr) {
   const [day, month, year] = dateStr.split('/').map(Number);
   const fullYear = year < 100 ? 2000 + year : year;
@@ -21,7 +18,6 @@ function parseDateFR(dateStr, timeStr) {
   return new Date(fullYear, month - 1, day, hours, minutes).toISOString();
 }
 
-// 🔹 Transforme string sets en array d'objets pour Mongo
 function parseSetsDetail(setsStr) {
   if (!setsStr) return [];
   return setsStr.split(',').map((s, idx) => {
@@ -30,15 +26,19 @@ function parseSetsDetail(setsStr) {
   });
 }
 
-// 🔹 Fonction principale
-async function scrapeFFVB() {
+// 🔹 Scraping d’un championnat
+async function scrapeChampionship(champ) {
   try {
-    console.log('📡 Lancement de Puppeteer...');
+    console.log(`\n🏐 ${champ.name || 'Championnat inconnu'}`);
+    console.log(`🔗 ${champ.federationUrl}`);
+    if (!champ.federationUrl) {
+      console.warn(`⚠️ Championnat ${champ.name || champ._id} n’a pas d’URL, skipping...`);
+      return;
+    }
+
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
-
-    console.log('📊 Récupération du HTML...');
-    await page.goto(FFVB_URL, { waitUntil: 'networkidle2' });
+    await page.goto(champ.federationUrl, { waitUntil: 'networkidle2' });
     const html = await page.content();
     await browser.close();
 
@@ -55,18 +55,20 @@ async function scrapeFFVB() {
       const tds = $(tr).find('td');
       if (tds.length < 6) return;
 
-      const homeTeam = $(tds[3]).text().trim();
-      const awayTeam = $(tds[5]).text().trim();
+      const row = [];
+      tds.each((j, td) => row.push($(td).text().trim()));
+
+      const homeTeam = row[3];
+      const awayTeam = row[5];
       if (!homeTeam || !awayTeam) return;
 
       if (homeTeam === CLUB_TEAM_NAME || awayTeam === CLUB_TEAM_NAME) {
         const homeAway = homeTeam === CLUB_TEAM_NAME ? 'home' : 'away';
-        const scoreFor = homeAway === 'home' ? parseInt($(tds[6]).text()) || 0 : parseInt($(tds[7]).text()) || 0;
-        const scoreAgainst = homeAway === 'home' ? parseInt($(tds[7]).text()) || 0 : parseInt($(tds[6]).text()) || 0;
-        const dateISO = parseDateFR($(tds[1]).text().trim(), $(tds[2]).text().trim());
-        const setsDetail = parseSetsDetail($(tds[8]).text().trim());
+        const scoreFor = homeAway === 'home' ? parseInt(row[6]) || 0 : parseInt(row[7]) || 0;
+        const scoreAgainst = homeAway === 'home' ? parseInt(row[7]) || 0 : parseInt(row[6]) || 0;
+        const dateISO = parseDateFR(row[1], row[2]);
+        const setsDetail = parseSetsDetail(row[8]);
 
-        // 🔹 Déterminer le status correctement
         const matchDate = new Date(dateISO);
         let status = 'scheduled';
         if (matchDate <= now && (scoreFor > 0 || scoreAgainst > 0)) {
@@ -74,7 +76,7 @@ async function scrapeFFVB() {
         }
 
         matches.push({
-          championshipId: CHAMPIONSHIP_ID,
+          championshipId: champ._id,
           opponentName: homeAway === 'home' ? awayTeam : homeTeam,
           date: dateISO,
           homeAway,
@@ -86,16 +88,16 @@ async function scrapeFFVB() {
       }
     });
 
-    console.log('💾 Mise à jour des matchs dans MongoDB...');
+    console.log(`🧪 ${matches.length} matchs détectés`);
+
     for (const m of matches) {
       const existing = await Match.findOne({
-        championshipId: CHAMPIONSHIP_ID,
+        championshipId: champ._id,
         opponentName: m.opponentName,
         date: m.date,
       });
 
       if (existing) {
-        // 🔹 Vérifier si on a de nouvelles infos avant mise à jour
         const needsUpdate =
           existing.status !== m.status ||
           existing.scoreFor !== m.scoreFor ||
@@ -111,7 +113,6 @@ async function scrapeFFVB() {
         console.log(`➕ Match créé : ${m.opponentName} (${m.date})`);
       }
     }
-    console.log(`🎉 ${matches.length} matchs analysés.`);
 
     // -----------------------------
     // 🔹 Scraping des standings
@@ -139,7 +140,7 @@ async function scrapeFFVB() {
       const coefficientPoints = parseFloat($(tds[18]).text()) || 0;
 
       standings.push({
-        championshipId: CHAMPIONSHIP_ID,
+        championshipId: champ._id,
         teamName,
         rank,
         played,
@@ -156,22 +157,27 @@ async function scrapeFFVB() {
     });
 
     console.log('💾 Mise à jour des standings dans MongoDB...');
-    let updatedCount = 0;
     for (const s of standings) {
-      await Standing.findOneAndUpdate({ championshipId: CHAMPIONSHIP_ID, teamName: s.teamName }, s, { upsert: true });
-      updatedCount++;
+      await Standing.findOneAndUpdate({ championshipId: champ._id, teamName: s.teamName }, s, { upsert: true });
     }
-
-    console.log(`🎉 ${updatedCount} équipes mises à jour ou créées.`);
+    console.log(`🎉 ${standings.length} équipes mises à jour ou créées`);
   } catch (err) {
     console.error('❌ Erreur pendant le scraping :', err);
   }
 }
 
 // -----------------------------
-// 🔹 Connexion MongoDB via .env
+// 🔹 Connexion MongoDB et scraping de tous les championnats
 // -----------------------------
 mongoose
   .connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/saintbarthvolley')
-  .then(() => scrapeFFVB())
+  .then(async () => {
+    console.log('✅ MongoDB connecté');
+    const championships = await mongoose.connection.db.collection('championships').find().toArray();
+
+    console.log(`🚀 ${championships.length} championnats à scraper`);
+    for (const champ of championships) {
+      await scrapeChampionship(champ);
+    }
+  })
   .finally(() => mongoose.disconnect());
