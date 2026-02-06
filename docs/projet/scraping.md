@@ -263,7 +263,7 @@ Juste : *HTML → JS object*
 ### Télécharger la page
 
 ```jsx
-axios.get(url)
+puppeteer.get(url)
 ```
 
 ### Parser le HTML
@@ -366,7 +366,7 @@ Quand tout est stable :
 Ex :
 
 ```bash
-npm run scrape:ffvb
+npm run ffvb
 ```
 
 
