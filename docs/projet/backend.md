@@ -2,22 +2,22 @@
 
 ## **Préparer le projet**
 
-- Crée un dossier pour ton backend :
+- Créer un dossier pour le backend :
 
 ```bash
 mkdir backend
 cd backend
 ```
 
-- Initialise un projet Node.js :
+- Initialiser un projet Node.js :
 
 ```bash
 npm init -y
 ```
 
-Ça crée un `package.json` avec toutes les infos de ton projet.
+Ça crée un `package.json` avec toutes les infos du projet.
 
-- Installe les dépendances essentielles :
+- Installer les dépendances essentielles :
 
 ```bash
 npm install express mongoose dotenv cors bcrypt
@@ -27,16 +27,17 @@ npm install express mongoose dotenv cors bcrypt
 - **mongoose** → interface pour MongoDB
 - **dotenv** → variables d’environnement (ex : URL Mongo)
 - **cors** → pour autoriser le frontend à accéder à ton API
+- **bcrypt** → Pour hasher le mdp
 
-- Installe les dépendances de développement :
+- Installer les dépendances de développement :
 
 ```bash
 npm install --save-dev nodemon
 ```
 
-- **nodemon** → redémarre le serveur automatiquement quand tu modifies un fichier
+- **nodemon** → redémarre le serveur automatiquement quand un fichier est modifié
 
-Dans ton `package.json`, ajoute un script pour lancer le serveur avec nodemon :
+Dans `package.json`, ajouter un script pour lancer le serveur avec nodemon :
 
 ```json
 "scripts":{
@@ -47,7 +48,7 @@ Dans ton `package.json`, ajoute un script pour lancer le serveur avec nodemon :
 
 ## **Créer la structure du projet**
 
-On va créer cette arborescence :
+Arborescence :
 
 ```
 backend/
@@ -89,7 +90,7 @@ On entre dans le shell MongoDB.
 
 ## **Configurer la connexion backend**
 
-- Crée un fichier `.env` à la racine de ton projet :
+- Créer un fichier `.env` à la racine du projet :
 
 ```
 PORT=5000
@@ -324,12 +325,12 @@ npm run dev
 
 ## **Tester la route “GET /”**
 
-1. Ouvre Postman
-2. Crée une nouvelle requête `GET`
+1. Ouvrir Postman
+2. Créer une nouvelle requête `GET`
 3. URL : `http://localhost:5000/`
 4. Clique sur **Send**
 
-✅ Tu devrais voir :
+✅ on devrait voir :
 
 ```
 API Volley fonctionne !
@@ -344,7 +345,7 @@ API Volley fonctionne !
 
 - Méthode : `GET`
 - URL : `http://localhost:5000/api/users`
-- Send → tu devrais recevoir un tableau vide `[]` si aucun utilisateur n’existe encore
+- Send → un tableau vide `[]` si aucun utilisateur n’existe encore
 
 ### POST create user
 
@@ -364,7 +365,7 @@ API Volley fonctionne !
 
 - Clique sur **Send**
     
-    ✅ Tu devrais recevoir un JSON avec un message de succès et `userId`.
+    ✅ JSON avec un message de succès et `userId`.
     
 
 > MongoDB va créer automatiquement la base volley et la collection users.
@@ -375,7 +376,7 @@ API Volley fonctionne !
 - Méthode : `GET`
 - URL : `http://localhost:5000/api/users/<userId>`
 - `<userId>` → l’ID retourné lors du POST
-- Send → tu devrais voir les infos du user (sans le password)
+- Send → infos du user (sans le password)
 
 ### PUT update user
 
