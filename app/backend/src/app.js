@@ -46,26 +46,76 @@ app.use('/api/matches', matchesRoutes);
 
 // 🔹 Nouveaux endpoints pour récupérer les matchs
 import Match from './models/Match.js';
-// 🔹 Endpoints pour les matchs
+import Standing from './models/Standing.js';
 
+// 🔹 Endpoint pour récupérer les matchs
 /**
  * GET /api/matches
- * - Optionnel : ?club=NomClub
+ * - Optionnel :
+ *    ?club=NomClub
+ *    ?championshipId=<ID>
  */
 app.get('/api/matches', async (req, res) => {
   try {
-    const { club } = req.query;
+    const { club, championshipId } = req.query;
     let filter = {};
 
     if (club) {
-      filter = { $or: [{ opponentName: decodeURIComponent(club) }] };
+      // Filtrer sur le nom de l'adversaire
+      filter.opponentName = decodeURIComponent(club);
     }
 
-    const matches = await Match.find(filter)
-      .populate('championshipId') // si tu veux récupérer les infos du championnat
-      .sort({ date: 1 });
+    if (championshipId) {
+      filter.championshipId = championshipId;
+    }
 
-    res.json(matches);
+    // Récupérer tous les matchs correspondants
+    const matches = await Match.find(filter)
+      .populate('championshipId') // pour récupérer les infos du championnat
+      .sort({ date: 1 }) // tri par date croissante
+      .lean(); // JSON simple, sans méthodes Mongoose
+
+    // Formater chaque match pour le front
+    const formatted = matches.map((m) => ({
+      id: m._id,
+      championshipId: m.championshipId?._id || null,
+      championshipName: m.championshipId?.name || '',
+      date: m.date,
+      homeAway: m.homeAway,
+      opponentName: m.opponentName,
+      status: m.status,
+      scoreFor: m.scoreFor,
+      scoreAgainst: m.scoreAgainst,
+      setsDetail: m.setsDetail || [],
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🔹 Endpoint pour récupérer tous les standings
+/**
+ * GET /api/standings
+ * - Optionnel : ?championshipId=<ID>
+ */
+app.get('/api/standings', async (req, res) => {
+  try {
+    const { championshipId } = req.query;
+    let filter = {};
+
+    // Si un championnat est précisé, on filtre dessus
+    if (championshipId) {
+      filter.championshipId = championshipId;
+    }
+
+    // Récupère tous les standings correspondants
+    const standings = await Standing.find(filter)
+      .sort({ rank: 1 }) // tri par classement
+      .lean(); // pour renvoyer un simple JSON sans les méthodes Mongoose
+
+    res.json(standings);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

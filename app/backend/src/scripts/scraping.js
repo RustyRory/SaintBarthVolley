@@ -1,19 +1,19 @@
-// src/scripts/scraping.js
+import dotenv from 'dotenv';
+dotenv.config();
+
 import puppeteer from 'puppeteer';
 import mongoose from 'mongoose';
 import * as cheerio from 'cheerio';
 import Match from '../models/Match.js';
 import Standing from '../models/Standing.js';
-import dotenv from 'dotenv';
-dotenv.config();
 
 // 🔹 Constantes
-const CHAMPIONSHIP_ID = '6985bd859903c98a455ca98d';
+const CHAMPIONSHIP_ID = '6985bd859903c98a455ca98d'; // ton championnat
 const CLUB_TEAM_NAME = "AS SAINT-BARTHELEMY D'ANJOU V.B.";
 const FFVB_URL =
   'https://www.ffvbbeach.org/ffvbapp/resu/vbspo_calendrier.php?saison=2025%2F2026&codent=ABCCS&poule=3MB&division=&tour=&calend=COMPLET&x=15&y=15';
 
-// 🔹 Utilitaires
+// 🔹 Utilitaire pour parser date FR -> ISO
 function parseDateFR(dateStr, timeStr) {
   const [day, month, year] = dateStr.split('/').map(Number);
   const fullYear = year < 100 ? 2000 + year : year;
@@ -21,6 +21,7 @@ function parseDateFR(dateStr, timeStr) {
   return new Date(fullYear, month - 1, day, hours, minutes).toISOString();
 }
 
+// 🔹 Transforme string sets en array d'objets pour Mongo
 function parseSetsDetail(setsStr) {
   if (!setsStr) return [];
   return setsStr.split(',').map((s, idx) => {
@@ -43,11 +44,12 @@ async function scrapeFFVB() {
 
     const $ = cheerio.load(html);
 
-    // ---------------------
+    // -----------------------------
     // 🔹 Scraping des matchs
-    // ---------------------
+    // -----------------------------
     console.log('📊 Parsing des matchs...');
     const matches = [];
+    const now = new Date();
 
     $('tr').each((i, tr) => {
       const tds = $(tr).find('td');
@@ -64,14 +66,19 @@ async function scrapeFFVB() {
         const dateISO = parseDateFR($(tds[1]).text().trim(), $(tds[2]).text().trim());
         const setsDetail = parseSetsDetail($(tds[8]).text().trim());
 
-        console.log(`🏐 Match: ${homeTeam} vs ${awayTeam} - ${dateISO}`);
+        // 🔹 Déterminer le status correctement
+        const matchDate = new Date(dateISO);
+        let status = 'scheduled';
+        if (matchDate <= now && (scoreFor > 0 || scoreAgainst > 0)) {
+          status = 'played';
+        }
+
         matches.push({
           championshipId: CHAMPIONSHIP_ID,
-          clubName: CLUB_TEAM_NAME, // pour filtrer plus tard
           opponentName: homeAway === 'home' ? awayTeam : homeTeam,
           date: dateISO,
           homeAway,
-          status: $(tds[6]).text().trim() || $(tds[7]).text().trim() ? 'played' : 'scheduled',
+          status,
           scoreFor,
           scoreAgainst,
           setsDetail,
@@ -81,31 +88,55 @@ async function scrapeFFVB() {
 
     console.log('💾 Mise à jour des matchs dans MongoDB...');
     for (const m of matches) {
-      await Match.findOneAndUpdate({ championshipId: CHAMPIONSHIP_ID, opponentName: m.opponentName, date: m.date }, m, {
-        upsert: true,
+      const existing = await Match.findOne({
+        championshipId: CHAMPIONSHIP_ID,
+        opponentName: m.opponentName,
+        date: m.date,
       });
-    }
-    console.log(`🎉 ${matches.length} matchs mis à jour.`);
 
-    // ---------------------
-    // 🔹 Scraping du classement (standings)
-    // ---------------------
+      if (existing) {
+        // 🔹 Vérifier si on a de nouvelles infos avant mise à jour
+        const needsUpdate =
+          existing.status !== m.status ||
+          existing.scoreFor !== m.scoreFor ||
+          existing.scoreAgainst !== m.scoreAgainst ||
+          JSON.stringify(existing.setsDetail) !== JSON.stringify(m.setsDetail);
+
+        if (needsUpdate) {
+          await Match.updateOne({ _id: existing._id }, m);
+          console.log(`🔄 Match mis à jour : ${m.opponentName} (${m.date})`);
+        }
+      } else {
+        await Match.create(m);
+        console.log(`➕ Match créé : ${m.opponentName} (${m.date})`);
+      }
+    }
+    console.log(`🎉 ${matches.length} matchs analysés.`);
+
+    // -----------------------------
+    // 🔹 Scraping des standings
+    // -----------------------------
     console.log('📊 Parsing des standings...');
     const standings = [];
 
-    // Exemple : chaque ligne du classement
-    $('table.standings tr').each((i, tr) => {
+    $('table tbody tr').each((i, tr) => {
       const tds = $(tr).find('td');
-      if (tds.length < 8) return; // on a besoin de 8 colonnes pour ton modèle
+      if (tds.length < 16) return;
 
       const rank = parseInt($(tds[0]).text()) || 0;
       const teamName = $(tds[1]).text().trim();
-      const played = parseInt($(tds[2]).text()) || 0;
-      const wins = parseInt($(tds[3]).text()) || 0;
-      const losses = parseInt($(tds[4]).text()) || 0;
-      const setsFor = parseInt($(tds[5]).text()) || 0;
-      const setsAgainst = parseInt($(tds[6]).text()) || 0;
-      const points = parseInt($(tds[7]).text()) || 0;
+      if (!teamName) return;
+
+      const points = parseInt($(tds[2]).text()) || 0;
+      const played = parseInt($(tds[3]).text()) || 0;
+      const wins = parseInt($(tds[4]).text()) || 0;
+      const losses = parseInt($(tds[5]).text()) || 0;
+      const setsFor = parseInt($(tds[13]).text()) || 0;
+      const setsAgainst = parseInt($(tds[14]).text()) || 0;
+      const coefficientSets = parseFloat($(tds[15]).text()) || 0;
+      const pointsFor = parseInt($(tds[16]).text()) || 0;
+      const pointsAgainst = parseInt($(tds[17]).text()) || 0;
+      const coefficientPoints = parseFloat($(tds[18]).text()) || 0;
 
       standings.push({
         championshipId: CHAMPIONSHIP_ID,
@@ -116,22 +147,30 @@ async function scrapeFFVB() {
         losses,
         setsFor,
         setsAgainst,
+        coefficientSets,
+        pointsFor,
+        pointsAgainst,
+        coefficientPoints,
         points,
       });
     });
 
     console.log('💾 Mise à jour des standings dans MongoDB...');
+    let updatedCount = 0;
     for (const s of standings) {
       await Standing.findOneAndUpdate({ championshipId: CHAMPIONSHIP_ID, teamName: s.teamName }, s, { upsert: true });
+      updatedCount++;
     }
 
-    console.log(`🎉 ${standings.length} équipes mises à jour.`);
+    console.log(`🎉 ${updatedCount} équipes mises à jour ou créées.`);
   } catch (err) {
     console.error('❌ Erreur pendant le scraping :', err);
   }
 }
 
-// 🔹 Connexion MongoDB
+// -----------------------------
+// 🔹 Connexion MongoDB via .env
+// -----------------------------
 mongoose
   .connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/saintbarthvolley')
   .then(() => scrapeFFVB())
