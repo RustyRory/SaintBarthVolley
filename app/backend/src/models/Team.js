@@ -58,12 +58,8 @@ const teamSchema = new mongoose.Schema(
       },
     ],
     photo: {
-      type: String, // URL Nextcloud
+      type: String, // URL
       trim: true,
-    },
-    isArchived: {
-      type: Boolean,
-      default: false,
     },
   },
   {
