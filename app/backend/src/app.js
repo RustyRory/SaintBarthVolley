@@ -29,6 +29,7 @@ import partnersRoutes from './routes/partners.js';
 import championshipsRoutes from './routes/championships.js';
 import standingsRoutes from './routes/standings.js';
 import matchesRoutes from './routes/matches.js';
+import authRoutes from './routes/auth.js';
 
 // Utiliser les routes existantes
 app.use('/api/users', usersRoutes);
@@ -43,6 +44,7 @@ app.use('/api/partners', partnersRoutes);
 app.use('/api/championships', championshipsRoutes);
 app.use('/api/standings', standingsRoutes);
 app.use('/api/matches', matchesRoutes);
+app.use('/auth', authRoutes);
 
 // 🔹 Nouveaux endpoints pour récupérer les matchs
 import Match from './models/Match.js';
