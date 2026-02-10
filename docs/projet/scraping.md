@@ -368,10 +368,3 @@ Ex :
 ```bash
 npm run ffvb
 ```
-
-
----
-
-saison : 6985bb5d9903c98a455ca986
-team : 6985bccd9903c98a455ca98b
-champ : 6985bd859903c98a455ca98d

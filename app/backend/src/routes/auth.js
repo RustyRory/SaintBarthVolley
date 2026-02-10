@@ -2,6 +2,8 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+import { authMiddleware } from '../middlewares/authMiddleware.js';
+
 const router = express.Router();
 
 /**
@@ -98,6 +100,26 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('LOGIN ERROR:', err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+/**
+ * GET /auth/me
+ * Retourne l'utilisateur connecté
+ */
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    res.json({
+      id: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      createdAt: req.user.createdAt,
+    });
+  } catch (error) {
+    console.error('AUTH ME ERROR:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
