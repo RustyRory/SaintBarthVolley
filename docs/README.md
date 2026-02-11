@@ -40,7 +40,7 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 
 ## 🔁 1. Workflow & Organisation de développement
 
-📁 **[docs/workflow/](/docs/workflow/workflow.md)**
+📁 **[docs/workflow/](./workflow/workflow.md)**
 
 ### Contenu
 - Résumé du workflow Git (branches, commits, releases)
@@ -57,7 +57,7 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 
 ## 📝 2. Cahier des charges
 
-📁 **[docs/cahier-des-charges/](/docs/cahier-des-charges/cahier-des-charges.md)**
+📁 **[docs/cahier-des-charges/](./cahier-des-charges/cahier-des-charges.md)**
 
 ### Contenu
 - Contexte du club
@@ -76,13 +76,13 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 
 ## 📐 3. UML – Modélisation applicative
 
-📁 **[docs/uml/](/docs/uml/)**
+📁 **[docs/uml/](./uml/)**
 
 ### Contenu
-- [Diagrammes de cas d’utilisation](/docs/uml/utilisation.md)
-- [Diagrammes de classes](/docs/uml/classes.md)
-- [Diagrammes de séquence](/docs/uml/sequence.md)
-- [Diagrammes d’activité](/docs/uml/activite.md)
+- [Diagrammes de cas d’utilisation](./uml/utilisation.md)
+- [Diagrammes de classes](./uml/classes.md)
+- [Diagrammes de séquence](./uml/sequence.md)
+- [Diagrammes d’activité](./uml/activite.md)
 
 ### Objectifs
 - Décrire le comportement de l’application
@@ -95,7 +95,7 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 
 ## 🗺️ 4. Cartographies
 
-📁 **[docs/cartographies/](/docs/cartographies/)**
+📁 **[docs/cartographies/](./cartographies/)**
 
 ### Contenu
 - [Cartographie fonctionnelle](/docs/cartographies/fonctionnelle)
@@ -107,11 +107,11 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Identifier les dépendances
 - Anticiper les points critiques (scraping, APIs externes)
 
----
+---docs
 
 ## 🎨 5. Maquettes UX / UI
 
-📁 **[docs/maquettes/](/docs/maquettes/)**
+📁 **[docs/maquettes/](./maquettes/)**
 
 ### Contenu
 - Wireframes
@@ -129,13 +129,13 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 
 ## 🗄️ 6. Conception des données
 
-📁 **[docs/data-conception/](/docs/data-conception/)**
+📁 **[docs/data-conception/](./data-conception/)**
 
 ### Contenu
-- [Dictionnaire de données](/docs/data-conception/data.md)
-- [MCD (Modèle Conceptuel de Données)](/docs/data-conception/mcd.md)
-- [MLD (Modèle Logique de Données)](/docs/data-conception/mld.md)
-- [MPD (Modèle Physique – MongoDB)](/docs/data-conception/mpd.md)
+- [Dictionnaire de données](./data-conception/data.md)
+- [MCD (Modèle Conceptuel de Données)](./data-conception/mcd.md)
+- [MLD (Modèle Logique de Données)](./data-conception/mld.md)
+- [MPD (Modèle Physique – MongoDB)](./data-conception/mpd.md)
 - Règles de gestion des données
 
 ### Objectifs
@@ -148,15 +148,14 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 
 ##  7. Backend
 
-**[docs/backend](/docs/project/backend.md/)**
+**[docs/backend](./project/backend.md/)**
 
 ### Contenu
 - Installation et configuration de Node.js et Express
 - Structure du projet backend (server.js, src/app.js, routes, controllers, models, middlewares)
 - Connexion à MongoDB avec Mongoose et configuration des variables d’environnement via .env
 - Création d’une API REST CRUD pour les articles (GET, POST, PUT, DELETE)
-- Exemple de modèle Mongoose (Article) et contrôleur associé
-- Mise en place d’un serveur Express fonctionnel avec test via navigateur ou Postman
+- Mise en place d’un serveur Express fonctionnel avec test 
 
 ### Objectifs
 - Fournir une API backend pour le site du club de volley, capable de gérer les contenus dynamiques (articles, pages, partenaires, équipes, galerie…)
@@ -165,13 +164,13 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 - Utiliser MongoDB de manière flexible, avec création automatique des bases et collections à l’insertion de documents
 - Permettre le développement rapide grâce à nodemon et à une configuration simple des routes et contrôleurs
 
-**[docs/scraping](/docs/project/scraping.md/)**
+**[docs/scraping](./projet/scraping.md/)**
 
 ### Contenu
 
 ### Objectifs
 
-**[docs/authentification](/docs/project/auth.md/)**
+**[docs/authentification](./project/auth.md/)**
 
 ### Contenu
 
