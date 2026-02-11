@@ -24,7 +24,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Supprimé
 
 - 
+---
 
+## [0.2.0] - 2026-01-
+
+### Ajouté
+
+- /Backend
+    - server.js
+    - /src
+      - app.js
+      - /controllers
+      - /models
+      - /routes
+- Scraping web
+  - Préparation des données “racines”
+  - Analyse de la page FFVB
+  - Script de scraping
+  - Mapping vers les modèles Mongo
+  - Scraping du classement
+  - Scraping des matchs
+  - Normalisation & sécurité
+  - Automatisation
+- Authentification
+      
 ---
 
 ## [0.1.0] - 2026-01-21
