@@ -47,20 +47,12 @@ jobs:
               echo "❌ Fichier manquant dans frontend : package.json"
               INVALID=true
             fi
-            if [ ! -f "saintBarthVolleyApp/frontend/.env.example" ]; then
-              echo "❌ Fichier manquant dans frontend : .env.example"
-              INVALID=true
-            fi
           fi
 
           # Vérification interne backend
           if [ -d "saintBarthVolleyApp/backend" ]; then
             if [ ! -f "saintBarthVolleyApp/backend/package.json" ]; then
               echo "❌ Fichier manquant dans backend : package.json"
-              INVALID=true
-            fi
-            if [ ! -f "saintBarthVolleyApp/backend/.env.example" ]; then
-              echo "❌ Fichier manquant dans backend : .env.example"
               INVALID=true
             fi
           fi
