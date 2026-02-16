@@ -30,13 +30,13 @@ jobs:
       - name: 'Installation des dépendances backend'
         run: |
           echo "Installation des dépendances backend"
-          cd app/backend
+          cd saintBarthVolleyApp/backend
           npm install
 
       - name: "Lancement de l'audit npm backend"
         run: |
           echo "Audit des dépendances backend"
-          cd app/backend
+          cd saintBarthVolleyApp/backend
           npm audit --audit-level=high
 
       # ----------------------
@@ -45,11 +45,11 @@ jobs:
       - name: 'Installation des dépendances frontend'
         run: |
           echo "Installation des dépendances frontend"
-          cd app/frontend
+          cd saintBarthVolleyApp/frontend
           npm install
 
       - name: "Lancement de l'audit npm frontend"
         run: |
           echo "Audit des dépendances frontend"
-          cd app/frontend
+          cd saintBarthVolleyApp/frontend
           npm audit --audit-level=high
