@@ -171,7 +171,7 @@ Moderniser la communication du club via un site web vitrine et préparer une str
 - Déploiement automatisé
 - Base de données MongoDB
 - API interne (Node.js / Express)
-- Frontend React
+- Frontend Nextjs
 - Tâches planifiées (cron jobs)
 - Sauvegardes régulières
 - Sécurisation des données (HTTPS, RGPD)
