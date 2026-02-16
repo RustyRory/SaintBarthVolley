@@ -18,7 +18,7 @@
 
 ### Frontend
 
-- React build statique
+- Nextjs build statique
 - Hébergement :
     - Vercel / Netlify / Nginx
 - CDN pour les assets

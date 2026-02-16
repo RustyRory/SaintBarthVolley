@@ -4,14 +4,14 @@ repos:
     hooks:
       - id: frontend-eslint
         name: Frontend ESLint
-        entry: bash -c "cd app/frontend && npm run lint"
+        entry: bash -c "cd saintBarthVolleyApp/frontend && npm run lint"
         language: system
         pass_filenames: false
         types: [javascript]
 
       - id: frontend-prettier
         name: Frontend Prettier
-        entry: bash -c "cd app/frontend && npm run format"
+        entry: bash -c "cd saintBarthVolleyApp/frontend && npm run format"
         language: system
         pass_filenames: false
         types: [javascript]
@@ -21,14 +21,14 @@ repos:
     hooks:
       - id: backend-eslint
         name: Backend ESLint
-        entry: bash -c "cd app/backend && npm run lint"
+        entry: bash -c "cd saintBarthVolleyApp/backend && npm run lint"
         language: system
         pass_filenames: false
         types: [javascript]
 
       - id: backend-prettier
         name: Backend Prettier
-        entry: bash -c "cd app/backend && npm run format"
+        entry: bash -c "cd saintBarthVolleyApp/backend && npm run format"
         language: system
         pass_filenames: false
         types: [javascript]

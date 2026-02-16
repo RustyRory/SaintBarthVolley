@@ -22,7 +22,7 @@ jobs:
       - name: 'Setup Node.js'
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.9.0
 
       # ----------------------
       # Backend
@@ -30,13 +30,13 @@ jobs:
       - name: 'Installer les dépendances backend'
         run: |
           echo "Installation des dépendances backend"
-          cd app/backend
+          cd saintBarthVolleyApp/backend
           npm install
 
       - name: 'Lancer les tests backend'
         run: |
           echo "Lancement des tests backend"
-          cd app/backend
+          cd saintBarthVolleyApp/backend
           npm test
 
       # ----------------------
@@ -45,13 +45,13 @@ jobs:
       - name: 'Installer les dépendances frontend'
         run: |
           echo "Installation des dépendances frontend"
-          cd app/frontend
+          cd saintBarthVolleyApp/frontend
           npm install
 
       - name: 'Lancer les tests frontend'
         run: |
           echo "Lancement des tests frontend"
-          cd app/frontend
+          cd saintBarthVolleyApp/frontend
           npm test
 
       # ----------------------
@@ -60,5 +60,5 @@ jobs:
       - name: 'Build frontend pour vérification'
         run: |
           echo "Building du frontend"
-          cd app/frontend
+          cd saintBarthVolleyApp/frontend
           npm run build || { echo "❌ Build frontend échoué"; exit 1; }

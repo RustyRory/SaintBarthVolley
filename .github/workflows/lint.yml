@@ -26,7 +26,7 @@ jobs:
 
       - name: 'Installation ESLint & Prettier'
         run: |
-          cd app/backend
+          cd saintBarthVolleyApp/backend
           npm init -y
           npm install eslint prettier --save-dev
           cd ../frontend
@@ -35,12 +35,12 @@ jobs:
 
       - name: 'Lancer ESLint backend'
         run: |
-          cd app/backend
+          cd saintBarthVolleyApp/backend
           npx eslint . --ext .js,.ts || echo "✅ Pas de fichiers backend JS/TS à lint"
 
       - name: 'Lancer ESLint frontend'
         run: |
-          cd app/frontend
+          cd saintBarthVolleyApp/frontend
           npx eslint . --ext .js,.jsx || echo "✅ Pas de fichiers frontend JS/JSX à lint"
 
       - name: 'Lancer Prettier check'
