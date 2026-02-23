@@ -25,7 +25,7 @@ jobs:
           fi
 
           # Regex pour le commit / titre PR : type(nom): Fixes #<num> - message
-          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\):\ Fixes\ \#[0-9]+\ -\ .+ ]]; then
+          if [[ "$PR_TITLE" =~ ^(feat|feature|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\):\ Fixes\ \#[0-9]+\ -\ .+ ]]; then
             echo "✅ Titre de PR valide avec référence au ticket"
             exit 0
           fi
