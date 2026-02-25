@@ -8,7 +8,12 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  }),
+);
 app.use(express.json()); // Pour parser le corps des requêtes en JSON
 
 // Route par défaut pour tester l'API

@@ -5,17 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "start": "next start",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "test": "echo \"Error: no test specified\" && exit 0",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,md}": [
-      "prettier --write",
-      "eslint --fix"
-    ]
+    "lint": "eslint",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "dependencies": {
     "next": "16.1.6",
@@ -27,11 +19,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^10.0.1",
-    "eslint-config-next": "^0.2.4",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
-    "prettier": "^3.8.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "3.8.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
