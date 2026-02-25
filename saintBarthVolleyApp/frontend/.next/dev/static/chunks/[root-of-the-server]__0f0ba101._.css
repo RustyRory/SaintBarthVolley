@@ -475,6 +475,16 @@
     border-style: solid;
   }
 
+  .border-black\/8 {
+    border-color: #00000014;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-black\/8 {
+      border-color: color-mix(in oklab, var(--color-black) 8%, transparent);
+    }
+  }
+
   .border-black\/\[\.08\] {
     border-color: #00000014;
   }
@@ -597,6 +607,18 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-black\/4:hover {
+      background-color: #0000000a;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-black\/4:hover {
+        background-color: color-mix(in oklab, var(--color-black) 4%, transparent);
+      }
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-black\/\[\.04\]:hover {
       background-color: #0000000a;
     }
@@ -623,6 +645,12 @@
   @media (min-width: 40rem) {
     .sm\:text-left {
       text-align: left;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .md\:w-39\.5 {
+      width: calc(var(--spacing) * 39.5);
     }
   }
 
