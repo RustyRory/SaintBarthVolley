@@ -1,34 +1,46 @@
-// src/app/api/auth/register/route.ts
+// app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { firstName, lastName, email, password } = body;
+    const { firstName, lastName, email, password } = await req.json();
 
-    // Appel du backend Express
-    const backendRes = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password }),
-      },
-    );
+    const res = await fetch(`${process.env.BACKEND_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName, lastName, email, password }),
+      credentials: "include",
+    });
 
-    const data = await backendRes.json();
+    const data = await res.json();
 
-    if (!backendRes.ok) {
+    if (!res.ok) {
       return NextResponse.json(
-        { message: data.message || "Erreur serveur" },
-        { status: backendRes.status },
+        { message: data.message || "Erreur inscription" },
+        { status: res.status },
       );
     }
 
-    // Retourne la réponse au front (pas de JWT ici, l’admin doit valider le compte)
-    return NextResponse.json({ message: data.message });
+    // Si le backend renvoie un token (login auto), on peut le mettre dans le cookie
+    const response = NextResponse.json({
+      message: data.message,
+      user: data.user,
+    });
+    if (data.token) {
+      response.cookies.set({
+        name: "token",
+        value: data.token,
+        httpOnly: true,
+        path: "/",
+        maxAge: 60 * 60 * 24, // 1 jour
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+    }
+
+    return response;
   } catch (err) {
-    console.error(err);
+    console.error("Next.js API register error:", err);
     return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
   }
 }

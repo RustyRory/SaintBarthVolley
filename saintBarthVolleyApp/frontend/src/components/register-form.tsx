@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
@@ -20,7 +19,6 @@ export function RegisterForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,6 +26,7 @@ export function RegisterForm({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,8 +54,14 @@ export function RegisterForm({
         return;
       }
 
-      // Redirection vers login après inscription
-      router.push("/login");
+      // Succès
+      setSuccess(data.message);
+      setLoading(false);
+
+      // Redirection automatique après 3 secondes
+      setTimeout(() => {
+        router.push("/login");
+      }, 3000);
     } catch (err) {
       console.error(err);
       setError("Erreur serveur");
@@ -67,73 +72,60 @@ export function RegisterForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0">
-        <CardContent className="p-6 md:p-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Créer un compte</CardTitle>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
-              <div className="flex flex-col items-center gap-2 text-center mb-6">
-                <h1 className="text-2xl font-bold">Créer un compte</h1>
-                <p className="text-muted-foreground text-balance">
-                  Entrez vos informations pour vous inscrire
-                </p>
-              </div>
-
               <Field>
-                <FieldLabel htmlFor="firstName">Prénom</FieldLabel>
+                <FieldLabel htmlFor="first-name">Prénom</FieldLabel>
                 <Input
-                  id="firstName"
+                  id="first-name"
                   type="text"
-                  placeholder="Prénom"
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
               </Field>
-
               <Field>
-                <FieldLabel htmlFor="lastName">Nom</FieldLabel>
+                <FieldLabel htmlFor="last-name">Nom</FieldLabel>
                 <Input
-                  id="lastName"
+                  id="last-name"
                   type="text"
-                  placeholder="Nom"
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                 />
               </Field>
-
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </Field>
-
               <Field>
                 <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="********"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </Field>
-
               <Field>
-                <FieldLabel htmlFor="confirmPassword">
+                <FieldLabel htmlFor="confirm-password">
                   Confirmer le mot de passe
                 </FieldLabel>
                 <Input
-                  id="confirmPassword"
+                  id="confirm-password"
                   type="password"
-                  placeholder="********"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -144,34 +136,30 @@ export function RegisterForm({
                 <p className="text-sm text-red-500 text-center">{error}</p>
               )}
 
-              <Field>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Inscription..." : "Créer un compte"}
-                </Button>
-              </Field>
+              {success && (
+                <div className="text-sm text-green-600 text-center bg-green-50 border border-green-200 rounded-md p-3">
+                  {success}
+                  <div className="text-xs mt-1 text-green-700">
+                    Redirection vers la page de connexion...
+                  </div>
+                </div>
+              )}
 
-              <FieldDescription className="text-center mt-2">
-                Vous avez déjà un compte ?{" "}
-                <Link href="/login" className="underline">
-                  Connectez-vous !
-                </Link>
-              </FieldDescription>
+              <Field>
+                <Button type="submit" disabled={loading || !!success}>
+                  {loading ? "Création..." : "Créer un compte"}
+                </Button>
+                <FieldDescription className="text-center mt-2">
+                  Vous avez déjà un compte ?{" "}
+                  <Link href="/login" className="underline">
+                    Connectez-vous !
+                  </Link>
+                </FieldDescription>
+              </Field>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
-
-      <FieldDescription className="px-6 text-center">
-        En continuant, vous acceptez nos{" "}
-        <Link href="#" className="underline">
-          Conditions d&apos;utilisation
-        </Link>{" "}
-        et notre{" "}
-        <Link href="#" className="underline">
-          Politique de confidentialité
-        </Link>
-        .
-      </FieldDescription>
     </div>
   );
 }

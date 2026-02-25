@@ -1,53 +1,41 @@
-import { NextResponse } from "next/server";
+// app/api/auth/login/route.ts
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, password } = body;
+    const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { message: "Email et mot de passe requis" },
-        { status: 400 },
-      );
-    }
-
-    // Appel au backend Express
-    const res = await fetch("http://localhost:5000/auth/login", {
+    const res = await fetch(`${process.env.BACKEND_URL}/auth/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+      credentials: "include",
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      return NextResponse.json(data, { status: res.status });
+      return NextResponse.json(
+        { message: data.message || "Erreur login" },
+        { status: res.status },
+      );
     }
 
-    const token = data.token;
-
-    // Stockage dans un cookie httpOnly
-    const response = NextResponse.json(
-      { message: "Connexion réussie", user: data.user },
-      { status: 200 },
-    );
-
+    // Stockage du JWT dans un cookie httpOnly
+    const response = NextResponse.json({ user: data.user });
     response.cookies.set({
       name: "token",
-      value: token,
+      value: data.token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
       path: "/",
-      sameSite: "lax",
       maxAge: 60 * 60 * 24, // 1 jour
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
     });
 
     return response;
   } catch (err) {
-    console.error("Next Auth Login Error:", err);
+    console.error("Next.js API login error:", err);
     return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
   }
 }
