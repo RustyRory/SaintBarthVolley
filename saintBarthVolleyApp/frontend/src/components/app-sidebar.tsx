@@ -48,7 +48,7 @@ const data = {
     },
     {
       title: "Club",
-      url: "/admin/club",
+      url: "/admin/clubs",
       icon: IconFolder,
     },
     {
