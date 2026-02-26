@@ -7,31 +7,26 @@ import User from '../models/User.js';
  */
 export const authMiddleware = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    let token;
 
-    // Vérification présence header
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Token manquant ou invalide' });
+    // 1️⃣ Header Authorization
+    if (req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
     }
 
-    const token = authHeader.split(' ')[1];
+    // 2️⃣ Cookie httpOnly
+    if (!token && req.cookies?.token) {
+      token = req.cookies.token;
+    }
 
-    // Vérification du token
+    if (!token) return res.status(401).json({ message: 'Token manquant' });
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Récupération utilisateur
     const user = await User.findById(decoded.id).select('-passwordHash');
 
-    if (!user) {
-      return res.status(401).json({ message: 'Utilisateur introuvable' });
-    }
+    if (!user) return res.status(401).json({ message: 'Utilisateur introuvable' });
+    if (!user.isActive) return res.status(403).json({ message: 'Compte désactivé' });
 
-    // Compte désactivé
-    if (!user.isActive) {
-      return res.status(403).json({ message: 'Compte désactivé' });
-    }
-
-    // Injection user dans la requête
     req.user = user;
     next();
   } catch (err) {

@@ -49,55 +49,41 @@ router.post('/register', async (req, res) => {
  * POST /auth/login
  * Connexion utilisateur
  */
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email ou mot de passe manquant' });
-    }
+    if (!email || !password) return res.status(400).json({ message: 'Email ou mot de passe manquant' });
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Identifiants invalides' });
-    }
-
-    // Compte non validé par l’admin
-    if (!user.isActive) {
-      return res.status(403).json({
-        message: 'Compte non activé. Contactez un administrateur.',
-      });
-    }
+    if (!user) return res.status(401).json({ message: 'Identifiants invalides' });
+    if (!user.isActive) return res.status(403).json({ message: 'Compte non activé' });
 
     const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Identifiants invalides' });
-    }
+    if (!isPasswordValid) return res.status(401).json({ message: 'Identifiants invalides' });
 
-    // Mise à jour last login
     user.lastLoginAt = new Date();
     await user.save();
 
-    // Génération JWT
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' },
-    );
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      },
-    });
+    // 🔹 Stockage cookie httpOnly
+    res
+      .cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax', // 'strict' bloque localhost
+        maxAge: 24 * 60 * 60 * 1000,
+      })
+      .json({
+        user: {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      });
   } catch (err) {
     console.error('LOGIN ERROR:', err);
     res.status(500).json({ message: 'Erreur serveur' });

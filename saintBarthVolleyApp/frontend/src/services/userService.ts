@@ -1,12 +1,15 @@
 import { apiFetch } from "@/lib/api";
 
-export interface User {
+export type User = {
   _id: string;
+  email: string;
+  role: "admin" | "editor" | "user" | "other";
   firstName: string;
   lastName: string;
-  email: string;
-  role: string;
-}
+  isActive: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+};
 
 export function getUsers(): Promise<User[]> {
   return apiFetch("/api/users");
