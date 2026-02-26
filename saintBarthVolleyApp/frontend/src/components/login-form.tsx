@@ -1,4 +1,3 @@
-// app/components/login-form.tsx
 "use client";
 
 import { useState } from "react";
@@ -12,9 +11,9 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { apiFetch } from "@/lib/api";
 
 export function LoginForm({
   className,
@@ -32,25 +31,16 @@ export function LoginForm({
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      await apiFetch("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Erreur lors de la connexion");
-        setLoading(false);
-        return;
-      }
-
-      // Redirection vers dashboard
+      // Cookie httpOnly pris en charge automatiquement par le backend
       router.push("/dashboard");
-    } catch (err) {
-      console.error(err);
-      setError("Erreur serveur");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la connexion");
     } finally {
       setLoading(false);
     }
@@ -70,6 +60,7 @@ export function LoginForm({
                 <Input
                   id="email"
                   type="email"
+                  placeholder="m@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -81,6 +72,7 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  placeholder="********"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

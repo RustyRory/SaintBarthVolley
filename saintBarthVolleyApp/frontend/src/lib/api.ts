@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const res = await fetch(`${API_URL}${endpoint}`, {
@@ -11,7 +11,8 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   });
 
   if (!res.ok) {
-    throw new Error("Erreur API");
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Erreur API");
   }
 
   return res.json();

@@ -2,10 +2,15 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 
 // Création de l'application Express
 const app = express();
+
+// Middlewares
+app.use(cookieParser());
+app.use(express.json());
 
 // Middlewares
 app.use(
