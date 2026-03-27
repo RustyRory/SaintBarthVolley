@@ -22,7 +22,6 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = React.useState("all");
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
 
-  // 🔄 Charger les utilisateurs
   React.useEffect(() => {
     getUsers()
       .then((data) => {
@@ -32,7 +31,6 @@ export default function AdminUsersPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // 🔎 Filtrage et recherche
   React.useEffect(() => {
     let result = users;
 
@@ -51,9 +49,8 @@ export default function AdminUsersPage() {
     setFilteredUsers(result);
   }, [search, roleFilter, users]);
 
-  // ❌ Supprimer un utilisateur
   const handleDelete = async (id: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
       return;
     try {
       await deleteUser(id);
@@ -64,22 +61,24 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (loading) return <div>Chargement des utilisateurs...</div>;
+  if (loading) return <div className="p-6">Chargement...</div>;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 p-4 sm:p-6 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
 
       {/* 🔎 Filtres */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Input
-          placeholder="Rechercher par nom ou email..."
+          className="w-full"
+          placeholder="Rechercher..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+
         <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-45">
-            <SelectValue placeholder="Filtrer par rôle" />
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Rôle" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous</SelectItem>
@@ -91,8 +90,53 @@ export default function AdminUsersPage() {
         </Select>
       </div>
 
-      {/* 📋 Tableau */}
-      <div className="rounded-lg border">
+      {/* 📱 MOBILE → CARD VIEW */}
+      <div className="flex flex-col gap-4 md:hidden">
+        {filteredUsers.map((user) => (
+          <div
+            key={user._id}
+            className="border rounded-lg p-4 flex flex-col gap-2"
+          >
+            <div className="font-semibold">
+              {user.firstName} {user.lastName}
+            </div>
+
+            <div className="text-sm text-muted-foreground">{user.email}</div>
+
+            <div className="text-sm">
+              Rôle : <span className="capitalize">{user.role}</span>
+            </div>
+
+            <div className="text-sm">
+              Actif : {user.isActive ? "Oui" : "Non"}
+            </div>
+
+            <div className="text-xs text-muted-foreground">
+              {new Date(user.createdAt).toLocaleDateString()}
+            </div>
+
+            <div className="flex gap-2 mt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditingUser(user)}
+              >
+                Modifier
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => handleDelete(user._id)}
+              >
+                Supprimer
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 💻 DESKTOP → TABLE */}
+      <div className="hidden md:block rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted">
             <tr>
@@ -138,7 +182,7 @@ export default function AdminUsersPage() {
         </table>
       </div>
 
-      {/* 📝 Formulaire modal */}
+      {/* 📝 Modal */}
       {editingUser && (
         <UserForm
           user={editingUser}
