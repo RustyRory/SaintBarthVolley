@@ -55,8 +55,8 @@ app.use('/api/partners', partnersRoutes);
 app.use('/api/championships', championshipsRoutes);
 app.use('/api/standings', standingsRoutes);
 app.use('/api/matches', matchesRoutes);
-app.use('/auth', authRoutes);
-app.use('/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 🔹 Nouveaux endpoints pour récupérer les matchs
 import Match from './models/Match.js';

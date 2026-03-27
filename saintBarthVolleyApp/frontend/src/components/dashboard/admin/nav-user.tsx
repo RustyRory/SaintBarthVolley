@@ -43,12 +43,25 @@ export function NavUser({
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
+      if (!res.ok) {
+        throw new Error("Erreur lors de la déconnexion");
+      }
+
+      // 🔥 Optionnel : clear local state si tu en as
+      // ex: setUser(null)
+
+      // 🔥 Redirection propre
       router.push("/login");
+
+      // 🔥 Force revalidation NextJS (important avec app router)
       router.refresh();
     } catch (error) {
       console.error("Logout error:", error);

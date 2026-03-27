@@ -70,7 +70,7 @@ Chaque dossier correspond à une étape clé du cycle projet, de l’idée au co
 ### Objectifs
 - Servir de référence fonctionnelle
 - Justifier les choix techniques
-- Éviter les dérives fonctionnelles (*scope creep*)
+- Éviter les dérives fonctionnelles
 
 ---
 

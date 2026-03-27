@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from '../models/User.js';
 
-dotenv.config();
+dotenv.config({ path: '../../.env' });
 
 const seedAdmin = async () => {
   try {
@@ -26,6 +26,7 @@ const seedAdmin = async () => {
       lastName: 'Root',
       role: 'admin',
       isActive: true,
+      isVerified: true,
     });
 
     await admin.setPassword(process.env.ADMIN_PASSWORD);

@@ -1,6 +1,6 @@
 // app/admin/page.tsx
 
-import { SectionAdminCards } from "@/components/section-admin-cards";
+import { SectionAdminCards } from "@/components/dashboard/admin/section-admin-cards";
 
 export default function AdminDashboardPage() {
   return (
