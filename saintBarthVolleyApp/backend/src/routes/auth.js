@@ -1,100 +1,30 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import { register, login, logout, verifyEmail, forgotPassword, resetPassword } from '../controllers/authController.js';
 
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-/**
- * POST /auth/register
- * Inscription utilisateur (compte en attente de validation admin)
- */
-router.post('/register', async (req, res) => {
-  try {
-    const { email, password, firstName, lastName } = req.body;
+// 🔐 AUTH
 
-    // Vérification basique
-    if (!email || !password || !firstName || !lastName) {
-      return res.status(400).json({ message: 'Champs manquants' });
-    }
+// POST /api/auth/register
+router.post('/register', register);
 
-    // Email déjà utilisé ?
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email déjà utilisé' });
-    }
+// GET /api/auth/verify-email?token=...
+router.get('/verify-email', verifyEmail);
 
-    // Création user (isActive = false par défaut)
-    const user = new User({
-      email,
-      firstName,
-      lastName,
-      role: 'user',
-    });
+// POST /api/auth/login
+router.post('/login', login);
 
-    await user.setPassword(password);
-    await user.save();
+// POST /api/auth/logout
+router.post('/logout', logout);
 
-    return res.status(201).json({
-      message: 'Compte créé. En attente de validation par un administrateur.',
-    });
-  } catch (err) {
-    console.error('REGISTER ERROR:', err);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-});
+router.post('/forgot-password', forgotPassword);
 
-/**
- * POST /auth/login
- * Connexion utilisateur
- */
+router.post('/reset-password', resetPassword);
 
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email ou mot de passe manquant' });
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Identifiants invalides' });
-    if (!user.isActive) return res.status(403).json({ message: 'Compte non activé' });
-
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) return res.status(401).json({ message: 'Identifiants invalides' });
-
-    user.lastLoginAt = new Date();
-    await user.save();
-
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-    // 🔹 Stockage cookie httpOnly
-    res
-      .cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // 'strict' bloque localhost
-        maxAge: 24 * 60 * 60 * 1000,
-      })
-      .json({
-        user: {
-          id: user._id,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
-      });
-  } catch (err) {
-    console.error('LOGIN ERROR:', err);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-});
-
-/**
- * GET /auth/me
- * Retourne l'utilisateur connecté
- */
-router.get('/me', authMiddleware, async (req, res) => {
+// 👤 USER CONNECTÉ
+router.get('/me', authMiddleware, (req, res) => {
   try {
     res.json({
       id: req.user._id,
@@ -103,6 +33,8 @@ router.get('/me', authMiddleware, async (req, res) => {
       firstName: req.user.firstName,
       lastName: req.user.lastName,
       createdAt: req.user.createdAt,
+      isVerified: req.user.isVerified,
+      isActive: req.user.isActive,
     });
   } catch (error) {
     console.error('AUTH ME ERROR:', error);

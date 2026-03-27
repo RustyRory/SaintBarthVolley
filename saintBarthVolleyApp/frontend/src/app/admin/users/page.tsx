@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { getUsers, type User } from "@/services/userService";
+import { getUsers, deleteUser, type User } from "@/services/userService";
+import { UserForm } from "@/components/dashboard/admin/user-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +20,9 @@ export default function AdminUsersPage() {
 
   const [search, setSearch] = React.useState("");
   const [roleFilter, setRoleFilter] = React.useState("all");
+  const [editingUser, setEditingUser] = React.useState<User | null>(null);
 
+  // 🔄 Charger les utilisateurs
   React.useEffect(() => {
     getUsers()
       .then((data) => {
@@ -29,10 +32,10 @@ export default function AdminUsersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // 🔎 Filtrage et recherche
   React.useEffect(() => {
     let result = users;
 
-    // 🔎 Recherche nom/email
     if (search) {
       result = result.filter((u) =>
         `${u.firstName} ${u.lastName} ${u.email}`
@@ -41,13 +44,25 @@ export default function AdminUsersPage() {
       );
     }
 
-    // 🎭 Filtre rôle
     if (roleFilter !== "all") {
       result = result.filter((u) => u.role === roleFilter);
     }
 
     setFilteredUsers(result);
   }, [search, roleFilter, users]);
+
+  // ❌ Supprimer un utilisateur
+  const handleDelete = async (id: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
+      return;
+    try {
+      await deleteUser(id);
+      setUsers(users.filter((u) => u._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la suppression");
+    }
+  };
 
   if (loading) return <div>Chargement des utilisateurs...</div>;
 
@@ -62,7 +77,6 @@ export default function AdminUsersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
         <Select value={roleFilter} onValueChange={setRoleFilter}>
           <SelectTrigger className="w-45">
             <SelectValue placeholder="Filtrer par rôle" />
@@ -77,7 +91,7 @@ export default function AdminUsersPage() {
         </Select>
       </div>
 
-      {/* 📋 Table */}
+      {/* 📋 Tableau */}
       <div className="rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted">
@@ -90,27 +104,32 @@ export default function AdminUsersPage() {
               <th className="p-3 text-left">Actions</th>
             </tr>
           </thead>
-
           <tbody>
             {filteredUsers.map((user) => (
               <tr key={user._id} className="border-t">
                 <td className="p-3">
                   {user.firstName} {user.lastName}
                 </td>
-
                 <td className="p-3">{user.email}</td>
-
                 <td className="p-3 capitalize">{user.role}</td>
-
-                <td className="p-3">{user.isActive ? "✅ Oui" : "❌ Non"}</td>
-
+                <td className="p-3">{user.isActive ? "Oui" : "Non"}</td>
                 <td className="p-3">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
-
-                <td className="p-3">
-                  <Button size="sm" variant="outline">
+                <td className="p-3 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditingUser(user)}
+                  >
                     Modifier
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(user._id)}
+                  >
+                    Supprimer
                   </Button>
                 </td>
               </tr>
@@ -118,6 +137,20 @@ export default function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+
+      {/* 📝 Formulaire modal */}
+      {editingUser && (
+        <UserForm
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={(updatedUser) => {
+            setUsers((prev) =>
+              prev.map((u) => (u._id === updatedUser._id ? updatedUser : u)),
+            );
+            setEditingUser(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,19 +1,15 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    credentials: "include",
+export async function apiFetch(path: string, options?: RequestInit) {
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    credentials: "include", // envoie/reçoit les cookies httpOnly
     headers: {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...options?.headers,
     },
-    ...options,
   });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Erreur API");
-  }
-
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message ?? "Erreur serveur");
+  return data;
 }

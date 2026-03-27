@@ -1,9 +1,11 @@
-// app/admin/layout.tsx
 "use client";
 
 import * as React from "react";
-import { AppSidebar } from "@/components/app-sidebar";
-import { DashboardHeader } from "@/components/dashboard-header";
+import { useRouter } from "next/navigation";
+import { authApi } from "@/lib/auth";
+
+import { AppSidebar } from "@/components/dashboard/admin/app-sidebar";
+import { DashboardHeader } from "@/components/dashboard/admin/dashboard-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function AdminLayout({
@@ -11,6 +13,34 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
+  const [isChecking, setIsChecking] = React.useState(true);
+  const [isAllowed, setIsAllowed] = React.useState(false);
+
+  React.useEffect(() => {
+    authApi
+      .me()
+      .then((user) => {
+        if (user.role === "admin") {
+          setIsAllowed(true);
+        } else {
+          router.replace("/");
+        }
+      })
+      .catch(() => {
+        router.replace("/login");
+      })
+      .finally(() => {
+        setIsChecking(false);
+      });
+  }, [router]);
+
+  // 🔒 BLOQUE TOUT
+  if (isChecking || !isAllowed) {
+    return null; // 🔥 pas de flash
+  }
+
   return (
     <SidebarProvider
       style={

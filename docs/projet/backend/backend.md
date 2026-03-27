@@ -77,13 +77,13 @@ backend/
 
 ```bash
 sudo systemctl start mongod
-sudo systemctlenable mongod
+sudo systemctl enable mongod
 ```
 
 3. Tester la connexion :
 
 ```bash
-mongo
+mongosh
 ```
 
 On entre dans le shell MongoDB.

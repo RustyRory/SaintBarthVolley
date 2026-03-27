@@ -14,9 +14,9 @@ import {
   IconInnerShadowTop,
 } from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
-import { NavUser } from "@/components/nav-user";
+import { NavMain } from "@/components/dashboard/admin/nav-main";
+import { NavSecondary } from "@/components/dashboard/admin/nav-secondary";
+import { NavUser } from "@/components/dashboard/admin/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +26,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 const data = {
   user: {
@@ -48,7 +49,7 @@ const data = {
     },
     {
       title: "Club",
-      url: "/admin/clubs",
+      url: "/admin/club",
       icon: IconFolder,
     },
     {
@@ -113,10 +114,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="/admin">
+              <Link href="/admin">
                 <IconInnerShadowTop className="size-5!" />
                 <span className="text-base font-semibold">Admin Dashboard</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -7,7 +7,8 @@
 
 - Visiteur
 - Administrateur
-- Système externe (FFVB, SportEasy, Google Maps)
+- Editeur
+- Système externe (FFVB, SportEasy)
 
 ## Domaines fonctionnels
 
@@ -56,3 +57,7 @@
 - Protection des routes back-office
 - Gestion RGPD (cookies, données personnelles)
 - Mentions légales
+
+## Cartographie 
+
+<img src="./images/cartfonction.png" />

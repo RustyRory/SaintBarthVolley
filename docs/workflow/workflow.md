@@ -1,496 +1,496 @@
-# GitHub – Règles de protection des branches
+  # GitHub – Règles de protection des branches
 
-Ce document décrit **pas à pas** la configuration des **Rulesets GitHub** afin de protéger les branches selon le workflow conventionnel :
+  Ce document décrit **pas à pas** la configuration des **Rulesets GitHub** afin de protéger les branches selon le workflow conventionnel :
 
-- `feature/*` → `dev`
-- `release/*` → `main`
-- `hotfix/*` → `main`
+  - `feature/*` → `dev`
+  - `release/*` → `main`
+  - `hotfix/*` → `main`
 
----
+  ---
 
-## Objectifs
+  ## Objectifs
 
-- ❌ Aucun push direct sur `main` et `dev`
-- ✅ Push libre sur `feature/*`
-- ✅ Merges uniquement via **Pull Request**
-- ✅ Sécurisation des branches critiques
+  - ❌ Aucun push direct sur `main` et `dev`
+  - ✅ Push libre sur `feature/*`
+  - ✅ Merges uniquement via **Pull Request**
+  - ✅ Sécurisation des branches critiques
 
----
+  ---
 
-## Workflow cible
+  ## Workflow cible
 
-```
-feature/* → PR → dev
-dev → PR → release/*
-release/* → PR → main
-hotfix/* → PR → main
-```
+  ```
+  feature/* → PR → dev
+  dev → PR → release/*
+  release/* → PR → main
+  hotfix/* → PR → main
+  ```
 
----
+  ---
 
-## Pré-requis
+  ## Pré-requis
 
-- Être **Admin** ou **Owner** du repository
-- GitHub Cloud
-- Utilisation des **Rulesets** (nouvelle interface GitHub)
+  - Être **Admin** ou **Owner** du repository
+  - GitHub Cloud
+  - Utilisation des **Rulesets** (nouvelle interface GitHub)
 
----
+  ---
 
-## Accès à la configuration
+  ## Accès à la configuration
 
-1. Ouvrir le repository GitHub
-2. Aller dans **Settings**
-3. Cliquer sur **Rules**
-4. Cliquer sur **Rulesets**
-5. Cliquer sur **New ruleset**
-6. Choisir **Branch ruleset**
+  1. Ouvrir le repository GitHub
+  2. Aller dans **Settings**
+  3. Cliquer sur **Rules**
+  4. Cliquer sur **Rulesets**
+  5. Cliquer sur **New ruleset**
+  6. Choisir **Branch ruleset**
 
----
+  ---
 
-## Ruleset : Protection de `main`
+  ## Ruleset : Protection de `main`
 
-### Nom
+  ### Nom
 
-```
-protect-main
-```
+  ```
+  protect-main
+  ```
 
-### Target branches
+  ### Target branches
 
-```
-main
-```
+  ```
+  main
+  ```
 
-### Règles à activer
+  ### Règles à activer
 
-#### Protection
+  #### Protection
 
-- ✅ Restrict deletions
-- ✅ Restrict force pushes
+  - ✅ Restrict deletions
+  - ✅ Restrict force pushes
 
-#### Pull Requests
+  #### Pull Requests
 
-- ✅ Require a pull request before merging
-  - Minimum approvals : 1 ou 2
-  - (Optionnel) Require review from Code Owners
-  - (Recommandé) Dismiss stale approvals
+  - ✅ Require a pull request before merging
+    - Minimum approvals : 1 ou 2
+    - (Optionnel) Require review from Code Owners
+    - (Recommandé) Dismiss stale approvals
 
-#### Checks
+  #### Checks
 
-- ✅ Require status checks to pass
-  - Sélectionner la CI (ex: build, test)
+  - ✅ Require status checks to pass
+    - Sélectionner la CI (ex: build, test)
 
-#### Autres
+  #### Autres
 
-- ✅ Require conversation resolution
-- (Optionnel) Require signed commits
+  - ✅ Require conversation resolution
+  - (Optionnel) Require signed commits
 
-❌ Ne pas autoriser les push directs
+  ❌ Ne pas autoriser les push directs
 
----
+  ---
 
-## Ruleset : Protection de `dev`
+  ## Ruleset : Protection de `dev`
 
-### Nom
+  ### Nom
 
-```
-protect-dev
-```
+  ```
+  protect-dev
+  ```
 
-### Target branches
+  ### Target branches
 
-```
-dev
-```
+  ```
+  dev
+  ```
 
-### Règles
+  ### Règles
 
-- ❌ Allow direct pushes
-- ✅ Require pull request before merging
-- ✅ Require status checks
-- ✅ Restrict force pushes
-- ✅ Restrict deletions
+  - ❌ Allow direct pushes
+  - ✅ Require pull request before merging
+  - ✅ Require status checks
+  - ✅ Restrict force pushes
+  - ✅ Restrict deletions
 
----
+  ---
 
-## Ruleset : Branches de features
+  ## Ruleset : Branches de features
 
-### Nom
+  ### Nom
 
-```
-allow-feature-push
-```
+  ```
+  allow-feature-push
+  ```
 
-### Target branches
+  ### Target branches
 
-```
-feature/*
-feat/*
-```
+  ```
+  feature/*
+  feat/*
+  ```
 
-### Règles
+  ### Règles
 
-- ❌ Require pull request
-- ❌ Require approvals
-- ❌ Require status checks
-- ❌ Restrict pushes
+  - ❌ Require pull request
+  - ❌ Require approvals
+  - ❌ Require status checks
+  - ❌ Restrict pushes
 
-👉 Les développeurs peuvent pousser librement sur ces branches.
+  👉 Les développeurs peuvent pousser librement sur ces branches.
 
----
+  ---
 
-## Ruleset : Branches de release
+  ## Ruleset : Branches de release
 
-### Nom
+  ### Nom
 
-```
-protect-release
-```
+  ```
+  protect-release
+  ```
 
-### Target branches
+  ### Target branches
 
-```
-release/*
-```
+  ```
+  release/*
+  ```
 
-### Règles recommandées
+  ### Règles recommandées
 
-- ❌ Allow force pushes
-- ❌ Allow deletions
-- ❌ Allow direct pushes (optionnel selon politique)
-- ✅ Require pull request (pour merge vers `main`)
+  - ❌ Allow force pushes
+  - ❌ Allow deletions
+  - ❌ Allow direct pushes (optionnel selon politique)
+  - ✅ Require pull request (pour merge vers `main`)
 
----
+  ---
 
-## Ruleset : Branches de hotfix
+  ## Ruleset : Branches de hotfix
 
-### Nom
+  ### Nom
 
-```
-protect-hotfix
-```
+  ```
+  protect-hotfix
+  ```
 
-### Target branches
+  ### Target branches
 
-```
-hotfix/*
-```
+  ```
+  hotfix/*
+  ```
 
-### Règles
+  ### Règles
 
-- ❌ Allow direct pushes
-- ❌ Allow force pushes
-- ❌ Allow deletions
-- ✅ Require pull request
+  - ❌ Allow direct pushes
+  - ❌ Allow force pushes
+  - ❌ Allow deletions
+  - ✅ Require pull request
 
----
+  ---
 
-## Ordre et comportement des Rulesets
+  ## Ordre et comportement des Rulesets
 
-- GitHub applique **toutes les règles qui correspondent**
-- Il n’y a **pas de priorité exclusive**
-- Les règles les plus restrictives gagnent
+  - GitHub applique **toutes les règles qui correspondent**
+  - Il n’y a **pas de priorité exclusive**
+  - Les règles les plus restrictives gagnent
 
-Vérifier dans :
+  Vérifier dans :
 
-```
-Settings → Rules → Rulesets
-```
+  ```
+  Settings → Rules → Rulesets
+  ```
 
----
+  ---
 
-## Tests recommandés
+  ## Tests recommandés
 
-### Push interdit
+  ### Push interdit
 
-```bash
-git push origin main
-git push origin dev
-```
+  ```bash
+  git push origin main
+  git push origin dev
+  ```
 
-### Push autorisé
+  ### Push autorisé
 
-```
-git push origin feature/ma-feature
+  ```
+  git push origin feature/ma-feature
 
-```
+  ```
 
-### Flux valide
+  ### Flux valide
 
-```
-feature/* → dev via PR
-release/* → main via PR
-hotfix/* → main via PR & dev via PR
-```
+  ```
+  feature/* → dev via PR
+  release/* → main via PR
+  hotfix/* → main via PR & dev via PR
+  ```
 
-# Workflow Github Actions
+  # Workflow Github Actions
 
-### Objectif
+  ### Objectif
 
-- Un workflow Git propre et sécurisé
-- Des branches cohérentes
-- Des issues traçables
-- Vérification des commits
-- Des PR contrôlées
-- Un changelog écrit à la main selon norme [Keepachangelog](https://keepachangelog.com/fr/1.0.0/)
-- Des releases propres
+  - Un workflow Git propre et sécurisé
+  - Des branches cohérentes
+  - Des issues traçables
+  - Vérification des commits
+  - Des PR contrôlées
+  - Un changelog écrit à la main selon norme [Keepachangelog](https://keepachangelog.com/fr/1.0.0/)
+  - Des releases propres
 
-### Ce que GitHub fera pour toi
+  ### Ce que GitHub fera pour toi
 
-- Bloquer les erreurs
-- Automatiser ce qui est répétitif
-- Forcer aux bonnes pratiques
+  - Bloquer les erreurs
+  - Automatiser ce qui est répétitif
+  - Forcer aux bonnes pratiques
 
-## ÉTAPE 1 — Vérification du nom de branche
+  ## ÉTAPE 1 — Vérification du nom de branche
 
-`.github/workflows/branch-name.yml`
+  `.github/workflows/branch-name.yml`
 
-Vérifier que le nom de branche suit la convention :
+  Vérifier que le nom de branche suit la convention :
 
-```
-feature/<issue-id>-short-description
-fix/<issue-id>-short-description
-hotfix/<issue-id>-short-description
-release/<x.y.z>
-```
+  ```
+  feature/<issue-id>-short-description
+  fix/<issue-id>-short-description
+  hotfix/<issue-id>-short-description
+  release/<x.y.z>
+  ```
 
-Bloque la PR si le nom est invalide.
-Affiche un message clair pour corriger.
+  Bloque la PR si le nom est invalide.
+  Affiche un message clair pour corriger.
 
-## ÉTAPE 2 — Vérification de la présence d’une issue
+  ## ÉTAPE 2 — Vérification de la présence d’une issue
 
-`.github/workflows/ticket.yml`
+  `.github/workflows/ticket.yml`
 
-Vérifie que le titre de la PR ou le nom de la branche contient une référence à une issue (#<numéro>).
-Bloque la PR si aucune issue n’est liée.
+  Vérifie que le titre de la PR ou le nom de la branche contient une référence à une issue (#<numéro>).
+  Bloque la PR si aucune issue n’est liée.
 
-## ÉTAPE 3 — Ajout automatique de labels à la PR
+  ## ÉTAPE 3 — Ajout automatique de labels à la PR
 
-`.github/workflows/labels.yml`
+  `.github/workflows/labels.yml`
 
-Ajoute automatiquement les labels à la PR selon le type de branche : feature, fix, hotfix, release.
-Avertit si aucun label n’est ajouté (nom de branche invalide).
+  Ajoute automatiquement les labels à la PR selon le type de branche : feature, fix, hotfix, release.
+  Avertit si aucun label n’est ajouté (nom de branche invalide).
 
-## ÉTAPE 4 — Vérification des messages de commit
+  ## ÉTAPE 4 — Vérification des messages de commit
 
-`.github/workflows/commit-message.yml`
+  `.github/workflows/commit-message.yml`
 
-Format attendu :
+  Format attendu :
 
-```
-type(nom): Fixes #<issue> - message
-```
+  ```
+  type(nom): Fixes #<issue> - message
+  ```
 
-- type : feat, fix, docs, chore, refactor, test, hotfix
-- nom : le nom de la fonctionnalité ou du module
-- #<numéro> : référence à l’issue
-- message : texte libre décrivant le commit
+  - type : feat, fix, docs, chore, refactor, test, hotfix
+  - nom : le nom de la fonctionnalité ou du module
+  - #<numéro> : référence à l’issue
+  - message : texte libre décrivant le commit
 
-Blocage du push/PR si un commit ne respecte pas le format
+  Blocage du push/PR si un commit ne respecte pas le format
 
-Exemple de commits valides :
+  Exemple de commits valides :
 
-```
-feat(login): Fixes #3 - Ajout page login
-docs(readme): Fixes #6 - Mise à jour du README
-fix(api): Fixes #10 - Correction timeout API
-hotfix(prod): Fixes #12 - Correction crash production
-```
+  ```
+  feat(login): Fixes #3 - Ajout page login
+  docs(readme): Fixes #6 - Mise à jour du README
+  fix(api): Fixes #10 - Correction timeout API
+  hotfix(prod): Fixes #12 - Correction crash production
+  ```
 
-## ÉTAPE 5 — Vérification de la structure du projet
+  ## ÉTAPE 5 — Vérification de la structure du projet
 
-`.github/workflows/structure.yml`
+  `.github/workflows/structure.yml`
 
-- Fichiers racine obligatoires : README.md, CONTRIBUTING.md, INSTALL.md, LICENSE
-- Dossiers MERN : frontend et backend
-- Vérification interne des dossiers :
-  - frontend/package.json et .env.example
-  - backend/package.json et .env.example
-- Message clair pour chaque fichier/dossier manquant
-- Blocage de la PR avec exit 1 si des fichiers sont absents
+  - Fichiers racine obligatoires : README.md, CONTRIBUTING.md, INSTALL.md, LICENSE
+  - Dossiers MERN : frontend et backend
+  - Vérification interne des dossiers :
+    - frontend/package.json et .env.example
+    - backend/package.json et .env.example
+  - Message clair pour chaque fichier/dossier manquant
+  - Blocage de la PR avec exit 1 si des fichiers sont absents
 
-## ÉTAPE 6 — Tests unitaires et build
+  ## ÉTAPE 6 — Tests unitaires et build
 
-`.github/workflows/tests.yml`
+  `.github/workflows/tests.yml`
 
-Installe les dépendances et lance les tests pour backend et frontend :
+  Installe les dépendances et lance les tests pour backend et frontend :
 
-```
-cd backend && npm install && npm test
-cd ../frontend && npm install && npm test
-```
+  ```
+  cd backend && npm install && npm test
+  cd ../frontend && npm install && npm test
+  ```
 
-Optionnel : build frontend pour vérifier que l’application compile correctement.
+  Optionnel : build frontend pour vérifier que l’application compile correctement.
 
-## ÉTAPE 7 — Linting (ESLint / Prettier)
+  ## ÉTAPE 7 — Linting (ESLint / Prettier)
 
-`.github/workflows/lint.yml`
+  `.github/workflows/lint.yml`
 
-Vérifie le style et la cohérence du code :
+  Vérifie le style et la cohérence du code :
 
-```
-cd backend && npx eslint . --ext .js,.ts
-cd ../frontend && npx eslint . --ext .js,.jsx
-npx prettier --check .
-```
+  ```
+  cd backend && npx eslint . --ext .js,.ts
+  cd ../frontend && npx eslint . --ext .js,.jsx
+  npx prettier --check .
+  ```
 
-Bloque la PR si des fichiers ne respectent pas les règles.
+  Bloque la PR si des fichiers ne respectent pas les règles.
 
-## ÉTAPE 8 — Pre-commit
+  ## ÉTAPE 8 — Pre-commit
 
-### Qu'est-ce que pre-commit ?
+  ### Qu'est-ce que pre-commit ?
 
-`pre-commit` est un outil qui exécute automatiquement des vérifications avant chaque commit Git pour empêcher d’envoyer du code mal formaté ou non conforme.
+  `pre-commit` est un outil qui exécute automatiquement des vérifications avant chaque commit Git pour empêcher d’envoyer du code mal formaté ou non conforme.
 
-Il agit avant que le commit soit créé (en local).
-- outil Python
-- installé avec pip
-- indépendant du stack
+  Il agit avant que le commit soit créé (en local).
+  - outil Python
+  - installé avec pip
+  - indépendant du stack
 
-### Installation (une seule fois par développeur)
-```
-pip install pre-commit        
-pre-commit install
-```
-Cela installe un hook Git dans .git/hooks/pre-commit.
+  ### Installation (une seule fois par développeur)
+  ```
+  pip install pre-commit        
+  pre-commit install
+  ```
+  Cela installe un hook Git dans .git/hooks/pre-commit.
 
-### Configuration du projet
+  ### Configuration du projet
 
-Dans `.pre-commit-config.yaml`, définition de :
+  Dans `.pre-commit-config.yaml`, définition de :
 
-- quels outils lancer (ESLint, Prettier, etc.)
-- sur quels fichiers
-- dans quel dossier (frontend / backend)
+  - quels outils lancer (ESLint, Prettier, etc.)
+  - sur quels fichiers
+  - dans quel dossier (frontend / backend)
 
-Ce fichier est versionné → toute l’équipe a le même comportement.
+  Ce fichier est versionné → toute l’équipe a le même comportement.
 
-### Fonctionnement
+  ### Fonctionnement
 
-- git add .
-- git commit -m "feat(login): Fixes #3 - Ajout page login"
-- Déclenchement du hook pre-commit :
-  - Lint du code
-  - Tests unitaires
-- Si une étape échoue, le commit est bloqué et un message s’affiche.
-- Si tout passe, le commit est effectué normalement.
+  - git add .
+  - git commit -m "feat(login): Fixes #3 - Ajout page login"
+  - Déclenchement du hook pre-commit :
+    - Lint du code
+    - Tests unitaires
+  - Si une étape échoue, le commit est bloqué et un message s’affiche.
+  - Si tout passe, le commit est effectué normalement.
 
-## ÉTAPE 9 — Audit des dépendances
+  ## ÉTAPE 9 — Audit des dépendances
 
-`.github/workflows/audit.yml`
+  `.github/workflows/audit.yml`
 
-Vérifie automatiquement la sécurité des packages npm :
+  Vérifie automatiquement la sécurité des packages npm :
 
-```
-cd server && npm audit --audit-level=high
-cd ../client && npm audit --audit-level=high
-```
+  ```
+  cd server && npm audit --audit-level=high
+  cd ../client && npm audit --audit-level=high
+  ```
 
-Bloque la PR si des vulnérabilités critiques sont détectées.
+  Bloque la PR si des vulnérabilités critiques sont détectées.
 
-## ÉTAPE 10 — Release & versioning
+  ## ÉTAPE 10 — Release & versioning
 
-`.github/workflows/release.yml`
+  `.github/workflows/release.yml`
 
-- Détecte les branches release/x.y.z.
-- Vérifie que la version respecte le format SemVer.
-- Crée le tag git et pousse sur GitHub.
-- Extrait la section correspondante dans CHANGELOG.md.
-- Crée la GitHub Release.
+  - Détecte les branches release/x.y.z.
+  - Vérifie que la version respecte le format SemVer.
+  - Crée le tag git et pousse sur GitHub.
+  - Extrait la section correspondante dans CHANGELOG.md.
+  - Crée la GitHub Release.
 
-# RÈGLES À RETENIR
+  # RÈGLES À RETENIR
 
-- 1 issue = 1 branche
-- Pas de push sur main
-- Pas de merge sans PR
-- Release = release/x.y.z
-- Fichiers obligatoire
+  - 1 issue = 1 branche
+  - Pas de push sur main
+  - Pas de merge sans PR
+  - Release = release/x.y.z
+  - Fichiers obligatoire
 
-# Diagramme visuel
+  # Diagramme visuel
 
-```
-           ┌───────────────┐
-           │ Issue github  │
-           └─────┬─────────┘
-                 │
-                 ▼
-           ┌──────────────┐
-           │ Créer branche│
-           │ feature/*    │
-           │ fix/*        │
-           │ hotfix/*     │
-           │ release/*    │
-           └─────┬────────┘
-                 │
-                 ▼
-           ┌─────────────┐
-           │ Ouvrir PR   │
-           │ vers main   │
-           └─────┬───────┘
-                 │
-       ┌─────────┴─────────┐
-       │ Workflow GitHub   │
-       │ (CI/CD checks)    │
-       └─────────┬─────────┘
-                 │
-    ┌────────────┴─────────────┐
-    │ Vérification du nom de   │
-    │ branche et format ticket │
-    └────────────┬─────────────┘
-                 │
-                 │ OK
-                 ▼
-          ┌─────────────┐
-          │ Ajout labels│
-          │ automatiques│
-          └──────┬──────┘
-                 │
-                 ▼
-          ┌─────────────┐
-          │ PR mergée   │
-          │ sur main    │
-          └──────┬──────┘
-                 │
-                 ▼
-         ┌─────────────────┐
-         │ Branche release │
-         │ détectée        │
-         └───────┬─────────┘
-                 │
-                 ▼
-        ┌──────────────────┐
-        │ Vérifier format  │
-        │ SemVer x.y.z     │
-        └────────┬─────────┘
-                 │
-                 ▼
-        ┌──────────────────┐
-        │ Créer et pousser │
-        │ le tag git       │
-        └────────┬─────────┘
-                 │
-                 ▼
-        ┌───────────────────┐
-        │ Extraire changelog│
-        │ version correspond│
-        └────────┬──────────┘
-                 │
-                 ▼
-        ┌──────────────────┐
-        │ Créer GitHub     │
-        │ Release          │
-        └──────────────────┘
-```
+  ```
+            ┌───────────────┐
+            │ Issue github  │
+            └─────┬─────────┘
+                  │
+                  ▼
+            ┌──────────────┐
+            │ Créer branche│
+            │ feature/*    │
+            │ fix/*        │
+            │ hotfix/*     │
+            │ release/*    │
+            └─────┬────────┘
+                  │
+                  ▼
+            ┌─────────────┐
+            │ Ouvrir PR   │
+            │ vers main   │
+            └─────┬───────┘
+                  │
+        ┌─────────┴─────────┐
+        │ Workflow GitHub   │
+        │ (CI/CD checks)    │
+        └─────────┬─────────┘
+                  │
+      ┌────────────┴─────────────┐
+      │ Vérification du nom de   │
+      │ branche et format ticket │
+      └────────────┬─────────────┘
+                  │
+                  │ OK
+                  ▼
+            ┌─────────────┐
+            │ Ajout labels│
+            │ automatiques│
+            └──────┬──────┘
+                  │
+                  ▼
+            ┌─────────────┐
+            │ PR mergée   │
+            │ sur main    │
+            └──────┬──────┘
+                  │
+                  ▼
+          ┌─────────────────┐
+          │ Branche release │
+          │ détectée        │
+          └───────┬─────────┘
+                  │
+                  ▼
+          ┌──────────────────┐
+          │ Vérifier format  │
+          │ SemVer x.y.z     │
+          └────────┬─────────┘
+                  │
+                  ▼
+          ┌──────────────────┐
+          │ Créer et pousser │
+          │ le tag git       │
+          └────────┬─────────┘
+                  │
+                  ▼
+          ┌───────────────────┐
+          │ Extraire changelog│
+          │ version correspond│
+          └────────┬──────────┘
+                  │
+                  ▼
+          ┌──────────────────┐
+          │ Créer GitHub     │
+          │ Release          │
+          └──────────────────┘
+  ```
 
-# Tableau récapitulatif
+  # Tableau récapitulatif
 
-| Workflow                                    | Fichier                                | Déclenchement                                            | Objectif                                                                                                                                                                         | Blocage / Messages                                                |
-| ------------------------------------------- | -------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **Vérification du nom de branche**          | `.github/workflows/branch-name.yml`    | PR ouverte, réouverte, mise à jour                       | Vérifie que le nom de branche suit la convention (`feature/123-desc`, `fix/456-desc`, `hotfix/789-desc`, `release/x.y.z`)                                                        | ❌ PR bloquée si nom invalide, message clair avec format attendu  |
-| **Vérification de la présence d’une issue** | `.github/workflows/ticket.yml`         | PR ouverte, réouverte, mise à jour                       | Vérifie que le titre de PR ou le nom de branche contient `#<numéro>` d’une issue                                                                                                 | ❌ PR bloquée si aucune référence à une issue, message clair      |
-| **Ajout automatique de labels**             | `.github/workflows/labels.yml`         | PR ouverte                                               | Ajoute un label selon le type de branche (`feature`, `bug`, `hotfix`, `release`)                                                                                                 | ⚠️ Message si aucun label ajouté                                  |
-| **Vérification des messages de commit**     | `.github/workflows/commit-message.yml` | Push sur main/dev ou branches feature/fix/hotfix/release | Vérifie le format `type(nom): Fixes #<issue> - message`                                                                                                                          | ❌ Push/PR bloqué si un commit invalide, message clair            |
-| **Vérification de la structure du projet**  | `.github/workflows/structure.yml`      | PR ouverte, réouverte, mise à jour                       | Vérifie fichiers racine (`README.md`, `CONTRIBUTING.md`, `INSTALL.md`, `LICENSE`) et dossiers MERN (`frontend`, `backend`) et fichiers internes (`package.json`, `.env.example`) | ❌ PR bloquée si un fichier/dossier manquant, message clair       |
-| **Tests unitaires / build**                 | `.github/workflows/tests.yml`          | PR ouverte, réouverte, mise à jour                       | Installe les dépendances et lance les tests backend et frontend                                                                                                                  | ❌ PR bloquée si un test échoue ou dossier manquant               |
-| **Linting (ESLint + Prettier)**             | `.github/workflows/lint.yml`           | PR ouverte, réouverte, mise à jour                       | Vérifie la qualité et la cohérence du code                                                                                                                                       | ❌ PR bloquée si des fichiers ne respectent pas les règles        |
-| **Audit des dépendances**                   | `.github/workflows/audit.yml`          | PR ouverte, réouverte, mise à jour                       | Vérifie la sécurité des packages npm (`npm audit --audit-level=high`)                                                                                                            | ❌ PR bloquée si vulnérabilités critiques détectées               |
-| **Release & versioning**                    | `.github/workflows/release.yml`        | PR fermée et mergée vers main depuis `release/x.y.z`     | Crée le tag git, extrait changelog et crée la GitHub Release                                                                                                                     | ❌ Release bloquée si format SemVer incorrect ou changelog absent |
+  | Workflow                                    | Fichier                                | Déclenchement                                            | Objectif                                                                                                                                                                         | Blocage / Messages                                                |
+  | ------------------------------------------- | -------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+  | **Vérification du nom de branche**          | `.github/workflows/branch-name.yml`    | PR ouverte, réouverte, mise à jour                       | Vérifie que le nom de branche suit la convention (`feature/123-desc`, `fix/456-desc`, `hotfix/789-desc`, `release/x.y.z`)                                                        | ❌ PR bloquée si nom invalide, message clair avec format attendu  |
+  | **Vérification de la présence d’une issue** | `.github/workflows/ticket.yml`         | PR ouverte, réouverte, mise à jour                       | Vérifie que le titre de PR ou le nom de branche contient `#<numéro>` d’une issue                                                                                                 | ❌ PR bloquée si aucune référence à une issue, message clair      |
+  | **Ajout automatique de labels**             | `.github/workflows/labels.yml`         | PR ouverte                                               | Ajoute un label selon le type de branche (`feature`, `bug`, `hotfix`, `release`)                                                                                                 | ⚠️ Message si aucun label ajouté                                  |
+  | **Vérification des messages de commit**     | `.github/workflows/commit-message.yml` | Push sur main/dev ou branches feature/fix/hotfix/release | Vérifie le format `type(nom): Fixes #<issue> - message`                                                                                                                          | ❌ Push/PR bloqué si un commit invalide, message clair            |
+  | **Vérification de la structure du projet**  | `.github/workflows/structure.yml`      | PR ouverte, réouverte, mise à jour                       | Vérifie fichiers racine (`README.md`, `CONTRIBUTING.md`, `INSTALL.md`, `LICENSE`) et dossiers MERN (`frontend`, `backend`) et fichiers internes (`package.json`, `.env.example`) | ❌ PR bloquée si un fichier/dossier manquant, message clair       |
+  | **Tests unitaires / build**                 | `.github/workflows/tests.yml`          | PR ouverte, réouverte, mise à jour                       | Installe les dépendances et lance les tests backend et frontend                                                                                                                  | ❌ PR bloquée si un test échoue ou dossier manquant               |
+  | **Linting (ESLint + Prettier)**             | `.github/workflows/lint.yml`           | PR ouverte, réouverte, mise à jour                       | Vérifie la qualité et la cohérence du code                                                                                                                                       | ❌ PR bloquée si des fichiers ne respectent pas les règles        |
+  | **Audit des dépendances**                   | `.github/workflows/audit.yml`          | PR ouverte, réouverte, mise à jour                       | Vérifie la sécurité des packages npm (`npm audit --audit-level=high`)                                                                                                            | ❌ PR bloquée si vulnérabilités critiques détectées               |
+  | **Release & versioning**                    | `.github/workflows/release.yml`        | PR fermée et mergée vers main depuis `release/x.y.z`     | Crée le tag git, extrait changelog et crée la GitHub Release                                                                                                                     | ❌ Release bloquée si format SemVer incorrect ou changelog absent |
