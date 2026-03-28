@@ -20,6 +20,7 @@ import matchesRoutes from './routes/matches.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
 import uploadRoutes from './routes/upload.js';
+import memberSeasonsRouter from './routes/memberSeasons.js';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use('/api/clubs', clubsRoutes);
 app.use('/api/seasons', seasonsRoutes);
 app.use('/api/teams', teamsRoutes);
 app.use('/api/members', membersRoutes);
+app.use('/api/member-seasons', memberSeasonsRouter);
 app.use('/api/news', newsRoutes);
 app.use('/api/albums', albumsRoutes);
 app.use('/api/medias', mediasRoutes);

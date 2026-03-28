@@ -6,11 +6,13 @@ import {
   updateTeam,
   archiveTeam,
   deleteTeam,
+  getTeamMembers,
 } from '../controllers/teamsController.js';
 
 const router = express.Router();
 
 router.get('/', getTeams);
+router.get('/:id/members', getTeamMembers);
 router.get('/:id', getTeamById);
 router.post('/', createTeam);
 router.put('/:id', updateTeam);

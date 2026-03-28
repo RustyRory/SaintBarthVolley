@@ -27,6 +27,15 @@ router.post('/', upload.single('file'), (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
+    // 🔹 Supprime l'ancienne image si elle existe
+    const oldFile = req.body.oldFile;
+    if (oldFile) {
+      const oldPath = path.join(uploadDir, oldFile);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
     const fileUrl = `/uploads/${req.file.filename}`; // accessible depuis public
     res.json({ fileUrl, filename: req.file.filename });
   } catch (err) {

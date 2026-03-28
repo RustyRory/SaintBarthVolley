@@ -1,3 +1,4 @@
+// models/Team.js
 import mongoose from 'mongoose';
 
 const trainingScheduleSchema = new mongoose.Schema(
@@ -21,7 +22,7 @@ const trainingScheduleSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { _id: false },
+  { _id: false }, // pas besoin d'ID pour chaque horaire
 );
 
 const teamSchema = new mongoose.Schema(
@@ -50,13 +51,9 @@ const teamSchema = new mongoose.Schema(
       ref: 'Season',
       required: true,
     },
+    // plusieurs entraînements par semaine
     trainingSchedule: [trainingScheduleSchema],
-    coachIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    // photo de l'équipe
     photo: {
       type: String, // URL
       trim: true,

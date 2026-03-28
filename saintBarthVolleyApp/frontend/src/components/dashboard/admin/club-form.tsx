@@ -18,23 +18,6 @@ export function ClubForm({ club, onChange, onSave }: Props) {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!dirty) return;
-    const timeout = setTimeout(async () => {
-      setSaving(true);
-      try {
-        await onSave(club);
-        setDirty(false);
-      } catch (err) {
-        console.error("Auto-save failed", err);
-      } finally {
-        setSaving(false);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  }, [club, dirty, onSave]);
-
   const handleChange = (name: string, value: string) => {
     setDirty(true);
 
@@ -59,9 +42,18 @@ export function ClubForm({ club, onChange, onSave }: Props) {
     }
   };
 
-  const handleFileUpload = async (field: "logo" | "photo", file: File) => {
+  const handleFileUpload = async (
+    field: "logo" | "photo",
+    file: File,
+    oldFileUrl?: string, // on peut passer l'ancienne image
+  ) => {
     const formData = new FormData();
     formData.append("file", file);
+
+    if (oldFileUrl) {
+      // envoie juste le filename, pas l'URL complète
+      formData.append("oldFile", oldFileUrl.split("/").pop()!);
+    }
 
     try {
       const res = await fetch("http://localhost:5000/api/upload", {
@@ -76,7 +68,6 @@ export function ClubForm({ club, onChange, onSave }: Props) {
       }
 
       const data = await res.json();
-
       const imageUrl = `http://localhost:5000/uploads/${data.filename}`;
 
       handleChange(field, imageUrl);
@@ -141,6 +132,9 @@ export function ClubForm({ club, onChange, onSave }: Props) {
               <Image
                 src={club.logo}
                 alt="Logo"
+                width={100}
+                height={100}
+                unoptimized
                 className="mt-2 h-24 object-contain"
               />
             )}
@@ -152,6 +146,9 @@ export function ClubForm({ club, onChange, onSave }: Props) {
               <Image
                 src={club.photo}
                 alt="Photo"
+                width={100}
+                height={100}
+                unoptimized
                 className="mt-2 h-24 object-cover"
               />
             )}

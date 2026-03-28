@@ -19,6 +19,9 @@ export function ClubPreview({ club }: { club: Club }) {
           <Image
             src={club.photo}
             alt="club"
+            width={100}
+            height={100}
+            unoptimized
             className="w-full h-full object-cover"
           />
         ) : (
@@ -35,6 +38,9 @@ export function ClubPreview({ club }: { club: Club }) {
             <Image
               src={club.logo}
               alt="logo"
+              width={100}
+              height={100}
+              unoptimized
               className="w-12 h-12 object-contain"
             />
           )}

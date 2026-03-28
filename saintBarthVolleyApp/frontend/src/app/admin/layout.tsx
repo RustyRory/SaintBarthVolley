@@ -55,7 +55,7 @@ export default function AdminLayout({
       <SidebarInset>
         <DashboardHeader />
 
-        <main className="flex flex-1 flex-col bg-muted/40 p-4 md:p-6">
+        <main className="flex flex-1 flex-col bg-muted/40 p-4 md:p-6 min-h-[calc(100vh-60px)]">
           {children}
         </main>
       </SidebarInset>

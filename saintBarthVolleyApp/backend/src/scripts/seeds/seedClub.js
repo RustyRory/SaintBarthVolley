@@ -1,7 +1,7 @@
 // scripts/seedClub.js
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Club from '../models/Club.js';
+import Club from '../../models/Club.js';
 
 dotenv.config();
 

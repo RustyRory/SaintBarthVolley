@@ -28,6 +28,7 @@ export default function ClubPage() {
   const [status, setStatus] = useState("");
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 🔹 Fetch club initial
   useEffect(() => {
@@ -46,12 +47,14 @@ export default function ClubPage() {
   // 🔹 Dirty check
   const isDirty = JSON.stringify(club) !== JSON.stringify(initialClub);
 
-  // 🔹 Auto-save (1s debounce)
+  // 🔹 Auto-save (debounced 1s)
   useEffect(() => {
     if (!club?._id || !isDirty) return;
 
+    // Clear previous debounce
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
+    // Set new debounce
     debounceRef.current = setTimeout(async () => {
       try {
         setSaving(true);
@@ -61,6 +64,10 @@ export default function ClubPage() {
         });
         setInitialClub(club);
         setStatus("saved");
+
+        // Reset status after 5s
+        if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+        statusTimeoutRef.current = setTimeout(() => setStatus(""), 5000);
       } catch (err) {
         console.error(err);
         setStatus("error");
@@ -69,13 +76,16 @@ export default function ClubPage() {
       }
     }, 1000);
 
-    return () => clearTimeout(debounceRef.current!);
-  }, [club]);
+    // Cleanup on unmount or club change
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [club, isDirty]);
 
   if (!club) return <p className="p-6">Chargement...</p>;
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full flex-1">
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Gestion du club</h1>
@@ -103,18 +113,25 @@ export default function ClubPage() {
           <ClubForm
             club={club}
             onChange={setClub}
+            // Optionnel : bouton "Enregistrer" manuel
             onSave={async (updatedClub) => {
               if (!updatedClub._id) return;
               try {
                 setSaving(true);
-                const res = await apiFetch(`/api/clubs/${updatedClub._id}`, {
+                await apiFetch(`/api/clubs/${updatedClub._id}`, {
                   method: "PUT",
                   body: JSON.stringify(updatedClub),
                 });
                 setInitialClub(updatedClub);
                 setStatus("saved");
+                if (statusTimeoutRef.current)
+                  clearTimeout(statusTimeoutRef.current);
+                statusTimeoutRef.current = setTimeout(
+                  () => setStatus(""),
+                  5000,
+                );
               } catch (err) {
-                console.error("Auto-save failed", err);
+                console.error("Manual save failed", err);
                 setStatus("error");
               } finally {
                 setSaving(false);

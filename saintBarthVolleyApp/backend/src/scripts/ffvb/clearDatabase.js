@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Match from '../models/Match.js';
-import Standing from '../models/Standing.js';
+import Match from '../../models/Match.js';
+import Standing from '../../models/Standing.js';
 
 dotenv.config();
 

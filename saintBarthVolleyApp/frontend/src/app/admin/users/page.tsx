@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { getUsers, deleteUser, type User } from "@/services/userService";
-import { UserForm } from "@/components/dashboard/admin/user-form";
+import { UserForm } from "@/components/dashboard/admin/users-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
   if (loading) return <div className="p-6">Chargement...</div>;
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full flex-1">
       <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
 
       {/* 🔎 Filtres */}
@@ -133,10 +133,15 @@ export default function AdminUsersPage() {
             </div>
           </div>
         ))}
+        {filteredUsers.length === 0 && (
+          <div className="text-center text-muted-foreground py-10 md:hidden">
+            Aucun utilisateur
+          </div>
+        )}
       </div>
 
       {/* 💻 DESKTOP → TABLE */}
-      <div className="hidden md:block rounded-lg border overflow-x-auto">
+      <div className="hidden md:flex flex-col flex-1 rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted">
             <tr>
@@ -149,35 +154,46 @@ export default function AdminUsersPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
-              <tr key={user._id} className="border-t">
-                <td className="p-3">
-                  {user.firstName} {user.lastName}
-                </td>
-                <td className="p-3">{user.email}</td>
-                <td className="p-3 capitalize">{user.role}</td>
-                <td className="p-3">{user.isActive ? "Oui" : "Non"}</td>
-                <td className="p-3">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
-                <td className="p-3 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setEditingUser(user)}
-                  >
-                    Modifier
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(user._id)}
-                  >
-                    Supprimer
-                  </Button>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <tr key={user._id} className="border-t">
+                  <td className="p-3">
+                    {user.firstName} {user.lastName}
+                  </td>
+                  <td className="p-3">{user.email}</td>
+                  <td className="p-3 capitalize">{user.role}</td>
+                  <td className="p-3">{user.isActive ? "Oui" : "Non"}</td>
+                  <td className="p-3">
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingUser(user)}
+                    >
+                      Modifier
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(user._id)}
+                    >
+                      Supprimer
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="h-60">
+                  <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <p className="text-sm">Aucun utilisateur</p>
+                    <p className="text-xs">Commencez par en créer un</p>
+                  </div>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

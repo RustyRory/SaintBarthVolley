@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    role: { type: String, enum: ['admin', 'editor', 'user', 'other'], default: 'user' },
+    role: { type: String, enum: ['admin', 'editor', 'writer', 'user', 'other'], default: 'user' },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     passwordHash: { type: String, required: true },

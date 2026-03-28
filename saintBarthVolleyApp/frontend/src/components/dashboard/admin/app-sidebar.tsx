@@ -64,7 +64,7 @@ const data = {
     },
     {
       title: "Membres / Joueurs",
-      url: "/admin/players",
+      url: "/admin/members",
       icon: IconListDetails,
     },
     {

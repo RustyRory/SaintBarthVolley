@@ -1,8 +1,9 @@
 import Team from '../models/Team.js';
+import MemberSeason from '../models/MemberSeason.js';
 
 export const getTeams = async (req, res) => {
   try {
-    const teams = await Team.find({ isArchived: false }).populate('seasonId').populate('coachIds');
+    const teams = await Team.find({ isArchived: false }).populate('seasonId');
 
     res.json(teams);
   } catch (error) {
@@ -12,7 +13,7 @@ export const getTeams = async (req, res) => {
 
 export const getTeamById = async (req, res) => {
   try {
-    const team = await Team.findById(req.params.id).populate('seasonId').populate('coachIds');
+    const team = await Team.findById(req.params.id).populate('seasonId');
 
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
@@ -73,6 +74,30 @@ export const deleteTeam = async (req, res) => {
     }
 
     res.json({ message: 'Team deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getTeamMembers = async (req, res) => {
+  try {
+    const teamId = req.params.id;
+
+    const members = await MemberSeason.find({
+      teams: teamId,
+      isActive: true,
+    })
+      .populate({
+        path: 'memberId',
+        select: 'firstName lastName photo',
+      })
+      .populate({
+        path: 'seasonId',
+        select: 'name',
+      });
+
+    members.sort((a, b) => a.memberId.lastName.localeCompare(b.memberId.lastName));
+    res.json(members);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

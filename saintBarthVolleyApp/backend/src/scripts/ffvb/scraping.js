@@ -4,8 +4,8 @@ dotenv.config();
 import puppeteer from 'puppeteer';
 import mongoose from 'mongoose';
 import * as cheerio from 'cheerio';
-import Match from '../models/Match.js';
-import Standing from '../models/Standing.js';
+import Match from '../../models/Match.js';
+import Standing from '../../models/Standing.js';
 
 // 🔹 Club fixe
 const CLUB_TEAM_NAME = "AS SAINT-BARTHELEMY D'ANJOU V.B.";
