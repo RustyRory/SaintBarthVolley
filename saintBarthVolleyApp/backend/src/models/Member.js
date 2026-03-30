@@ -12,62 +12,31 @@ const memberSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    types: {
-      type: [
-        {
-          type: String,
-          enum: ['owner', 'staff', 'volunteer', 'referee', 'player', 'coach', 'other'],
-        },
-      ],
-      required: true,
-      validate: [(v) => v.length > 0, 'One type at least is required'],
-    },
-    role: {
-      type: String,
-      trim: true,
-    },
-    teamId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Team',
-    },
-    seasonId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Season',
-      required: true,
-    },
-    birthDate: {
-      type: Date,
-    },
-    position: {
-      type: String,
-      trim: true,
-    },
-    height: {
-      type: Number,
-      min: 0,
-    },
-    weight: {
-      type: Number,
-      min: 0,
-    },
+
+    birthDate: Date,
+
     photo: {
-      type: String, // URL Nextcloud
+      type: String,
       trim: true,
     },
+
     bio: {
       type: String,
       trim: true,
     },
+
+    // 🔗 lien futur avec user
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+
     isActive: {
       type: Boolean,
       default: true,
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-const Member = mongoose.model('Member', memberSchema);
-
-export default Member;
+export default mongoose.model('Member', memberSchema);

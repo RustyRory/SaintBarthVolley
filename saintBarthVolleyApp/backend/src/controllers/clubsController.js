@@ -1,4 +1,6 @@
+// src/controllers/clubController.js
 import Club from '../models/Club.js';
+import merge from 'lodash.merge';
 
 // GET all clubs
 export const getAllClubs = async (req, res) => {
@@ -10,7 +12,7 @@ export const getAllClubs = async (req, res) => {
   }
 };
 
-// GET single club
+// GET single club by ID
 export const getClubById = async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
@@ -21,7 +23,7 @@ export const getClubById = async (req, res) => {
   }
 };
 
-// POST create club
+// POST create new club
 export const createClub = async (req, res) => {
   try {
     const club = new Club(req.body);
@@ -32,13 +34,13 @@ export const createClub = async (req, res) => {
   }
 };
 
-// PUT update club
+// PUT update club by ID
 export const updateClub = async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
     if (!club) return res.status(404).json({ message: 'Club not found' });
 
-    Object.assign(club, req.body); // Met à jour tous les champs reçus
+    merge(club, req.body); // fusion profonde pour nested objects
     await club.save();
     res.json({ message: 'Club updated' });
   } catch (err) {
@@ -46,7 +48,7 @@ export const updateClub = async (req, res) => {
   }
 };
 
-// DELETE club
+// DELETE club by ID
 export const deleteClub = async (req, res) => {
   try {
     const club = await Club.findByIdAndDelete(req.params.id);

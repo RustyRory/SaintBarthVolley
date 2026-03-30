@@ -1,4 +1,5 @@
 import Season from '../models/Season.js';
+import MemberSeason from '../models/MemberSeason.js';
 
 // Créer une nouvelle saison
 export const createSeason = async (req, res) => {
@@ -29,6 +30,30 @@ export const getSeasonById = async (req, res) => {
     res.json(season);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+export const getSeasonMembers = async (req, res) => {
+  try {
+    const seasonId = req.params.id;
+
+    const members = await MemberSeason.find({
+      seasonId,
+      isActive: true,
+    })
+      .populate({
+        path: 'memberId',
+        select: 'firstName lastName photo',
+      })
+      .populate({
+        path: 'teams',
+        select: 'name category',
+      });
+
+    members.sort((a, b) => a.memberId.lastName.localeCompare(b.memberId.lastName));
+    res.json(members);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 

@@ -5,12 +5,14 @@ import {
   getSeasonById,
   updateSeason,
   deleteSeason,
+  getSeasonMembers,
 } from '../controllers/seasonsController.js';
 
 const router = express.Router();
 
 // CRUD seasons
 router.get('/', getSeasons);
+router.get('/:id/members', getSeasonMembers);
 router.get('/:id', getSeasonById);
 router.post('/', createSeason);
 router.put('/:id', updateSeason);

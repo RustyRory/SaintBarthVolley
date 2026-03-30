@@ -1,8 +1,9 @@
 import Member from '../models/Member.js';
+import MemberSeason from '../models/MemberSeason.js';
 
 export const getMembers = async (req, res) => {
   try {
-    const members = await Member.find({ isActive: true }).populate('teamId').populate('seasonId');
+    const members = await Member.find({ isActive: true });
 
     res.json(members);
   } catch (error) {
@@ -12,13 +13,22 @@ export const getMembers = async (req, res) => {
 
 export const getMemberById = async (req, res) => {
   try {
-    const member = await Member.findById(req.params.id).populate('teamId').populate('seasonId');
+    const member = await Member.findById(req.params.id);
 
     if (!member) {
       return res.status(404).json({ message: 'Member not found' });
     }
 
-    res.json(member);
+    const memberSeasons = await MemberSeason.find({
+      memberId: member._id,
+    })
+      .populate('seasonId')
+      .populate('teams');
+
+    res.json({
+      member,
+      seasons: memberSeasons,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

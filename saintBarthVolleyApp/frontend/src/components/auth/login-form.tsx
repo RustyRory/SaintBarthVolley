@@ -32,7 +32,7 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const user = await authApi.login(email, password);
+      await authApi.login(email, password);
       // 🔥 replace = évite retour arrière vers login
       router.replace("/admin");
       router.refresh();

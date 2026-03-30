@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { getUsers, deleteUser, type User } from "@/services/userService";
-import { UserForm } from "@/components/dashboard/admin/user-form";
+import { UserForm } from "@/components/dashboard/admin/users-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,7 +22,6 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = React.useState("all");
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
 
-  // 🔄 Charger les utilisateurs
   React.useEffect(() => {
     getUsers()
       .then((data) => {
@@ -32,7 +31,6 @@ export default function AdminUsersPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // 🔎 Filtrage et recherche
   React.useEffect(() => {
     let result = users;
 
@@ -51,9 +49,8 @@ export default function AdminUsersPage() {
     setFilteredUsers(result);
   }, [search, roleFilter, users]);
 
-  // ❌ Supprimer un utilisateur
   const handleDelete = async (id: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
       return;
     try {
       await deleteUser(id);
@@ -64,22 +61,24 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (loading) return <div>Chargement des utilisateurs...</div>;
+  if (loading) return <div className="p-6">Chargement...</div>;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full flex-1">
       <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
 
       {/* 🔎 Filtres */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Input
-          placeholder="Rechercher par nom ou email..."
+          className="w-full"
+          placeholder="Rechercher..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+
         <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-45">
-            <SelectValue placeholder="Filtrer par rôle" />
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Rôle" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous</SelectItem>
@@ -91,8 +90,58 @@ export default function AdminUsersPage() {
         </Select>
       </div>
 
-      {/* 📋 Tableau */}
-      <div className="rounded-lg border">
+      {/* 📱 MOBILE → CARD VIEW */}
+      <div className="flex flex-col gap-4 md:hidden">
+        {filteredUsers.map((user) => (
+          <div
+            key={user._id}
+            className="border rounded-lg p-4 flex flex-col gap-2"
+          >
+            <div className="font-semibold">
+              {user.firstName} {user.lastName}
+            </div>
+
+            <div className="text-sm text-muted-foreground">{user.email}</div>
+
+            <div className="text-sm">
+              Rôle : <span className="capitalize">{user.role}</span>
+            </div>
+
+            <div className="text-sm">
+              Actif : {user.isActive ? "Oui" : "Non"}
+            </div>
+
+            <div className="text-xs text-muted-foreground">
+              {new Date(user.createdAt).toLocaleDateString()}
+            </div>
+
+            <div className="flex gap-2 mt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditingUser(user)}
+              >
+                Modifier
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => handleDelete(user._id)}
+              >
+                Supprimer
+              </Button>
+            </div>
+          </div>
+        ))}
+        {filteredUsers.length === 0 && (
+          <div className="text-center text-muted-foreground py-10 md:hidden">
+            Aucun utilisateur
+          </div>
+        )}
+      </div>
+
+      {/* 💻 DESKTOP → TABLE */}
+      <div className="hidden md:flex flex-col flex-1 rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted">
             <tr>
@@ -105,40 +154,51 @@ export default function AdminUsersPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
-              <tr key={user._id} className="border-t">
-                <td className="p-3">
-                  {user.firstName} {user.lastName}
-                </td>
-                <td className="p-3">{user.email}</td>
-                <td className="p-3 capitalize">{user.role}</td>
-                <td className="p-3">{user.isActive ? "Oui" : "Non"}</td>
-                <td className="p-3">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
-                <td className="p-3 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setEditingUser(user)}
-                  >
-                    Modifier
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(user._id)}
-                  >
-                    Supprimer
-                  </Button>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <tr key={user._id} className="border-t">
+                  <td className="p-3">
+                    {user.firstName} {user.lastName}
+                  </td>
+                  <td className="p-3">{user.email}</td>
+                  <td className="p-3 capitalize">{user.role}</td>
+                  <td className="p-3">{user.isActive ? "Oui" : "Non"}</td>
+                  <td className="p-3">
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingUser(user)}
+                    >
+                      Modifier
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(user._id)}
+                    >
+                      Supprimer
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="h-60">
+                  <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <p className="text-sm">Aucun utilisateur</p>
+                    <p className="text-xs">Commencez par en créer un</p>
+                  </div>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* 📝 Formulaire modal */}
+      {/* 📝 Modal */}
       {editingUser && (
         <UserForm
           user={editingUser}

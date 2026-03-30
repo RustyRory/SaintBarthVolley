@@ -67,10 +67,10 @@ export const UserForm = ({ user, onClose, onSave }: UserFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50 p-4">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md flex flex-col gap-4"
+        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
       >
         <h2 className="text-xl font-bold">Modifier l&apos;utilisateur</h2>
 
