@@ -23,7 +23,10 @@ jobs:
 
           git fetch origin $BASE_REF
 
-          REGEX="^(feat|fix|docs|chore|refactor|test|hotfix)\([a-z0-9_-]+\): Fixes #[0-9]+ - .+"
+          # Commits avec numéro d'issue (feat, fix, hotfix, refactor, test)
+          REGEX_ISSUE="^(feat|fix|hotfix|refactor|test)\([a-z0-9_-]+\): Fixes #[0-9]+ - .+"
+          # Commits sans numéro d'issue autorisés (chore, docs, ci)
+          REGEX_NO_ISSUE="^(chore|docs|ci)\([a-z0-9_-]+\): .+"
 
           COMMITS=$(git log origin/$BASE_REF..HEAD --pretty=format:"%H")
 
@@ -32,17 +35,17 @@ jobs:
           for COMMIT in $COMMITS; do
             MESSAGE=$(git log -1 --pretty=format:"%s" $COMMIT | sed 's/^[[:space:]]*//')
 
-            # Ignorer les commits de merge
-            if [[ "$MESSAGE" =~ ^Merge\ (pull\ request|branch|remote) ]]; then
+            # Ignorer tous les commits de merge
+            if [[ "$MESSAGE" =~ ^Merge ]]; then
               echo "⏭️ Commit de merge ignoré: $MESSAGE"
               continue
             fi
 
-            if ! [[ "$MESSAGE" =~ $REGEX ]]; then
+            if [[ "$MESSAGE" =~ $REGEX_ISSUE ]] || [[ "$MESSAGE" =~ $REGEX_NO_ISSUE ]]; then
+              echo "✅ Commit valide: $MESSAGE"
+            else
               echo "❌ Commit invalide: $MESSAGE"
               INVALID=true
-            else
-              echo "✅ Commit valide: $MESSAGE"
             fi
           done
 
