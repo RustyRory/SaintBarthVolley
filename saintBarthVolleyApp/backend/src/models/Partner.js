@@ -13,8 +13,8 @@ const partnerSchema = new mongoose.Schema(
       trim: true,
     },
     logo: {
-      type: String, // URL (Nextcloud ou externe)
-      required: true,
+      type: String,
+      default: '',
       trim: true,
     },
     website: {

@@ -4,13 +4,14 @@ import * as React from "react";
 import {
   IconDashboard,
   IconUsers,
-  IconFolder,
-  IconListDetails,
-  IconChartBar,
-  IconDatabase,
+  IconBuildingCommunity,
+  IconNews,
+  IconCalendar,
+  IconUsersGroup,
+  IconBallVolleyball,
+  IconStar,
   IconSettings,
   IconHelp,
-  IconSearch,
   IconInnerShadowTop,
 } from "@tabler/icons-react";
 
@@ -27,84 +28,43 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 
-const data = {
-  user: {
-    name: "Admin",
-    email: "admin@example.com",
-    avatar: "/avatars/admin.jpg",
-  },
+const navMain = [
+  { title: "Dashboard", url: "/admin", icon: IconDashboard },
+  { title: "Club", url: "/admin/club", icon: IconBuildingCommunity },
+  { title: "Saisons & Équipes", url: "/admin/seasons", icon: IconCalendar },
+  { title: "Membres", url: "/admin/members", icon: IconUsersGroup },
+  { title: "Matches", url: "/admin/matches", icon: IconBallVolleyball },
+  { title: "Actualités", url: "/admin/news", icon: IconNews },
+  { title: "Partenaires", url: "/admin/partners", icon: IconStar },
+  { title: "Utilisateurs", url: "/admin/users", icon: IconUsers },
+];
 
-  // MENU PRINCIPAL ADMIN
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: IconDashboard,
-    },
-    {
-      title: "Users",
-      url: "/admin/users",
-      icon: IconUsers,
-    },
-    {
-      title: "Club",
-      url: "/admin/club",
-      icon: IconFolder,
-    },
-    {
-      title: "Actualités",
-      url: "/admin/news",
-      icon: IconListDetails,
-    },
-    {
-      title: "Equipes",
-      url: "/admin/teams",
-      icon: IconListDetails,
-    },
-    {
-      title: "Membres / Joueurs",
-      url: "/admin/members",
-      icon: IconListDetails,
-    },
-    {
-      title: "Matches",
-      url: "/admin/matches",
-      icon: IconChartBar,
-    },
-    {
-      title: "Championnats",
-      url: "/admin/championships",
-      icon: IconDatabase,
-    },
-    {
-      title: "Partenaires",
-      url: "/admin/partners",
-      icon: IconDatabase,
-    },
-  ],
+const navSecondary = [
+  { title: "Paramètres", url: "/admin/settings", icon: IconSettings },
+  { title: "Aide", url: "/admin/help", icon: IconHelp },
+];
 
-  // 🔹 MENU SECONDAIRE
-  navSecondary: [
-    {
-      title: "Paramètres",
-      url: "/admin/settings",
-      icon: IconSettings,
-    },
-    {
-      title: "Aide",
-      url: "/admin/help",
-      icon: IconHelp,
-    },
-    {
-      title: "Recherche",
-      url: "/admin/search",
-      icon: IconSearch,
-    },
-  ],
-};
+interface AuthUser {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [user, setUser] = React.useState<AuthUser | null>(null);
+
+  React.useEffect(() => {
+    apiFetch("/api/auth/me")
+      .then((data: AuthUser) => setUser(data))
+      .catch(() => setUser(null));
+  }, []);
+
+  const navUser = user
+    ? { name: `${user.firstName} ${user.lastName}`, email: user.email }
+    : { name: "Admin", email: "" };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -116,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link href="/admin">
                 <IconInnerShadowTop className="size-5!" />
-                <span className="text-base font-semibold">Admin Dashboard</span>
+                <span className="text-base font-semibold">Admin</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -124,12 +84,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={navUser} />
       </SidebarFooter>
     </Sidebar>
   );

@@ -2,9 +2,9 @@ import mongoose from 'mongoose';
 
 const standingSchema = new mongoose.Schema(
   {
-    championshipId: {
+    teamId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Championship',
+      ref: 'Team',
       required: true,
     },
     teamName: {

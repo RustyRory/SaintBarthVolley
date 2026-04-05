@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,12 +11,12 @@ import Image from "next/image";
 interface Props {
   club: any;
   onChange: (club: any) => void;
-  onSave: (club: any) => Promise<void>;
+  onSave?: (club: any) => Promise<void>; // géré par le parent
 }
 
-export function ClubForm({ club, onChange, onSave }: Props) {
+export function ClubForm({ club, onChange }: Props) {
   const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const saving = false;
 
   const handleChange = (name: string, value: string) => {
     setDirty(true);
