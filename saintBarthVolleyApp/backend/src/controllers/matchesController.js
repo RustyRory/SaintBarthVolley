@@ -1,15 +1,15 @@
 import Match from '../models/Match.js';
 
-// Liste des matchs (par championnat)
+// Liste des matchs (par équipe)
 export const getMatches = async (req, res) => {
   try {
     const filter = {};
 
-    if (req.query.championshipId) {
-      filter.championshipId = req.query.championshipId;
+    if (req.query.teamId) {
+      filter.teamId = req.query.teamId;
     }
 
-    const matches = await Match.find(filter).populate('championshipId').sort({ date: 1 });
+    const matches = await Match.find(filter).populate('teamId').sort({ date: 1 });
 
     res.json(matches);
   } catch (error) {
@@ -20,7 +20,7 @@ export const getMatches = async (req, res) => {
 // Match par ID
 export const getMatchById = async (req, res) => {
   try {
-    const match = await Match.findById(req.params.id).populate('championshipId');
+    const match = await Match.findById(req.params.id).populate('teamId');
 
     if (!match) {
       return res.status(404).json({ message: 'Match non trouvé' });

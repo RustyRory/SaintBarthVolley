@@ -1,104 +1,90 @@
-import Team from '../models/Team.js';
-import MemberSeason from '../models/MemberSeason.js';
+// src/controllers/teamsController.js
+import Team from '../models/Team.js'; // ton modèle Mongoose pour Team
 
-export const getTeams = async (req, res) => {
-  try {
-    const teams = await Team.find({ isArchived: false }).populate('seasonId');
-
-    res.json(teams);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
+// 🔹 Récupérer une équipe par son ID
 export const getTeamById = async (req, res) => {
   try {
-    const team = await Team.findById(req.params.id).populate('seasonId');
-
-    if (!team) {
-      return res.status(404).json({ message: 'Team not found' });
-    }
-
+    const team = await Team.findById(req.params.id);
+    if (!team) return res.status(404).json({ message: 'Équipe non trouvée' });
     res.json(team);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
+// 🔹 GET /api/teams?seasonId=xxx  OR  /api/seasons/:seasonId/teams
+export const getTeamsBySeason = async (req, res) => {
+  try {
+    const seasonId = req.params.seasonId ?? req.query.seasonId;
+    if (!seasonId) return res.status(400).json({ message: 'seasonId requis' });
+
+    const teams = await Team.find({ seasonId });
+    res.json(teams);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+// 🔹 POST /api/teams
 export const createTeam = async (req, res) => {
   try {
-    const team = await Team.create(req.body);
-    res.status(201).json(team);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+    const { name, category, gender, level, seasonId } = req.body;
+
+    if (!name || !category || !gender || !seasonId) {
+      return res.status(400).json({ message: 'Champs obligatoires manquants' });
+    }
+
+    const newTeam = new Team({ name, category, gender, level, seasonId });
+    await newTeam.save();
+    res.status(201).json(newTeam);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
+export const createTeamForSeason = async (req, res) => {
+  try {
+    const { id: seasonId } = req.params;
+    const { name, category, gender, level } = req.body;
+
+    if (!name || !category || !gender) {
+      return res.status(400).json({ message: 'Champs obligatoires manquants' });
+    }
+
+    const newTeam = new Team({ name, category, gender, level, seasonId });
+    await newTeam.save();
+    res.status(201).json(newTeam);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+// 🔹 PUT /api/teams/:id
 export const updateTeam = async (req, res) => {
   try {
-    const team = await Team.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!team) {
-      return res.status(404).json({ message: 'Team not found' });
-    }
-
-    res.json(team);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+    const { id } = req.params;
+    const updated = await Team.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ message: 'Équipe introuvable' });
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
-export const archiveTeam = async (req, res) => {
-  try {
-    const team = await Team.findByIdAndUpdate(req.params.id, { isArchived: true }, { new: true });
-
-    if (!team) {
-      return res.status(404).json({ message: 'Team not found' });
-    }
-
-    res.json({ message: 'Team archived', team });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
+// 🔹 DELETE /api/teams/:id
 export const deleteTeam = async (req, res) => {
   try {
-    const team = await Team.findByIdAndDelete(req.params.id);
-
-    if (!team) {
-      return res.status(404).json({ message: 'Team not found' });
-    }
-
-    res.json({ message: 'Team deleted' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const getTeamMembers = async (req, res) => {
-  try {
-    const teamId = req.params.id;
-
-    const members = await MemberSeason.find({
-      teams: teamId,
-      isActive: true,
-    })
-      .populate({
-        path: 'memberId',
-        select: 'firstName lastName photo',
-      })
-      .populate({
-        path: 'seasonId',
-        select: 'name',
-      });
-
-    members.sort((a, b) => a.memberId.lastName.localeCompare(b.memberId.lastName));
-    res.json(members);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    const { id } = req.params;
+    const deleted = await Team.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: 'Équipe introuvable' });
+    res.json({ message: 'Équipe supprimée' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };

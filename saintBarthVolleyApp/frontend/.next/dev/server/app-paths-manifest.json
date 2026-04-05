@@ -1,6 +1,8 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/admin/club/page": "app/admin/club/page.js",
-  "/admin/members/page": "app/admin/members/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/seasons/[seasonId]/teams/[teamId]/page": "app/admin/seasons/[seasonId]/teams/[teamId]/page.js",
+  "/admin/seasons/[seasonId]/teams/page": "app/admin/seasons/[seasonId]/teams/page.js",
+  "/admin/seasons/page": "app/admin/seasons/page.js",
   "/admin/users/page": "app/admin/users/page.js"
 }

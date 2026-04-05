@@ -1,15 +1,15 @@
 import Standing from '../models/Standing.js';
 
-// Liste des classements (par championnat)
+// Liste des classements (par équipe)
 export const getStandings = async (req, res) => {
   try {
     const filter = {};
 
-    if (req.query.championshipId) {
-      filter.championshipId = req.query.championshipId;
+    if (req.query.teamId) {
+      filter.teamId = req.query.teamId;
     }
 
-    const standings = await Standing.find(filter).populate('championshipId').sort({ rank: 1 });
+    const standings = await Standing.find(filter).populate('teamId').sort({ rank: 1 });
 
     res.json(standings);
   } catch (error) {
@@ -20,7 +20,7 @@ export const getStandings = async (req, res) => {
 // Classement par ID
 export const getStandingById = async (req, res) => {
   try {
-    const standing = await Standing.findById(req.params.id).populate('championshipId');
+    const standing = await Standing.findById(req.params.id).populate('teamId');
 
     if (!standing) {
       return res.status(404).json({ message: 'Standing not found' });
@@ -32,7 +32,7 @@ export const getStandingById = async (req, res) => {
   }
 };
 
-// Création (import FFVB typiquement)
+// Création
 export const createStanding = async (req, res) => {
   try {
     const standing = await Standing.create(req.body);

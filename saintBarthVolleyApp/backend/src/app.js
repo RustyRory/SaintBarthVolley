@@ -5,61 +5,76 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 
+// 🔹 Routes
 import usersRoutes from './routes/users.js';
 import clubsRoutes from './routes/clubs.js';
 import seasonsRoutes from './routes/seasons.js';
 import teamsRoutes from './routes/teams.js';
 import membersRoutes from './routes/members.js';
+import membersWithSeasonRoute from './routes/api/membersWithSeason.js';
+import authRoutes from './routes/api/auth.js';
+import adminRoutes from './routes/api/admin.js';
+import uploadRoutes from './routes/api/upload.js';
+import scrapingRoutes from './routes/api/scraping.js';
+import statsRoutes from './routes/api/stats.js';
+
+// Autres routes (optionnel)
 import newsRoutes from './routes/news.js';
 import albumsRoutes from './routes/albums.js';
 import mediasRoutes from './routes/medias.js';
 import partnersRoutes from './routes/partners.js';
-import championshipsRoutes from './routes/championships.js';
 import standingsRoutes from './routes/standings.js';
 import matchesRoutes from './routes/matches.js';
-import authRoutes from './routes/auth.js';
-import adminRoutes from './routes/admin.js';
-import uploadRoutes from './routes/upload.js';
-import memberSeasonsRouter from './routes/memberSeasons.js';
 
 dotenv.config();
-
 const app = express();
 
-// Middlewares
+// 🔹 Middlewares globaux
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 🔹 CORS : autoriser Next.js front sur localhost:3000
+// 🔹 CORS pour Next.js
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',');
 app.use(
   cors({
-    origin: 'http://localhost:3000', // Next.js
+    origin: (origin, cb) => {
+      // Autoriser les requêtes sans origin (ex: curl, Postman) et les origins autorisées
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error(`CORS bloqué: ${origin}`));
+    },
     credentials: true,
   }),
 );
 
-// Route test
-app.get('/', (req, res) => res.send('API Volley fonctionne !'));
-
+// 🔹 Statique pour uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
-// Routes API
+// 🔹 Route test
+app.get('/', (req, res) => res.send('API Volley fonctionne !'));
+
+// 🔹 Routes API principales
 app.use('/api/users', usersRoutes);
 app.use('/api/clubs', clubsRoutes);
-app.use('/api/seasons', seasonsRoutes);
-app.use('/api/teams', teamsRoutes);
-app.use('/api/members', membersRoutes);
-app.use('/api/member-seasons', memberSeasonsRouter);
+app.use('/api/seasons', seasonsRoutes); // CRUD saisons
+app.use('/api/teams', teamsRoutes); // CRUD équipes
+app.use('/api/members', membersRoutes); // CRUD membres
+app.use('/api/members-with-season', membersWithSeasonRoute); // Membres + saison active
+
+// 🔹 Routes admin/auth/upload
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/scraping', scrapingRoutes);
+app.use('/api/stats', statsRoutes);
+
+// 🔹 Routes optionnelles
 app.use('/api/news', newsRoutes);
 app.use('/api/albums', albumsRoutes);
 app.use('/api/medias', mediasRoutes);
 app.use('/api/partners', partnersRoutes);
-app.use('/api/championships', championshipsRoutes);
 app.use('/api/standings', standingsRoutes);
 app.use('/api/matches', matchesRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/upload', uploadRoutes);
 
+// 🔹 Export
 export default app;
