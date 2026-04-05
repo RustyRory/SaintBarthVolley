@@ -34,7 +34,7 @@ export default function ClubPage() {
   useEffect(() => {
     const fetchClub = async () => {
       try {
-        const data = await apiFetch("/api/clubs");
+        const data = await apiFetch<Club[]>("/api/clubs");
         setClub(data[0]);
         setInitialClub(data[0]);
       } catch (err) {

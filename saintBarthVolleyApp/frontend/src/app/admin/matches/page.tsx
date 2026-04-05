@@ -79,7 +79,7 @@ export default function MatchesPage() {
   const CLUB_NAME = "AS SAINT-BARTHELEMY D'ANJOU V.B.";
 
   React.useEffect(() => {
-    apiFetch("/api/seasons").then(setSeasons).catch(console.error);
+    apiFetch<Season[]>("/api/seasons").then(setSeasons).catch(console.error);
   }, []);
 
   React.useEffect(() => {
@@ -87,7 +87,7 @@ export default function MatchesPage() {
       const fetchAll = async () => {
         const allTeams: Team[] = [];
         for (const s of seasons) {
-          const t: Team[] = await apiFetch(
+          const t: Team[] = await apiFetch<Team[]>(
             `/api/teams?seasonId=${s._id}`,
           ).catch(() => []);
           allTeams.push(...t);
@@ -96,7 +96,7 @@ export default function MatchesPage() {
       };
       if (seasons.length > 0) fetchAll();
     } else {
-      apiFetch(`/api/teams?seasonId=${selectedSeason}`)
+      apiFetch<Team[]>(`/api/teams?seasonId=${selectedSeason}`)
         .then(setTeams)
         .catch(console.error);
     }
@@ -116,7 +116,7 @@ export default function MatchesPage() {
         selectedTeam === "all"
           ? "/api/matches"
           : `/api/matches?teamId=${selectedTeam}`;
-      setMatches(await apiFetch(url));
+      setMatches(await apiFetch<Match[]>(url));
     } catch (err) {
       console.error(err);
     } finally {
@@ -131,7 +131,7 @@ export default function MatchesPage() {
         selectedTeam === "all"
           ? "/api/standings"
           : `/api/standings?teamId=${selectedTeam}`;
-      setStandings(await apiFetch(url));
+      setStandings(await apiFetch<Standing[]>(url));
     } catch (err) {
       console.error(err);
     } finally {
