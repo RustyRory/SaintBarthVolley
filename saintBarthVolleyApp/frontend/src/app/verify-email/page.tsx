@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import type { ApiMessage } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -34,7 +35,9 @@ export default function VerifyEmailPage() {
 
     const verify = async () => {
       try {
-        const res = await apiFetch(`/api/auth/verify-email?token=${token}`);
+        const res = await apiFetch<ApiMessage>(
+          `/api/auth/verify-email?token=${token}`,
+        );
         setStatus("success");
         setMessage(res.message);
       } catch (err: any) {

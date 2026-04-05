@@ -26,6 +26,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 ---
 
+## [0.3.0] - 2026-04-05
+
+### Ajouté
+- Login User
+- Dashboard admin : gestion des membres par équipe et saison
+- Dashboard admin : page utilisateurs avec création/modification/vérification
+- Gestion des rôles par subdocument (roleId)
+- Photo par assignation équipe/saison
+- Bénévoles sans équipe
+
+### Corrigé
+- Email SMTP fixe au lieu de compte Ethereal recréé à chaque restart
+- Upload URL relative via NEXT_PUBLIC_API_URL
+
+### Infrastructure
+- Dockerfiles backend et frontend
+- GitHub Actions : lint, tests, audit, deploy
+
+---
+
 ## [0.2.0] - 2026-02-11
 ### Ajouté
 

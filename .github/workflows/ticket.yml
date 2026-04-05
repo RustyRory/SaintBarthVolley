@@ -24,14 +24,15 @@ jobs:
             exit 0
           fi
 
-          # Regex pour le commit / titre PR : type(nom): Fixes #<num> - message
-          if [[ "$PR_TITLE" =~ ^(feat|feature|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\):\ Fixes\ \#[0-9]+\ -\ .+ ]]; then
+          # Regex pour le titre PR : type(nom): Fixes #<num> - message
+          TITLE_REGEX='^(feat|feature|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\): Fixes #[0-9]+ - .+'
+          if [[ "$PR_TITLE" =~ $TITLE_REGEX ]]; then
             echo "✅ Titre de PR valide avec référence au ticket"
             exit 0
           fi
 
-          # Regex pour le nom de branche : feature/123-description, fix/123-description, hotfix/123-description
-          if [[ "$BRANCH_NAME" =~ ^(feature|fix|hotfix)/[0-9]+-.+ ]]; then
+          # Regex pour le nom de branche : feat/123-description, feature/123-description, fix/123-description, hotfix/123-description
+          if [[ "$BRANCH_NAME" =~ ^(feat|feature|fix|hotfix)/[0-9]+-.+ ]]; then
             echo "✅ Nom de branche valide avec référence au ticket"
             exit 0
           fi

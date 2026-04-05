@@ -1,7 +1,6 @@
-// services/userService.ts
 import { apiFetch } from "@/lib/api";
 
-export type Role = "admin" | "editor" | "user" | "other";
+export type Role = "admin" | "editor" | "user";
 
 export type User = {
   _id: string;
@@ -10,51 +9,30 @@ export type User = {
   firstName: string;
   lastName: string;
   isActive: boolean;
-  lastLoginAt: string | null;
-  createdAt: string;
   isVerified: boolean;
+  createdAt: string;
 };
 
-// Récupérer tous les utilisateurs
-export function getUsers(): Promise<User[]> {
-  return apiFetch("/api/admin/users");
-}
+export const getUsers = (): Promise<User[]> => apiFetch("/api/admin/users");
 
-// Créer un utilisateur
-export function createUser(data: Partial<User>) {
-  return apiFetch("/api/admin/users", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
+export const createUser = (data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: Role;
+  isActive: boolean;
+}): Promise<User> =>
+  apiFetch("/api/admin/users", { method: "POST", body: JSON.stringify(data) });
 
-// Mettre à jour un utilisateur complet
-export function updateUser(id: string, data: Partial<User>): Promise<User> {
-  return apiFetch(`/api/admin/users/${id}`, {
+export const updateUser = (id: string, data: Partial<User>): Promise<User> =>
+  apiFetch(`/api/admin/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
-}
 
-// Mettre à jour uniquement le rôle
-export function updateUserRole(id: string, role: Role) {
-  return apiFetch(`/api/admin/users/${id}/role`, {
-    method: "PATCH",
-    body: JSON.stringify({ role }),
-  });
-}
+export const deleteUser = (id: string): Promise<void> =>
+  apiFetch(`/api/admin/users/${id}`, { method: "DELETE" });
 
-// Activer / désactiver un utilisateur
-export function toggleUserActive(id: string, isActive: boolean) {
-  return apiFetch(`/api/admin/users/${id}/activate`, {
-    method: "PATCH",
-    body: JSON.stringify({ isActive }),
-  });
-}
-
-// Supprimer un utilisateur
-export function deleteUser(id: string) {
-  return apiFetch(`/api/admin/users/${id}`, {
-    method: "DELETE",
-  });
-}
+export const resendVerification = (id: string): Promise<{ message: string }> =>
+  apiFetch(`/api/admin/users/${id}/resend-verification`, { method: "POST" });

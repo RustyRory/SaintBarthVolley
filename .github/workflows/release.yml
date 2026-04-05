@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -69,7 +69,6 @@ jobs:
             exit 1
           fi
 
-          # Extraire uniquement la section de la version
           SECTION=$(awk "
             BEGIN {found=0}
             /^## \\[$VERSION\\]/ {found=1}
@@ -82,20 +81,16 @@ jobs:
             exit 1
           fi
 
-          # Vérifier que la section contient du contenu réel
           CONTENT=$(echo "$SECTION" | grep -Ev '^(## |\s*$|### )')
-
           if [[ -z "$CONTENT" ]]; then
             echo "❌ Le changelog pour la version $VERSION est vide"
             exit 1
           fi
 
           echo "✅ Changelog valide pour la version $VERSION"
-
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           echo "$SECTION" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
 
       - name: 'Créer le tag'
         run: |

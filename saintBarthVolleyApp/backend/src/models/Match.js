@@ -23,9 +23,9 @@ const setDetailSchema = new mongoose.Schema(
 
 const matchSchema = new mongoose.Schema(
   {
-    championshipId: {
+    teamId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Championship', // <-- utilisation du modèle Championship existant
+      ref: 'Team',
       required: true,
     },
     opponentName: {

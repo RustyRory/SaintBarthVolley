@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import type { ApiMessage } from "@/lib/auth";
 
 export function RegisterForm() {
   const [form, setForm] = useState({
@@ -56,7 +57,7 @@ export function RegisterForm() {
     }
 
     try {
-      const data = await apiFetch("/api/auth/register", {
+      const data = await apiFetch<ApiMessage>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({
           firstName: form.firstName,
