@@ -30,10 +30,10 @@ jobs:
           INVALID=false
 
           for COMMIT in $COMMITS; do
-            MESSAGE=$(git log -1 --pretty=format:"%s" $COMMIT)
+            MESSAGE=$(git log -1 --pretty=format:"%s" $COMMIT | sed 's/^[[:space:]]*//')
 
             # Ignorer les commits de merge
-            if [[ "$MESSAGE" =~ ^Merge\  ]]; then
+            if [[ "$MESSAGE" =~ ^Merge\ (pull\ request|branch|remote) ]]; then
               echo "⏭️ Commit de merge ignoré: $MESSAGE"
               continue
             fi
