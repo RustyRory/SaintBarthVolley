@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { authApi } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
       <div className="flex min-h-svh items-center justify-center p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Mot de passe mis à jour ✅</CardTitle>
+            <CardTitle>Mot de passe mis à jour</CardTitle>
             <CardDescription>{message}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -115,5 +115,13 @@ export default function ResetPasswordPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-svh items-center justify-center">Chargement...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
