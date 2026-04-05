@@ -120,7 +120,13 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-svh items-center justify-center">Chargement...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-svh items-center justify-center">
+          Chargement...
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );

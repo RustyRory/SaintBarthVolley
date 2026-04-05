@@ -78,7 +78,13 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-svh items-center justify-center">Chargement...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-svh items-center justify-center">
+          Chargement...
+        </div>
+      }
+    >
       <VerifyEmailContent />
     </Suspense>
   );
