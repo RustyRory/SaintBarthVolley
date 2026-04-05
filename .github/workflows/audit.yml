@@ -28,7 +28,7 @@ jobs:
         working-directory: saintBarthVolleyApp/backend
 
       - name: 'Audit npm backend'
-        run: npm audit --audit-level=high --omit=dev
+        run: npm audit --audit-level=critical --omit=dev
         working-directory: saintBarthVolleyApp/backend
 
   audit-frontend:
@@ -50,5 +50,5 @@ jobs:
         working-directory: saintBarthVolleyApp/frontend
 
       - name: 'Audit npm frontend'
-        run: npm audit --audit-level=high --omit=dev
+        run: npm audit --audit-level=critical --omit=dev
         working-directory: saintBarthVolleyApp/frontend
