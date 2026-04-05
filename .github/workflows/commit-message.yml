@@ -25,8 +25,8 @@ jobs:
 
           # Commits avec numéro d'issue (feat, fix, hotfix, refactor, test)
           REGEX_ISSUE="^(feat|fix|hotfix|refactor|test)\([a-z0-9_-]+\): Fixes #[0-9]+ - .+"
-          # Commits sans numéro d'issue autorisés (chore, docs, ci)
-          REGEX_NO_ISSUE="^(chore|docs|ci)\([a-z0-9_-]+\): .+"
+          # Commits sans numéro d'issue autorisés (chore, docs, ci, fix(ci))
+          REGEX_NO_ISSUE="^(chore|docs|ci|fix)\(ci\): .+|^(chore|docs)\([a-z0-9_-]+\): .+"
 
           COMMITS=$(git log origin/$BASE_REF..HEAD --pretty=format:"%H")
 
