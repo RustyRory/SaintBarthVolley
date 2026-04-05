@@ -121,6 +121,8 @@ Moderniser la communication du club via un site web vitrine et préparer une str
 - Publication d’actualités (administrateur)
 - Gestion des actualités à la une
 - Gestion de l’affichage sur la page d’accueil
+- Consulation du calendrier
+- Consulation des matches à venir
 
 ---
 
@@ -171,7 +173,7 @@ Moderniser la communication du club via un site web vitrine et préparer une str
 - Déploiement automatisé
 - Base de données MongoDB
 - API interne (Node.js / Express)
-- Frontend React
+- Frontend Nextjs
 - Tâches planifiées (cron jobs)
 - Sauvegardes régulières
 - Sécurisation des données (HTTPS, RGPD)
@@ -201,19 +203,6 @@ Moderniser la communication du club via un site web vitrine et préparer une str
 - Visuels web
 - Supports print
 - Plan de cybersécurité de base
-
----
-
-## 9. Planning prévisionnel
-- Phase 1 : Analyse & cadrage
-- Phase 2 : Maquettes UX/UI
-- Phase 3 : Développement web (MERN)
-- Phase 4 : Intégration des contenus
-- Phase 5 : Tests
-- Phase 6 : Mise en production
-- Phase 7 : Formation & maintenance légère
-
-> *(Dates exactes à définir, idéalement pour la saison 2026–2027)*
 
 ---
 

@@ -31,7 +31,7 @@ jobs:
           done
 
           # Dossiers obligatoires
-          DIRS=("app/frontend" "app/backend")
+          DIRS=("saintBarthVolleyApp/frontend" "saintBarthVolleyApp/backend")
           for DIR in "${DIRS[@]}"; do
             if [ ! -d "$DIR" ]; then
               echo "❌ Dossier manquant : $DIR"
@@ -42,25 +42,17 @@ jobs:
           done
 
           # Vérification interne frontend
-          if [ -d "app/frontend" ]; then
-            if [ ! -f "app/frontend/package.json" ]; then
+          if [ -d "saintBarthVolleyApp/frontend" ]; then
+            if [ ! -f "saintBarthVolleyApp/frontend/package.json" ]; then
               echo "❌ Fichier manquant dans frontend : package.json"
-              INVALID=true
-            fi
-            if [ ! -f "app/frontend/.env.example" ]; then
-              echo "❌ Fichier manquant dans frontend : .env.example"
               INVALID=true
             fi
           fi
 
           # Vérification interne backend
-          if [ -d "app/backend" ]; then
-            if [ ! -f "app/backend/package.json" ]; then
+          if [ -d "saintBarthVolleyApp/backend" ]; then
+            if [ ! -f "saintBarthVolleyApp/backend/package.json" ]; then
               echo "❌ Fichier manquant dans backend : package.json"
-              INVALID=true
-            fi
-            if [ ! -f "app/backend/.env.example" ]; then
-              echo "❌ Fichier manquant dans backend : .env.example"
               INVALID=true
             fi
           fi

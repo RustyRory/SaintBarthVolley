@@ -11,38 +11,35 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18]
 
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 'Setup Node.js'
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            saintBarthVolleyApp/backend/package-lock.json
+            saintBarthVolleyApp/frontend/package-lock.json
 
-      - name: 'Installation ESLint & Prettier'
-        run: |
-          cd app/backend
-          npm init -y
-          npm install eslint prettier --save-dev
-          cd ../frontend
-          npm init -y
-          npm install eslint prettier --save-dev
+      - name: 'Installer les dépendances backend'
+        run: npm ci
+        working-directory: saintBarthVolleyApp/backend
 
       - name: 'Lancer ESLint backend'
-        run: |
-          cd app/backend
-          npx eslint . --ext .js,.ts || echo "✅ Pas de fichiers backend JS/TS à lint"
+        run: npx eslint . --ext .js,.ts
+        working-directory: saintBarthVolleyApp/backend
+
+      - name: 'Installer les dépendances frontend'
+        run: npm ci
+        working-directory: saintBarthVolleyApp/frontend
 
       - name: 'Lancer ESLint frontend'
-        run: |
-          cd app/frontend
-          npx eslint . --ext .js,.jsx || echo "✅ Pas de fichiers frontend JS/JSX à lint"
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+        working-directory: saintBarthVolleyApp/frontend
 
-      - name: 'Lancer Prettier check'
-        run: |
-          npx prettier --check . || echo "✅ Pas de fichiers à formater"
+      - name: 'Prettier check (global)'
+        run: npx prettier --check "saintBarthVolleyApp/**/*.{js,ts,tsx,jsx,json}" --ignore-path .gitignore

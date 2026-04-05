@@ -3,9 +3,9 @@
 > Vue architecture logicielle
 > 
 
-## Frontend (React)
+## Frontend (NextJs)
 
-- Application SPA (React)
+- Application SPA (NextJs)
 - Routing public / privé
 - Pages publiques
 - Interface back-office
