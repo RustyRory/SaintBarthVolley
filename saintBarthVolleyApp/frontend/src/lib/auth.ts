@@ -1,8 +1,18 @@
 import { apiFetch } from "./api";
 
+export interface AuthUser {
+  _id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: "admin" | "editor" | "user";
+  isActive: boolean;
+  isVerified: boolean;
+}
+
 export const authApi = {
   login: (email: string, password: string) =>
-    apiFetch("/api/auth/login", {
+    apiFetch<AuthUser>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
@@ -13,14 +23,14 @@ export const authApi = {
     firstName: string;
     lastName: string;
   }) =>
-    apiFetch("/api/auth/register", {
+    apiFetch<AuthUser>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
   logout: () => apiFetch("/api/auth/logout", { method: "POST" }),
 
-  me: () => apiFetch("/api/auth/me"),
+  me: () => apiFetch<AuthUser>("/api/auth/me"),
 
   resendVerification: (email: string) =>
     apiFetch("/api/auth/resend-verification", {

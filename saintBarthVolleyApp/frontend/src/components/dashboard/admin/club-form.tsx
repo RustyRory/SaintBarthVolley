@@ -1,26 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/dashboard/admin/file-upload";
 import Image from "next/image";
 
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+
 interface Props {
   club: any;
   onChange: (club: any) => void;
-  onSave?: (club: any) => Promise<void>; // géré par le parent
+  onSave?: (club: any) => Promise<void>;
 }
 
 export function ClubForm({ club, onChange }: Props) {
-  const [dirty, setDirty] = useState(false);
-  const saving = false;
-
   const handleChange = (name: string, value: string) => {
-    setDirty(true);
-
     if (name.startsWith("social_")) {
       onChange({
         ...club,
@@ -45,20 +41,20 @@ export function ClubForm({ club, onChange }: Props) {
   const handleFileUpload = async (
     field: "logo" | "photo",
     file: File,
-    oldFileUrl?: string, // on peut passer l'ancienne image
+    oldFileUrl?: string,
   ) => {
     const formData = new FormData();
     formData.append("file", file);
 
     if (oldFileUrl) {
-      // envoie juste le filename, pas l'URL complète
       formData.append("oldFile", oldFileUrl.split("/").pop()!);
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/upload", {
+      const res = await fetch(`${API}/api/upload`, {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -68,7 +64,7 @@ export function ClubForm({ club, onChange }: Props) {
       }
 
       const data = await res.json();
-      const imageUrl = `http://localhost:5000/uploads/${data.filename}`;
+      const imageUrl = `${API}/uploads/${data.filename}`;
 
       handleChange(field, imageUrl);
     } catch (err) {
@@ -127,7 +123,9 @@ export function ClubForm({ club, onChange }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Logo</Label>
-            <FileUpload onUpload={(file) => handleFileUpload("logo", file)} />
+            <FileUpload
+              onUpload={(file) => handleFileUpload("logo", file, club.logo)}
+            />
             {club.logo && (
               <Image
                 src={club.logo}
@@ -141,7 +139,9 @@ export function ClubForm({ club, onChange }: Props) {
           </div>
           <div>
             <Label>Photo principale</Label>
-            <FileUpload onUpload={(file) => handleFileUpload("photo", file)} />
+            <FileUpload
+              onUpload={(file) => handleFileUpload("photo", file, club.photo)}
+            />
             {club.photo && (
               <Image
                 src={club.photo}
@@ -207,15 +207,6 @@ export function ClubForm({ club, onChange }: Props) {
           ))}
         </div>
       </div>
-
-      {saving && (
-        <p className="text-sm text-blue-600">💾 Sauvegarde en cours...</p>
-      )}
-      {!dirty && !saving && (
-        <p className="text-sm text-green-600">
-          ✅ Tous les changements sauvegardés
-        </p>
-      )}
     </div>
   );
 }
