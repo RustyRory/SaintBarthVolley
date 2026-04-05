@@ -8,7 +8,6 @@ import {
   IconNews,
   IconCalendar,
   IconUsersGroup,
-  IconBallVolleyball,
   IconStar,
   IconSettings,
   IconHelp,
@@ -29,13 +28,13 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import type { AuthUser } from "@/lib/auth";
 
 const navMain = [
   { title: "Dashboard", url: "/admin", icon: IconDashboard },
   { title: "Club", url: "/admin/club", icon: IconBuildingCommunity },
   { title: "Saisons & Équipes", url: "/admin/seasons", icon: IconCalendar },
   { title: "Membres", url: "/admin/members", icon: IconUsersGroup },
-  { title: "Matches", url: "/admin/matches", icon: IconBallVolleyball },
   { title: "Actualités", url: "/admin/news", icon: IconNews },
   { title: "Partenaires", url: "/admin/partners", icon: IconStar },
   { title: "Utilisateurs", url: "/admin/users", icon: IconUsers },
@@ -46,18 +45,12 @@ const navSecondary = [
   { title: "Aide", url: "/admin/help", icon: IconHelp },
 ];
 
-interface AuthUser {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = React.useState<AuthUser | null>(null);
 
   React.useEffect(() => {
-    apiFetch("/api/auth/me")
-      .then((data: AuthUser) => setUser(data))
+    apiFetch<AuthUser>("/api/auth/me")
+      .then(setUser)
       .catch(() => setUser(null));
   }, []);
 

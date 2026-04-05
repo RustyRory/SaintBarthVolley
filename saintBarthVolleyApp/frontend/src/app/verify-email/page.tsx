@@ -1,10 +1,10 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import type { ApiMessage } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -26,15 +26,16 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     const token = searchParams.get("token");
 
-    if (!token) {
-      setStatus("error");
-      setMessage("Token manquant");
-      return;
-    }
-
     const verify = async () => {
+      if (!token) {
+        setStatus("error");
+        setMessage("Token manquant");
+        return;
+      }
       try {
-        const res = await apiFetch(`/api/auth/verify-email?token=${token}`);
+        const res = await apiFetch<ApiMessage>(
+          `/api/auth/verify-email?token=${token}`,
+        );
         setStatus("success");
         setMessage(res.message);
       } catch (err: any) {
@@ -72,5 +73,19 @@ export default function VerifyEmailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-svh items-center justify-center">
+          Chargement...
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,9 @@
 import { apiFetch } from "./api";
 
+export interface ApiMessage {
+  message: string;
+}
+
 export interface AuthUser {
   _id: string;
   email: string;
@@ -23,29 +27,29 @@ export const authApi = {
     firstName: string;
     lastName: string;
   }) =>
-    apiFetch<AuthUser>("/api/auth/register", {
+    apiFetch<ApiMessage>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  logout: () => apiFetch("/api/auth/logout", { method: "POST" }),
+  logout: () => apiFetch<ApiMessage>("/api/auth/logout", { method: "POST" }),
 
   me: () => apiFetch<AuthUser>("/api/auth/me"),
 
   resendVerification: (email: string) =>
-    apiFetch("/api/auth/resend-verification", {
+    apiFetch<ApiMessage>("/api/auth/resend-verification", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
 
   forgotPassword: (email: string) =>
-    apiFetch("/api/auth/forgot-password", {
+    apiFetch<ApiMessage>("/api/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
 
   resetPassword: (token: string, password: string) =>
-    apiFetch("/api/auth/reset-password", {
+    apiFetch<ApiMessage>("/api/auth/reset-password", {
       method: "POST",
       body: JSON.stringify({ token, password }),
     }),

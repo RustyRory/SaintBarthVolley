@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,16 @@ interface Standing {
   losses: number;
   setsFor: number;
   setsAgainst: number;
+}
+
+interface Match {
+  _id: string;
+  opponentName: string;
+  date: string;
+  homeAway: "home" | "away";
+  status: "scheduled" | "played";
+  scoreFor?: number;
+  scoreAgainst?: number;
 }
 
 interface TeamRole {
@@ -123,6 +134,7 @@ export default function TeamDetailPage() {
   const [team, setTeam] = React.useState<Team | null>(null);
   const [form, setForm] = React.useState<Team | null>(null);
   const [standings, setStandings] = React.useState<Standing[]>([]);
+  const [matches, setMatches] = React.useState<Match[]>([]);
   const [allClubMembers, setAllClubMembers] = React.useState<Member[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
@@ -167,25 +179,27 @@ export default function TeamDetailPage() {
 
   // ── Load ──────────────────────────────────────────────────────────────────
   const refreshMembers = React.useCallback(async () => {
-    const data: Member[] = await apiFetch("/api/members");
+    const data = await apiFetch<Member[]>("/api/members");
     setAllClubMembers(data);
   }, []);
 
   React.useEffect(() => {
     if (!id) return;
     Promise.all([
-      apiFetch(`/api/teams/${id}`),
-      apiFetch(`/api/standings?teamId=${id}`),
-      apiFetch("/api/members"),
+      apiFetch<Team>(`/api/teams/${id}`),
+      apiFetch<Standing[]>(`/api/standings?teamId=${id}`),
+      apiFetch<Member[]>("/api/members"),
+      apiFetch<Match[]>(`/api/matches?teamId=${id}`),
     ])
-      .then(([teamData, standingsData, membersData]) => {
+      .then(([teamData, standingsData, membersData, matchesData]) => {
         setTeam(teamData);
         setForm({
           ...teamData,
           trainingSchedule: teamData.trainingSchedule ?? [],
         });
         setStandings(standingsData);
-        setAllClubMembers(membersData as Member[]);
+        setAllClubMembers(membersData);
+        setMatches(matchesData);
       })
       .catch(() => alert("Erreur lors du chargement"))
       .finally(() => setLoading(false));
@@ -196,7 +210,7 @@ export default function TeamDetailPage() {
     if (!form) return;
     setSaving(true);
     try {
-      const updated = await apiFetch(`/api/teams/${form._id}`, {
+      const updated = await apiFetch<Team>(`/api/teams/${form._id}`, {
         method: "PUT",
         body: JSON.stringify(form),
       });
@@ -367,9 +381,12 @@ export default function TeamDetailPage() {
           : "h-10 w-10 text-sm";
     if (photo) {
       return (
-        <img
+        <Image
           src={`${API}${photo}`}
           alt={`${member.firstName} ${member.lastName}`}
+          width={64}
+          height={64}
+          unoptimized
           className={`${cls} rounded-full object-cover shrink-0`}
         />
       );
@@ -476,6 +493,79 @@ export default function TeamDetailPage() {
                     </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* ── Matches ── */}
+      {matches.length > 0 && (
+        <section className="border rounded-lg p-6 flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">
+            Matches
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({matches.length})
+            </span>
+          </h2>
+          <div className="overflow-auto rounded border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="p-2 text-left">Date</th>
+                  <th className="p-2 text-left">Adversaire</th>
+                  <th className="p-2 text-center">D/E</th>
+                  <th className="p-2 text-center">Statut</th>
+                  <th className="p-2 text-center">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...matches]
+                  .sort(
+                    (a, b) =>
+                      new Date(a.date).getTime() - new Date(b.date).getTime(),
+                  )
+                  .map((m) => (
+                    <tr key={m._id} className="border-t">
+                      <td className="p-2 whitespace-nowrap text-muted-foreground">
+                        {new Date(m.date).toLocaleString("fr-FR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                      <td className="p-2 font-medium">{m.opponentName}</td>
+                      <td className="p-2 text-center">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            m.homeAway === "home"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-purple-100 text-purple-700"
+                          }`}
+                        >
+                          {m.homeAway === "home" ? "Dom." : "Ext."}
+                        </span>
+                      </td>
+                      <td className="p-2 text-center">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            m.status === "played"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {m.status === "played" ? "Joué" : "Prévu"}
+                        </span>
+                      </td>
+                      <td className="p-2 text-center font-mono">
+                        {m.status === "played"
+                          ? `${m.scoreFor} - ${m.scoreAgainst}`
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -914,8 +1004,11 @@ export default function TeamDetailPage() {
                     return (
                       <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-lg font-bold overflow-hidden shrink-0">
                         {rolePhoto ? (
-                          <img
+                          <Image
                             src={`${API}${rolePhoto}`}
+                            width={64}
+                            height={64}
+                            unoptimized
                             className="h-full w-full object-cover"
                             alt=""
                           />

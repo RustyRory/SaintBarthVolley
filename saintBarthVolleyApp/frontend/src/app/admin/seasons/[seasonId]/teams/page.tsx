@@ -28,7 +28,7 @@ export default function SeasonTeamsPage() {
     if (!seasonId || Array.isArray(seasonId)) return;
     setLoading(true);
     try {
-      const data: Team[] = await apiFetch(`/api/teams?seasonId=${seasonId}`);
+      const data = await apiFetch<Team[]>(`/api/teams?seasonId=${seasonId}`);
       setTeams(data);
     } catch (err) {
       console.error(err);
@@ -60,7 +60,7 @@ export default function SeasonTeamsPage() {
     try {
       if (team._id) {
         // Mise à jour
-        const updated = await apiFetch(`/api/teams/${team._id}`, {
+        const updated = await apiFetch<Team>(`/api/teams/${team._id}`, {
           method: "PUT",
           body: JSON.stringify(team),
         });
@@ -69,7 +69,7 @@ export default function SeasonTeamsPage() {
         );
       } else {
         // Création
-        const created = await apiFetch(`/api/teams`, {
+        const created = await apiFetch<Team>(`/api/teams`, {
           method: "POST",
           body: JSON.stringify(team),
         });
