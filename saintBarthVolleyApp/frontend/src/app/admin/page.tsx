@@ -19,6 +19,14 @@ interface Stats {
   activePartners: number;
 }
 
+interface ScrapingResult {
+  matchesCreated: number;
+  matchesUpdated: number;
+  standings: number;
+  errors: string[];
+  logs: string[];
+}
+
 interface QuickLink {
   label: string;
   href: string;
@@ -47,11 +55,6 @@ const QUICK_LINKS: QuickLink[] = [
     description: "Gérer les sponsors et partenaires",
   },
   {
-    label: "Matches & scraping",
-    href: "/admin/matches",
-    description: "Voir les matches et lancer le scraping FFVB",
-  },
-  {
     label: "Infos du club",
     href: "/admin/club",
     description: "Modifier les informations du club",
@@ -62,26 +65,100 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = React.useState<Stats | null>(null);
   const [loading, setLoading] = React.useState(true);
 
+  const [scraping, setScraping] = React.useState(false);
+  const [scrapingResult, setScrapingResult] =
+    React.useState<ScrapingResult | null>(null);
+  const [scrapingError, setScrapingError] = React.useState<string | null>(null);
+  const [showLogs, setShowLogs] = React.useState(false);
+
   React.useEffect(() => {
-    apiFetch("/api/stats")
+    apiFetch<Stats>("/api/stats")
       .then(setStats)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
+  const handleScraping = async () => {
+    if (
+      !confirm("Lancer le scraping FFVB ? Cela peut prendre plusieurs minutes.")
+    )
+      return;
+    setScraping(true);
+    setScrapingResult(null);
+    setScrapingError(null);
+    try {
+      const result = await apiFetch<ScrapingResult>("/api/scraping/run", {
+        method: "POST",
+      });
+      setScrapingResult(result);
+      // Refresh stats after scraping
+      const updated = await apiFetch<Stats>("/api/stats").catch(() => null);
+      if (updated) setStats(updated);
+    } catch (err) {
+      setScrapingError(
+        err instanceof Error ? err.message : "Erreur lors du scraping",
+      );
+    } finally {
+      setScraping(false);
+    }
+  };
+
   return (
     <div className="flex flex-1 flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        {stats?.activeSeason && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Saison active :{" "}
-            <span className="font-medium text-foreground">
-              {stats.activeSeason}
-            </span>
-          </p>
-        )}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          {stats?.activeSeason && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Saison active :{" "}
+              <span className="font-medium text-foreground">
+                {stats.activeSeason}
+              </span>
+            </p>
+          )}
+        </div>
+
+        <Button
+          onClick={handleScraping}
+          disabled={scraping}
+          className="bg-orange-600 hover:bg-orange-700 text-white shrink-0"
+        >
+          {scraping ? "⟳ Scraping en cours..." : "Lancer le scraping FFVB"}
+        </Button>
       </div>
+
+      {/* Résultat scraping */}
+      {scrapingResult && (
+        <div className="border rounded-lg p-4 bg-green-50 border-green-200 flex flex-col gap-2">
+          <div className="font-semibold text-green-800">Scraping terminé</div>
+          <div className="text-sm text-green-700 flex flex-wrap gap-4">
+            <span>{scrapingResult.matchesCreated} match(es) créé(s)</span>
+            <span>{scrapingResult.matchesUpdated} mis à jour</span>
+            <span>{scrapingResult.standings} classement(s)</span>
+          </div>
+          {scrapingResult.errors.filter(Boolean).length > 0 && (
+            <div className="text-sm text-red-600">
+              Erreurs : {scrapingResult.errors.join(", ")}
+            </div>
+          )}
+          <button
+            className="text-xs text-green-600 underline self-start"
+            onClick={() => setShowLogs((v) => !v)}
+          >
+            {showLogs ? "Masquer les logs" : "Voir les logs"}
+          </button>
+          {showLogs && (
+            <pre className="text-xs bg-white border rounded p-3 overflow-auto max-h-48 whitespace-pre-wrap">
+              {scrapingResult.logs.join("\n")}
+            </pre>
+          )}
+        </div>
+      )}
+      {scrapingError && (
+        <div className="border rounded-lg p-4 bg-red-50 border-red-200 text-red-700 text-sm">
+          {scrapingError}
+        </div>
+      )}
 
       <SectionAdminCards stats={stats} loading={loading} />
 
