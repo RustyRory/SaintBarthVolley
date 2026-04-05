@@ -150,6 +150,7 @@ export default function PartnersPage() {
             >
               <div className="flex items-center gap-3">
                 {p.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={p.logo}
                     alt={p.name}
@@ -256,6 +257,7 @@ export default function PartnersPage() {
                 placeholder="https://example.com/logo.png"
               />
               {editing.logo && (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={editing.logo}
                   alt="Aperçu logo"

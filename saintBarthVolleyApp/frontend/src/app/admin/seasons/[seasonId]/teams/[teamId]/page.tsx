@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -380,9 +381,12 @@ export default function TeamDetailPage() {
           : "h-10 w-10 text-sm";
     if (photo) {
       return (
-        <img
+        <Image
           src={`${API}${photo}`}
           alt={`${member.firstName} ${member.lastName}`}
+          width={64}
+          height={64}
+          unoptimized
           className={`${cls} rounded-full object-cover shrink-0`}
         />
       );
@@ -1000,8 +1004,11 @@ export default function TeamDetailPage() {
                     return (
                       <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-lg font-bold overflow-hidden shrink-0">
                         {rolePhoto ? (
-                          <img
+                          <Image
                             src={`${API}${rolePhoto}`}
+                            width={64}
+                            height={64}
+                            unoptimized
                             className="h-full w-full object-cover"
                             alt=""
                           />

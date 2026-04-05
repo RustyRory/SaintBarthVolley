@@ -26,13 +26,12 @@ function VerifyEmailContent() {
   useEffect(() => {
     const token = searchParams.get("token");
 
-    if (!token) {
-      setStatus("error");
-      setMessage("Token manquant");
-      return;
-    }
-
     const verify = async () => {
+      if (!token) {
+        setStatus("error");
+        setMessage("Token manquant");
+        return;
+      }
       try {
         const res = await apiFetch<ApiMessage>(
           `/api/auth/verify-email?token=${token}`,
