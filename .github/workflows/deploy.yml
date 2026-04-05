@@ -50,10 +50,10 @@ jobs:
 
             # ── Rebuild et restart uniquement les services SaintBarth ─────
             echo "🔨 Build des images..."
-            docker compose -f "$COMPOSE_FILE" build --no-cache sbv-api sbv-front
+            docker-compose -f "$COMPOSE_FILE" build --no-cache sbv-api sbv-front
 
             echo "🔄 Redémarrage des containers..."
-            docker compose -f "$COMPOSE_FILE" up -d --remove-orphans sbv-api sbv-front
+            docker-compose -f "$COMPOSE_FILE" up -d --remove-orphans sbv-api sbv-front
 
             echo "✅ Containers démarrés"
 
