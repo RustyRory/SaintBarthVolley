@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.1] - 2026-04-29
+
+### Corrigé
+
+- Déploiement : `NEXT_BASE_PATH` corrigé de `/saintbarth` vers `/saintbarthvolley` dans le Dockerfile
+- Déploiement : `NEXT_PUBLIC_API_URL` corrigé en URL absolue (`http://78.138.58.95/saintbarthvolley`) pour le bon fonctionnement du SSR Next.js
+- CI : regex commit et titre PR mis à jour pour accepter `fixes` en minuscule (`[Ff]ixes`)
+- Pages visiteur : ajout de `export const dynamic = "force-dynamic"` sur le layout visiteur pour éviter le timeout de génération statique au build
+
+---
+
 ## [0.4.0] - 2026-04-29
 
 ### Ajouté
