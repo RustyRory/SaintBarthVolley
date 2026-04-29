@@ -4,8 +4,8 @@ FROM node:20-alpine AS builder
 WORKDIR /usr/src/app
 
 # Build args passés par docker-compose
-ARG NEXT_BASE_PATH="/saintbarth"
-ARG NEXT_PUBLIC_API_URL="/saintbarth"
+ARG NEXT_BASE_PATH="/saintbarthvolley"
+ARG NEXT_PUBLIC_API_URL="http://localhost:5000"
 
 ENV NEXT_BASE_PATH=$NEXT_BASE_PATH
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
