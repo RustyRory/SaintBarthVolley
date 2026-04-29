@@ -25,6 +25,11 @@ import mediasRoutes from './routes/medias.js';
 import partnersRoutes from './routes/partners.js';
 import standingsRoutes from './routes/standings.js';
 import matchesRoutes from './routes/matches.js';
+import championshipsRoutes from './routes/championships.js';
+import eventsRoutes from './routes/events.js';
+import clubAssignmentsRoutes from './routes/clubAssignments.js';
+import teamAssignmentsRoutes from './routes/teamAssignments.js';
+import cupPhasesRoutes from './routes/cupPhases.js';
 
 dotenv.config();
 const app = express();
@@ -75,6 +80,11 @@ app.use('/api/medias', mediasRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/standings', standingsRoutes);
 app.use('/api/matches', matchesRoutes);
+app.use('/api/championships', championshipsRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/club-assignments', clubAssignmentsRoutes);
+app.use('/api/team-assignments', teamAssignmentsRoutes);
+app.use('/api/cup-phases', cupPhasesRoutes);
 
 // 🔹 Export
 export default app;

@@ -1,411 +1,241 @@
-# Méthodologie backend
+# Backend — Architecture et API REST
 
-## **Préparer le projet**
+> Node.js + Express + MongoDB + Mongoose
 
-- Créer un dossier pour le backend :
+---
 
-```bash
-mkdir backend
-cd backend
-```
+## Stack
 
-- Initialiser un projet Node.js :
+| Technologie | Rôle |
+|---|---|
+| Node.js 20 | Runtime JavaScript |
+| Express 4 | Framework HTTP |
+| MongoDB | Base de données NoSQL |
+| Mongoose | ODM (Object Document Mapper) |
+| bcrypt | Hash des mots de passe |
+| JWT | Authentification par token |
+| dotenv | Variables d'environnement |
+| cors | Politique CORS |
+| multer | Upload de fichiers |
+| Puppeteer + Cheerio | Scraping FFVB |
 
-```bash
-npm init -y
-```
+---
 
-Ça crée un `package.json` avec toutes les infos du projet.
-
-- Installer les dépendances essentielles :
-
-```bash
-npm install express mongoose dotenv cors bcrypt
-```
-
-- **express** → framework pour créer des routes et serveur
-- **mongoose** → interface pour MongoDB
-- **dotenv** → variables d’environnement (ex : URL Mongo)
-- **cors** → pour autoriser le frontend à accéder à ton API
-- **bcrypt** → Pour hasher le mdp
-
-- Installer les dépendances de développement :
-
-```bash
-npm install --save-dev nodemon
-```
-
-- **nodemon** → redémarre le serveur automatiquement quand un fichier est modifié
-
-Dans `package.json`, ajouter un script pour lancer le serveur avec nodemon :
-
-```json
-"scripts":{
-"start":"node server.js",
-"dev":"nodemon server.js"
-}
-```
-
-## **Créer la structure du projet**
-
-Arborescence :
+## Structure du projet
 
 ```
 backend/
-├──src/
-│   ├── routes/
-│   ├── controllers/
-│   ├── models/
+├── server.js                   ← Point d'entrée
+├── src/
+│   ├── app.js                  ← Configuration Express
+│   ├── routes/                 ← Définition des routes
+│   │   ├── auth.js
+│   │   ├── users.js
+│   │   ├── club.js
+│   │   ├── seasons.js
+│   │   ├── teams.js
+│   │   ├── members.js
+│   │   ├── news.js
+│   │   ├── partners.js
+│   │   ├── championships.js
+│   │   ├── scraping.js
+│   │   └── upload.js
+│   ├── controllers/            ← Logique métier
+│   ├── models/                 ← Schémas Mongoose
+│   │   ├── User.js
+│   │   ├── Club.js
+│   │   ├── Season.js
+│   │   ├── Team.js
+│   │   ├── Member.js
+│   │   ├── News.js
+│   │   ├── Album.js
+│   │   ├── Media.js
+│   │   ├── Partner.js
+│   │   ├── Championship.js
+│   │   ├── Standing.js
+│   │   ├── Match.js
+│   │   └── ScrapingLog.js
 │   ├── middlewares/
-│   └── app.js
-└── server.js
+│   │   ├── authMiddleware.js   ← Vérification JWT
+│   │   └── requireRole.js      ← Vérification rôle
+│   └── scripts/
+│       └── seeds/
+│           ├── seedAdmin.js
+│           └── seedClub.js
+└── public/
+    └── uploads/                ← Fichiers uploadés (volume Docker)
 ```
 
-- **server.js** → point d’entrée du serveur
-- **app.js** → configuration Express (middlewares, routes)
-- **routes/** → fichiers pour les routes (ex : `articles.js`)
-- **controllers/** → logique métier (ex : créer un article)
-- **models/** → modèles Mongoose (ex : Article)
-- **middlewares/** → fonctions intermédiaires (ex : auth)
+---
 
-## **Installer MongoDB**
+## Variables d'environnement
 
-### Local (sur VPS ou PC)
-
-1. Télécharger et installer MongoDB Community Server depuis le site officiel ou via ton package manager (Ubuntu : `sudo apt install mongodb`).
-2. Lancer le service MongoDB :
-
-```bash
-sudo systemctl start mongod
-sudo systemctl enable mongod
-```
-
-3. Tester la connexion :
-
-```bash
-mongosh
-```
-
-On entre dans le shell MongoDB.
-
-## **Configurer la connexion backend**
-
-- Créer un fichier `.env` à la racine du projet :
-
-```
+```env
 PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/saintbarthvolley
+MONGO_URI=mongodb://mongo:27017/saintbarthvolley
+JWT_SECRET=...
+JWT_EXPIRES_IN=7d
+FRONTEND_URL=http://localhost:3000
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=...
+EMAIL_HOST=...
+EMAIL_PORT=587
+EMAIL_USER=...
+EMAIL_PASS=...
 ```
 
-Si on utilise Atlas, remplacer l’URL par celle fournie.
+---
 
-- Dans **server.js**, on se connecte à MongoDB avec Mongoose :
+## API REST — Référence
 
-```jsx
-const mongoose =require('mongoose');
-const dotenv =require('dotenv');
-dotenv.config();
+### Authentification `/api/auth`
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() =>console.log("MongoDB connecté"))
-  .catch(err =>console.error(err));
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | — | Inscription |
+| POST | `/api/auth/login` | — | Connexion |
+| POST | `/api/auth/logout` | Cookie | Déconnexion |
+| GET | `/api/auth/me` | Cookie | Utilisateur courant |
+| GET | `/api/auth/verify-email?token=` | — | Vérification email |
+| POST | `/api/auth/resend-verification` | — | Renvoyer email de vérification |
+| POST | `/api/auth/forgot-password` | — | Demande reset mot de passe |
+| POST | `/api/auth/reset-password` | — | Réinitialisation mot de passe |
+
+### Utilisateurs `/api/users`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/users` | Admin | Liste des utilisateurs |
+| GET | `/api/users/:id` | Admin | Détail utilisateur |
+| PUT | `/api/users/:id` | Admin | Modifier utilisateur |
+| DELETE | `/api/users/:id` | Admin | Supprimer utilisateur |
+| PATCH | `/api/users/:id/activate` | Admin | Activer/désactiver |
+| PATCH | `/api/users/:id/role` | Admin | Modifier le rôle |
+
+### Club `/api/club`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/club` | — | Informations du club |
+| PUT | `/api/club` | Admin | Modifier le club |
+
+### Saisons `/api/seasons`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/seasons` | — | Liste des saisons |
+| GET | `/api/seasons/:id` | — | Détail saison |
+| POST | `/api/seasons` | Admin | Créer une saison |
+| PUT | `/api/seasons/:id` | Admin | Modifier une saison |
+| DELETE | `/api/seasons/:id` | Admin | Supprimer une saison |
+
+### Équipes `/api/teams`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/teams` | — | Liste des équipes |
+| GET | `/api/teams/:id` | — | Détail équipe |
+| POST | `/api/teams` | Admin | Créer une équipe |
+| PUT | `/api/teams/:id` | Admin | Modifier une équipe |
+| DELETE | `/api/teams/:id` | Admin | Supprimer une équipe |
+| PATCH | `/api/teams/:id/archive` | Admin | Archiver une équipe |
+
+### Membres `/api/members`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/members` | — | Liste des membres |
+| GET | `/api/members/:id` | — | Détail membre |
+| POST | `/api/members` | Admin | Créer un membre |
+| PUT | `/api/members/:id` | Admin | Modifier un membre |
+| DELETE | `/api/members/:id` | Admin | Supprimer un membre |
+
+### Actualités `/api/news`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/news` | — | Liste des actualités |
+| GET | `/api/news/:id` | — | Détail actualité |
+| POST | `/api/news` | Admin/Editor | Créer une actualité |
+| PUT | `/api/news/:id` | Admin/Editor | Modifier une actualité |
+| DELETE | `/api/news/:id` | Admin | Supprimer une actualité |
+
+### Partenaires `/api/partners`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/partners` | — | Liste des partenaires |
+| GET | `/api/partners/:id` | — | Détail partenaire |
+| POST | `/api/partners` | Admin | Créer un partenaire |
+| PUT | `/api/partners/:id` | Admin | Modifier un partenaire |
+| DELETE | `/api/partners/:id` | Admin | Supprimer un partenaire |
+
+### Championnats & scraping
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/championships` | — | Liste des championnats |
+| POST | `/api/championships` | Admin | Créer un championnat |
+| GET | `/api/championships/:id/standings` | — | Classement |
+| GET | `/api/championships/:id/matches` | — | Matchs |
+| POST | `/api/scraping/run` | Admin | Lancer le scraping |
+| GET | `/api/scraping/logs` | Admin | Logs de scraping |
+
+### Upload `/api/upload`
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| POST | `/api/upload` | Admin | Upload fichier (logo, photo) |
+
+---
+
+## Middlewares
+
+### authMiddleware.js
+
+Vérifie la présence et la validité du JWT dans le cookie `token`.
+
+```js
+// Usage dans les routes
+router.get('/users', authMiddleware, requireRole('admin'), getAllUsers);
 ```
 
-> La base sera automatiquement créée dès que l'on insérera un premier document.
-> 
+### requireRole.js
 
-# **Exemple de création de collection**
+Vérifie que l'utilisateur possède le rôle requis.
 
-## **Modèle Mongoose (`User.js`)**
-
-**`src/models/User.js`** :
-
-```jsx
-const mongoose =require('mongoose');
-const bcrypt =require('bcrypt');
-
-constUserSchema =new mongoose.Schema({
-email: {
-type:String,
-required:true,
-unique:true,
-lowercase:true,
-trim:true
-  },
-passwordHash: {type:String,required:true },
-role: {type:String,enum: ['admin','editor'],default:'editor' },
-firstName: {type:String,required:true },
-lastName: {type:String,required:true },
-isActive: {type:Boolean,default:true },
-lastLoginAt: {type:Date,default:null },
-passwordUpdatedAt: {type:Date,default:null }
-}, {timestamps:true });
-
-// Comparer un mot de passe
-UserSchema.methods.comparePassword =asyncfunction(password) {
-returnawait bcrypt.compare(password,this.passwordHash);
-};
-
-// Définir ou changer le mot de passe
-UserSchema.methods.setPassword =asyncfunction(password) {
-const salt =await bcrypt.genSalt(10);
-this.passwordHash =await bcrypt.hash(password, salt);
-this.passwordUpdatedAt =newDate();
-};
-
-module.exports = mongoose.model('User',UserSchema);
-
+```js
+requireRole('admin')   // Admin uniquement
+requireRole('editor')  // Editor et Admin
 ```
 
-## **Controller (`usersController.js`)**
+---
 
-**`src/controllers/usersController.js`** :
+## Scripts
 
-```jsx
-constUser =require('../models/User');
-
-// GET all users
-exports.getAllUsers =async (req, res) => {
-try {
-const users =awaitUser.find().select('-passwordHash');// Ne jamais renvoyer les passwords
-    res.json(users);
-  }catch (err) {
-    res.status(500).json({message: err.message });
-  }
-};
-
-// GET single user
-exports.getUserById =async (req, res) => {
-try {
-const user =awaitUser.findById(req.params.id).select('-passwordHash');
-if (!user)return res.status(404).json({message:'Utilisateur non trouvé' });
-    res.json(user);
-  }catch (err) {
-    res.status(500).json({message: err.message });
-  }
-};
-
-// POST create user
-exports.createUser =async (req, res) => {
-try {
-const { email, password, role, firstName, lastName } = req.body;
-const user =newUser({ email, role, firstName, lastName });
-await user.setPassword(password);
-await user.save();
-    res.status(201).json({message:'Utilisateur créé',userId: user._id });
-  }catch (err) {
-    res.status(400).json({message: err.message });
-  }
-};
-
-// PUT update user
-exports.updateUser =async (req, res) => {
-try {
-const { email, role, firstName, lastName, isActive, password } = req.body;
-const user =awaitUser.findById(req.params.id);
-if (!user)return res.status(404).json({message:'Utilisateur non trouvé' });
-
-if (email) user.email = email;
-if (role) user.role = role;
-if (firstName) user.firstName = firstName;
-if (lastName) user.lastName = lastName;
-if (isActive !==undefined) user.isActive = isActive;
-if (password)await user.setPassword(password);
-
-await user.save();
-    res.json({message:'Utilisateur mis à jour' });
-  }catch (err) {
-    res.status(400).json({message: err.message });
-  }
-};
-
-// DELETE user
-exports.deleteUser =async (req, res) => {
-try {
-const user =awaitUser.findByIdAndDelete(req.params.id);
-if (!user)return res.status(404).json({message:'Utilisateur non trouvé' });
-    res.json({message:'Utilisateur supprimé' });
-  }catch (err) {
-    res.status(500).json({message: err.message });
-  }
-};
-
-```
-
-## **Routes (`users.js`)**
-
-**`src/routes/users.js`** :
-
-```jsx
-const express =require('express');
-const router = express.Router();
-const usersController =require('../controllers/usersController');
-
-// Routes CRUD utilisateurs
-router.get('/', usersController.getAllUsers);
-router.get('/:id', usersController.getUserById);
-router.post('/', usersController.createUser);
-router.put('/:id', usersController.updateUser);
-router.delete('/:id', usersController.deleteUser);
-
-module.exports = router;
-
-```
-
-# **Importer les routes dans `app.js`**
-
-**`src/app.js`** :
-
-```jsx
-const express =require('express');
-const cors =require('cors');
-
-const app =express();
-
-app.use(cors());
-app.use(express.json());
-
-// Route test
-app.get('/',(req, res) => {
-  res.send('API Volley fonctionne !');
-});
-
-// Importer les routes
-const newsRoutes =require('./routes/news');
-app.use('/api/news', newsRoutes);
-
-const usersRoutes =require('./routes/users');
-app.use('/api/users', usersRoutes);
-
-module.exports = app;
-```
-
-## **`server.js`**
-
-**`server.js`** :
-
-```jsx
-const dotenv =require('dotenv');
-dotenv.config();
-
-const app =require('./src/app');
-const mongoose =require('mongoose');
-
-constPORT = process.env.PORT ||5000;
-constMONGO_URI = process.env.MONGO_URI ||'mongodb://127.0.0.1:27017/volley';
-
-mongoose.connect(MONGO_URI)
-  .then(() => {
-console.log('MongoDB connecté');
-    app.listen(PORT,() => {
-console.log(`Serveur lancé sur http://localhost:${PORT}`);
-    });
-  })
-  .catch(err =>console.error(err));
-
-```
-
-## **Tester l'API Users**
-
-1. Lancer le serveur :
+### Seed admin
 
 ```bash
-npm run dev
+docker exec -e ADMIN_EMAIL=admin@example.com \
+            -e ADMIN_PASSWORD=MotDePasse123! \
+            sbv-api node src/scripts/seeds/seedAdmin.js
 ```
 
-2. Tester les routes avec Postman :
+### Seed club
 
-| Méthode | URL | Description |
-| --- | --- | --- |
-| GET | /api/users | Liste tous les utilisateurs |
-| GET | /api/users/:id | Récupérer un utilisateur |
-| POST | /api/users | Créer un utilisateur |
-| PUT | /api/users/:id | Mettre à jour un utilisateur |
-| DELETE | /api/users/:id | Supprimer un utilisateur |
-
-## **Tester la route “GET /”**
-
-1. Ouvrir Postman
-2. Créer une nouvelle requête `GET`
-3. URL : `http://localhost:5000/`
-4. Clique sur **Send**
-
-✅ on devrait voir :
-
-```
-API Volley fonctionne !
+```bash
+docker exec -e MONGO_URI=mongodb://mongo:27017/saintbarthvolley \
+            sbv-api node src/scripts/seeds/seedClub.js
 ```
 
-> Ça confirme que le serveur tourne et que Express répond.
+---
 
-<img src="./images/getApi.png" />
+## Lancement en développement
 
-## **Tester la collection Users**
-
-### GET all users
-
-- Méthode : `GET`
-- URL : `http://localhost:5000/api/users`
-- Send → un tableau vide `[]` si aucun utilisateur n’existe encore
-
-<img src="./images/getUsers.png" />
-
-### POST create user
-
-- Méthode : `POST`
-- URL : `http://localhost:5000/api/users`
-- Body → `raw` → `JSON` :
-
-```json
-{
-"email":"admin@clubvolley.fr",
-"password":"MotDePasseSuperSecret",
-"role":"admin",
-"firstName":"Test",
-"lastName":"nom"
-}
+```bash
+cd saintBarthVolleyApp/backend
+npm install
+npm run dev     # nodemon server.js
 ```
 
-- Clique sur **Send**
-    
-    ✅ JSON avec un message de succès et `userId`.
-    
-
-> MongoDB va créer automatiquement la base volley et la collection users.
-
-<img src="./images/postUser.png" />
-
-### GET single user
-
-- Méthode : `GET`
-- URL : `http://localhost:5000/api/users/<userId>`
-- `<userId>` → l’ID retourné lors du POST
-- Send → infos du user (sans le password)
-
-<img src="./images/getUser.png" />
-
-### PUT update user
-
-- Méthode : `PUT`
-- URL : `http://localhost:5000/api/users/<userId>`
-- Body → `raw` → `JSON` :
-
-```json
-{
-"lastName":"Durand",
-"password":"NouveauMotDePasse123"
-}
-```
-
-- Send → succès, l’utilisateur est mis à jour
-
-<img src="./images/putUser.png" />
-
-### DELETE user
-
-- Méthode : `DELETE`
-- URL : `http://localhost:5000/api/users/<userId>`
-- Send → utilisateur supprimé
-
-
-<img src="./images/delUser.png" />
+API disponible sur `http://localhost:5000`

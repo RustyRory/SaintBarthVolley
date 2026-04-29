@@ -1,22 +1,28 @@
-# MCD
+# MCD — Modèle Conceptuel de Données
 
-## ENTITÉS
+> Modélisation MERISE — vue conceptuelle indépendante de la technologie
+
+---
+
+## Entités
 
 ### UTILISATEUR
-
+```
 UTILISATEUR
--------------------
+─────────────────────
 email
 motDePasse
 rôle
 prénom
 nom
 actif
+vérifié
+```
 
 ### CLUB
-
+```
 CLUB
--------------------
+─────────────────────
 nom
 slogan
 descriptionAccueil
@@ -25,20 +31,24 @@ motPrésident
 email
 téléphone
 adresse
+réseauxSociaux (embarqué)
+mentionsLégales (embarqué)
+```
 
 ### SAISON
-
+```
 SAISON
--------------------
+─────────────────────
 nom
 dateDébut
 dateFin
 statut
+```
 
 ### ÉQUIPE
-
+```
 ÉQUIPE
--------------------
+─────────────────────
 nom
 catégorie
 genre
@@ -46,11 +56,12 @@ niveau
 horairesEntraînement
 codeFFVB
 archivée
+```
 
 ### MEMBRE
-
+```
 MEMBRE
--------------------
+─────────────────────
 prénom
 nom
 type
@@ -59,55 +70,65 @@ dateNaissance
 poste
 taille
 poids
+photo
+biographie
 actif
+```
 
 ### ACTUALITÉ
-
+```
 ACTUALITÉ
--------------------
+─────────────────────
 titre
 slug
 contenu
 publiée
 àLaUne
 datePublication
+```
 
 ### ALBUM
-
+```
 ALBUM
--------------------
+─────────────────────
 titre
 description
 dateÉvénement
 public
+```
 
 ### MÉDIA
-
+```
 MÉDIA
--------------------
+─────────────────────
 url
 type
 ordre
+```
 
 ### PARTENAIRE
-
+```
 PARTENAIRE
--------------------
+─────────────────────
 nom
 description
+logo
 siteWeb
 priorité
 actif
+```
 
 ### CHAMPIONNAT_FFVB
+```
 CHAMPIONNAT_FFVB
--------------------
+─────────────────────
 urlFédération
+```
 
 ### CLASSEMENT_FFVB
-
+```
 CLASSEMENT_FFVB
--------------------
+─────────────────────
 nomÉquipe
 rang
 points
@@ -116,11 +137,12 @@ victoires
 défaites
 setsPour
 setsContre
+```
 
 ### MATCH_FFVB
-
+```
 MATCH_FFVB
--------------------
+─────────────────────
 idFédération
 date
 domicileExtérieur
@@ -129,59 +151,46 @@ setsPour
 setsContre
 détailSets
 nomAdversaire
+```
 
 ### JOURNAL_SCRAPING
-
+```
 JOURNAL_SCRAPING
--------------------
+─────────────────────
 source
 statut
 message
 dateExécution
+```
 
-## ASSOCIATIONS
+---
 
-### APPARTENIR
-CLUB (1,1) —— APPARTENIR —— (0,n) ÉQUIPE
-Un club possède plusieurs équipes
-Une équipe appartient à un seul club
+## Associations
 
-### CONCERNER
-SAISON (1,1) —— CONCERNER —— (0,n) ÉQUIPE
+| Association | Entité A | Card. A | Card. B | Entité B | Note |
+|---|---|---|---|---|---|
+| CONTENIR | SAISON | 1,1 | 0,n | ÉQUIPE | Une saison contient plusieurs équipes |
+| HISTORISER | SAISON | 1,1 | 0,n | MEMBRE | Un membre est rattaché à une saison |
+| COMPOSER | ÉQUIPE | 0,n | 0,n | MEMBRE | Association porteuse : `fonctionDansÉquipe` |
+| RÉDIGER | UTILISATEUR | 1,1 | 0,n | ACTUALITÉ | Un utilisateur rédige des actualités |
+| ILLUSTRER | ACTUALITÉ | 0,1 | 0,1 | ALBUM | Une actualité est illustrée par un album |
+| CONTENIR | ALBUM | 1,1 | 1,n | MÉDIA | Un album contient des médias |
+| COLLABORER | CLUB | 1,1 | 0,n | PARTENAIRE | Le club collabore avec des partenaires |
+| PARTICIPER | ÉQUIPE | 1,1 | 0,1 | CHAMPIONNAT_FFVB | Une équipe participe à un championnat |
+| APPARTENIR | CHAMPIONNAT_FFVB | 1,1 | 1,n | CLASSEMENT_FFVB | Un championnat génère un classement |
+| COMPRENDRE | CHAMPIONNAT_FFVB | 1,1 | 0,n | MATCH_FFVB | Un championnat comprend des matchs |
+| JOURNALISER | SAISON | 1,1 | 0,n | JOURNAL_SCRAPING | Les logs sont liés à une saison |
 
-### COMPOSER
-ÉQUIPE (0,n) —— COMPOSER —— (0,n) MEMBRE
+---
 
+## Association porteuse
 
-Association porteuse : COMPOSER
+### COMPOSER (ÉQUIPE ↔ MEMBRE)
 
+```
 COMPOSER
--------------------
+─────────────────────
 fonctionDansÉquipe
+```
 
-### HISTORISER
-SAISON (1,1) —— HISTORISER —— (0,n) MEMBRE
-
-### RÉDIGER
-UTILISATEUR (1,1) —— RÉDIGER —— (0,n) ACTUALITÉ
-
-### ILLUSTRER
-ACTUALITÉ (0,1) —— ILLUSTRER —— (0,1) ALBUM
-
-### CONTENIR
-ALBUM (1,1) —— CONTENIR —— (1,n) MÉDIA
-
-### COLLABORER
-CLUB (1,1) —— COLLABORER —— (0,n) PARTENAIRE
-
-### PARTICIPER
-ÉQUIPE (1,1) —— PARTICIPER —— (0,1) CHAMPIONNAT_FFVB
-
-### GÉNÉRER
-CHAMPIONNAT_FFVB (1,1) —— GÉNÉRER —— (1,n) CLASSEMENT_FFVB
-
-### COMPRENDRE
-CHAMPIONNAT_FFVB (1,1) —— COMPRENDRE —— (1,n) MATCH_FFVB
-
-### JOURNALISER
-SAISON (1,1) —— JOURNALISER —— (0,n) JOURNAL_SCRAPING
+Une équipe peut avoir plusieurs membres, un membre peut appartenir à plusieurs équipes (sur différentes saisons).

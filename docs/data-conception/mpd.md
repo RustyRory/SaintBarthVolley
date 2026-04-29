@@ -1,30 +1,36 @@
-# MLD
+# MPD — Modèle Physique de Données
 
-## json
+> Schémas physiques — MongoDB (JSON) et équivalent SQL
 
+---
+
+## MongoDB — Schémas des collections
+
+### users
 ```json
-// ======================================
-// USERS
-// ======================================
 {
-  "_id": ObjectId,
-  "email": "string",                // unique
+  "_id": "ObjectId",
+  "email": "string",
   "passwordHash": "string",
-  "role": "admin | editor",
+  "role": "admin | editor | user",
   "firstName": "string",
   "lastName": "string",
   "isActive": true,
-  "lastLoginAt": ISODate,
-  "passwordUpdatedAt": ISODate,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "isVerified": false,
+  "lastLoginAt": "ISODate | null",
+  "passwordUpdatedAt": "ISODate | null",
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ email: 1 }` unique
 
-// ======================================
-// CLUBS
-// ======================================
+---
+
+### clubs
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
   "name": "string",
   "subtitle": "string",
   "homeDescription": "string",
@@ -35,230 +41,262 @@
   "email": "string",
   "phone": "string",
   "address": "string",
-  "socialLinks": {                  // embedded document
+  "social_links": {
     "facebook": "string",
     "instagram": "string",
     "youtube": "string",
     "sporteasy": "string",
+    "clubMerch": "string",
+    "clubRegistration": "string",
     "website": "string",
     "other": "string"
   },
-  "legalInfo": {                    // embedded document
+  "legal_info": {
     "associationName": "string",
     "legalForm": "string",
     "siret": "string",
     "rna": "string",
     "headOffice": "string",
-    "publicationDate": ISODate,
+    "publicationDate": "ISODate | null",
     "responsible": "string",
     "hostingProvider": "string",
-    "updatedAt": ISODate
+    "updatedAt": "ISODate | null"
   },
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+> Collection singleton — un seul document représente le club.
 
-// ======================================
-// SEASONS
-// ======================================
+---
+
+### seasons
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
   "name": "string",
-  "startDate": ISODate,
-  "endDate": ISODate,
+  "startDate": "ISODate",
+  "endDate": "ISODate",
   "status": "active | archived | future",
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
 
-// ======================================
-// TEAMS
-// ======================================
+---
+
+### teams
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
   "name": "string",
   "category": "string",
   "gender": "Masculin | Féminin | Mixte",
   "level": "string",
-  "seasonId": ObjectId,             // référence à seasons
+  "seasonId": "ObjectId",
   "trainingSchedule": "string",
-  "coachIds": [ObjectId],           // références membres
+  "coachIds": ["ObjectId"],
   "photo": "string",
   "ffvbTeamCode": "string",
   "isArchived": false,
-  "clubId": ObjectId,               // référence à club
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ seasonId: 1 }`, `{ isArchived: 1 }`
 
-// ======================================
-// MEMBERS
-// ======================================
+---
+
+### members
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
   "firstName": "string",
   "lastName": "string",
   "type": "player | staff | dirigeant | benevole",
   "role": "string",
-  "teamId": ObjectId,               // référence équipe
-  "seasonId": ObjectId,             // référence saison
-  "birthDate": ISODate,
+  "teamId": "ObjectId",
+  "seasonId": "ObjectId",
+  "birthDate": "ISODate | null",
   "position": "string",
-  "height": Number,
-  "weight": Number,
+  "height": "Number",
+  "weight": "Number",
   "photo": "string",
   "bio": "string",
   "isActive": true,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ teamId: 1 }`, `{ seasonId: 1 }`
 
-// ======================================
-// NEWS
-// ======================================
+---
+
+### news
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
   "title": "string",
   "slug": "string",
   "content": "string",
-  "albumId": ObjectId,             // référence album
-  "authorId": ObjectId,            // référence user
+  "albumId": "ObjectId | null",
+  "authorId": "ObjectId",
   "isPublished": false,
   "isFeatured": false,
-  "publishedAt": ISODate,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "publishedAt": "ISODate | null",
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ slug: 1 }` unique, `{ isPublished: 1, isFeatured: 1 }`
 
-// ======================================
-// ALBUMS
-// ======================================
+---
+
+### albums
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
   "title": "string",
   "description": "string",
-  "eventDate": ISODate,
+  "eventDate": "ISODate | null",
   "isPublic": true,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
 
-// ======================================
-// MEDIA
-// ======================================
+---
+
+### media
+```json
 {
-  "_id": ObjectId,
-  "albumId": ObjectId,              // référence album
+  "_id": "ObjectId",
+  "albumId": "ObjectId",
   "url": "string",
   "type": "photo | video",
-  "order": Number,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "order": "Number",
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ albumId: 1, order: 1 }`
 
-// ======================================
-// PARTNERS
-// ======================================
+---
+
+### partners
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
   "name": "string",
   "description": "string",
   "logo": "string",
   "website": "string",
-  "priority": Number,
+  "priority": "Number",
   "isActive": true,
-  "clubId": ObjectId,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ priority: -1, isActive: 1 }`
 
-// ======================================
-// CHAMPIONSHIPS FFVB
-// ======================================
+---
+
+### championships
+```json
 {
-  "_id": ObjectId,
-  "seasonId": ObjectId,
-  "teamId": ObjectId,
+  "_id": "ObjectId",
+  "seasonId": "ObjectId",
+  "teamId": "ObjectId",
   "federationUrl": "string",
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ teamId: 1, seasonId: 1 }` unique
 
-// ======================================
-// STANDINGS FFVB
-// ======================================
+---
+
+### standings
+```json
 {
-  "_id": ObjectId,
-  "championshipId": ObjectId,
+  "_id": "ObjectId",
+  "championshipId": "ObjectId",
   "teamName": "string",
-  "rank": Number,
-  "points": Number,
-  "played": Number,
-  "wins": Number,
-  "losses": Number,
-  "setsFor": Number,
-  "setsAgainst": Number,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "rank": "Number",
+  "points": "Number",
+  "played": "Number",
+  "wins": "Number",
+  "losses": "Number",
+  "setsFor": "Number",
+  "setsAgainst": "Number",
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ championshipId: 1, teamName: 1 }` unique
 
-// ======================================
-// MATCHES FFVB
-// ======================================
+---
+
+### matches
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
+  "championshipId": "ObjectId",
   "federationMatchId": "string",
-  "championshipId": ObjectId,
   "opponentName": "string",
-  "date": ISODate,
+  "date": "ISODate",
   "homeAway": "home | away",
   "status": "scheduled | played",
-  "scoreFor": Number,
-  "scoreAgainst": Number,
+  "scoreFor": "Number | null",
+  "scoreAgainst": "Number | null",
   "setsDetail": "string",
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
+```
+Index : `{ federationMatchId: 1 }` unique, `{ championshipId: 1, date: 1 }`
 
-// ======================================
-// SCRAPING LOGS
-// ======================================
+---
+
+### scrapinglogs
+```json
 {
-  "_id": ObjectId,
+  "_id": "ObjectId",
+  "seasonId": "ObjectId",
   "source": "string",
-  "seasonId": ObjectId,
   "status": "success | error",
   "message": "string",
-  "runAt": ISODate,
-  "createdAt": ISODate,
-  "updatedAt": ISODate
+  "runAt": "ISODate",
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
 }
-
 ```
+Index : `{ seasonId: 1, runAt: -1 }`
 
-## SQL
+---
+
+## SQL — Équivalent relationnel (référence)
+
+> Ce projet utilise MongoDB. Le schéma SQL ci-dessous est fourni à titre documentaire.
 
 ```sql
--- ======================================
 -- UTILISATEURS
--- ======================================
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK(role IN ('admin', 'editor')),
+    role VARCHAR(20) NOT NULL CHECK(role IN ('admin', 'editor', 'user')),
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
+    is_verified BOOLEAN DEFAULT FALSE,
     last_login_at TIMESTAMP,
     password_updated_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ======================================
 -- CLUBS
--- ======================================
 CREATE TABLE clubs (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -275,7 +313,6 @@ CREATE TABLE clubs (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Réseaux sociaux (JSON pour flexibilité)
 CREATE TABLE social_links (
     id SERIAL PRIMARY KEY,
     club_id INT NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
@@ -283,11 +320,12 @@ CREATE TABLE social_links (
     instagram TEXT,
     youtube TEXT,
     sporteasy TEXT,
+    club_merch TEXT,
+    club_registration TEXT,
     website TEXT,
     other TEXT
 );
 
--- Informations légales
 CREATE TABLE legal_info (
     id SERIAL PRIMARY KEY,
     club_id INT NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
@@ -302,9 +340,7 @@ CREATE TABLE legal_info (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ======================================
 -- SAISONS
--- ======================================
 CREATE TABLE seasons (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
@@ -315,9 +351,7 @@ CREATE TABLE seasons (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ======================================
 -- ÉQUIPES
--- ======================================
 CREATE TABLE teams (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -326,18 +360,14 @@ CREATE TABLE teams (
     level VARCHAR(50),
     season_id INT NOT NULL REFERENCES seasons(id),
     training_schedule TEXT,
-    coach_ids INT[], -- tableau des membres coach
     photo TEXT,
     ffvb_team_code VARCHAR(50),
     is_archived BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    club_id INT REFERENCES clubs(id)
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ======================================
 -- MEMBRES
--- ======================================
 CREATE TABLE members (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
@@ -357,23 +387,13 @@ CREATE TABLE members (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Table de liaison équipe ↔ membre
-CREATE TABLE team_members (
-    id SERIAL PRIMARY KEY,
-    team_id INT REFERENCES teams(id) ON DELETE CASCADE,
-    member_id INT REFERENCES members(id) ON DELETE CASCADE,
-    role_in_team VARCHAR(100)
-);
-
--- ======================================
 -- ACTUALITÉS
--- ======================================
 CREATE TABLE news (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE,
     content TEXT,
-    album_id INT REFERENCES album(id),
+    album_id INT REFERENCES albums(id),
     author_id INT REFERENCES users(id),
     is_published BOOLEAN DEFAULT FALSE,
     is_featured BOOLEAN DEFAULT FALSE,
@@ -382,10 +402,8 @@ CREATE TABLE news (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ======================================
 -- ALBUMS & MÉDIAS
--- ======================================
-CREATE TABLE album (
+CREATE TABLE albums (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255),
     description TEXT,
@@ -397,7 +415,7 @@ CREATE TABLE album (
 
 CREATE TABLE media (
     id SERIAL PRIMARY KEY,
-    album_id INT REFERENCES album(id) ON DELETE CASCADE,
+    album_id INT REFERENCES albums(id) ON DELETE CASCADE,
     url TEXT NOT NULL,
     type VARCHAR(20) CHECK(type IN ('photo','video')),
     order_index INT DEFAULT 0,
@@ -405,16 +423,7 @@ CREATE TABLE media (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Table pour relier actualités ↔ albums
-CREATE TABLE news_albums (
-    id SERIAL PRIMARY KEY,
-    news_id INT REFERENCES news(id) ON DELETE CASCADE,
-    album_id INT REFERENCES album(id) ON DELETE CASCADE
-);
-
--- ======================================
 -- PARTENAIRES
--- ======================================
 CREATE TABLE partners (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255),
@@ -424,25 +433,23 @@ CREATE TABLE partners (
     priority INT DEFAULT 0,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    club_id INT REFERENCES clubs(id)
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ======================================
 -- CHAMPIONNATS FFVB
--- ======================================
-CREATE TABLE championships_ffvb (
+CREATE TABLE championships (
     id SERIAL PRIMARY KEY,
     season_id INT REFERENCES seasons(id),
     team_id INT REFERENCES teams(id),
     federation_url TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(season_id, team_id)
 );
 
-CREATE TABLE standings_ffvb (
+CREATE TABLE standings (
     id SERIAL PRIMARY KEY,
-    championship_id INT REFERENCES championships_ffvb(id),
+    championship_id INT REFERENCES championships(id),
     team_name VARCHAR(255),
     rank INT,
     points INT,
@@ -455,10 +462,10 @@ CREATE TABLE standings_ffvb (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE matches_ffvb (
+CREATE TABLE matches (
     id SERIAL PRIMARY KEY,
-    federation_match_id VARCHAR(50),
-    championship_id INT REFERENCES championships_ffvb(id),
+    championship_id INT REFERENCES championships(id),
+    federation_match_id VARCHAR(50) UNIQUE,
     opponent_name VARCHAR(255),
     date TIMESTAMP,
     home_away VARCHAR(10) CHECK(home_away IN ('home','away')),
@@ -470,13 +477,11 @@ CREATE TABLE matches_ffvb (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ======================================
--- SCRAPING LOGS
--- ======================================
+-- LOGS SCRAPING
 CREATE TABLE scraping_logs (
     id SERIAL PRIMARY KEY,
-    source VARCHAR(50),
     season_id INT REFERENCES seasons(id),
+    source VARCHAR(50),
     status VARCHAR(20) CHECK(status IN ('success','error')),
     message TEXT,
     run_at TIMESTAMP,
@@ -484,4 +489,3 @@ CREATE TABLE scraping_logs (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
-

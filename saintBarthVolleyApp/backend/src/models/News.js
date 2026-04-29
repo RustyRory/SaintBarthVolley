@@ -22,6 +22,11 @@ const newsSchema = new mongoose.Schema(
       ref: 'Album',
       default: null,
     },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+    },
     authorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

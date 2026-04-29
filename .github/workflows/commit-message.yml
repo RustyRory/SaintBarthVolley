@@ -24,7 +24,7 @@ jobs:
           git fetch origin $BASE_REF
 
           # Commits avec numéro d'issue (feat, fix, hotfix, refactor, test)
-          REGEX_ISSUE="^(feat|fix|hotfix|refactor|test)\([a-z0-9_-]+\): Fixes #[0-9]+ - .+"
+          REGEX_ISSUE="^(feat|fix|hotfix|refactor|test)\([a-z0-9_-]+\): [Ff]ixes #[0-9]+ - .+"
           # Commits sans numéro d'issue autorisés (chore, docs, ci, fix(ci))
           REGEX_NO_ISSUE="^(chore|docs|ci|fix)\(ci\): .+|^(chore|docs)\([a-z0-9_-]+\): .+"
 

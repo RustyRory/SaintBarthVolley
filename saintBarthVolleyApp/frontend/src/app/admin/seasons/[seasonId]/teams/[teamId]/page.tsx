@@ -59,22 +59,23 @@ interface Match {
   scoreAgainst?: number;
 }
 
-interface TeamRole {
-  _id: string; // subdoc ObjectId
-  teamId: string;
-  seasonId: string;
-  roles: string[];
-  isCaptain: boolean;
-  position?: string;
-  photo?: string; // photo propre à cette affectation
-}
-
 interface Member {
   _id: string;
   firstName: string;
   lastName: string;
   isActive: boolean;
-  teamRoles: TeamRole[];
+}
+
+interface TeamAssignment {
+  _id: string;
+  memberId: { _id: string; firstName: string; lastName: string };
+  teamId: string;
+  seasonId: string;
+  role: "player" | "coach" | "assistant_coach";
+  position?: string;
+  isCaptain?: boolean;
+  jerseyNumber?: number;
+  photo?: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -97,28 +98,34 @@ const DAY_LABELS: Record<string, string> = {
   Saturday: "Samedi",
   Sunday: "Dimanche",
 };
-const ROLES = [
-  "player",
-  "coach",
-  "staff",
-  "referee",
-  "volunteer",
-  "owner",
-] as const;
-const ROLE_LABELS: Record<string, string> = {
+
+const TEAM_ROLES = ["player", "coach", "assistant_coach"] as const;
+const TEAM_ROLE_LABELS: Record<string, string> = {
   player: "Joueur",
   coach: "Entraîneur",
-  staff: "Staff",
-  referee: "Arbitre",
-  volunteer: "Bénévole",
-  owner: "Dirigeant",
+  assistant_coach: "Assistant entraîneur",
 };
+
+const POSITIONS: { value: string; label: string }[] = [
+  { value: "__none__", label: "— Aucun —" },
+  { value: "setter", label: "Passeur" },
+  { value: "libero", label: "Libéro" },
+  { value: "receiver", label: "Réceptionneur-attaquant" },
+  { value: "middle", label: "Central" },
+  { value: "universal", label: "Universel" },
+  { value: "opposite", label: "Pointu" },
+];
+
+const posToDb = (v: string) => (v === "__none__" ? "" : v);
+const posToUi = (v: string | undefined) => (v ? v : "__none__");
+
 const CLUB_NAME = "AS SAINT-BARTHELEMY D'ANJOU V.B.";
 
 const EMPTY_ROLE_FORM = {
-  roles: ["player"] as string[],
+  role: "player" as string,
   position: "",
   isCaptain: false,
+  jerseyNumber: "" as string | number,
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -136,6 +143,9 @@ export default function TeamDetailPage() {
   const [standings, setStandings] = React.useState<Standing[]>([]);
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [allClubMembers, setAllClubMembers] = React.useState<Member[]>([]);
+  const [teamAssignments, setTeamAssignments] = React.useState<
+    TeamAssignment[]
+  >([]);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
@@ -147,19 +157,20 @@ export default function TeamDetailPage() {
   const [addForm, setAddForm] = React.useState(EMPTY_ROLE_FORM);
   const [addSaving, setAddSaving] = React.useState(false);
 
-  // Edit member in team modal
-  const [editingMember, setEditingMember] = React.useState<Member | null>(null);
-  const [editRoleId, setEditRoleId] = React.useState<string>("");
+  // Edit assignment modal
+  const [editingAssignment, setEditingAssignment] =
+    React.useState<TeamAssignment | null>(null);
   const [editForm, setEditForm] = React.useState(EMPTY_ROLE_FORM);
   const [editSaving, setEditSaving] = React.useState(false);
   const [photoUploading, setPhotoUploading] = React.useState(false);
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const teamMembers = allClubMembers.filter((m) =>
-    m.teamRoles?.some((tr) => tr.teamId === id),
+  const assignedMemberIds = React.useMemo(
+    () => new Set(teamAssignments.map((a) => a.memberId._id)),
+    [teamAssignments],
   );
   const availableMembers = allClubMembers.filter(
-    (m) => !m.teamRoles?.some((tr) => tr.teamId === id),
+    (m) => !assignedMemberIds.has(m._id),
   );
   const filteredAvailable = availableMembers.filter((m) => {
     if (!addSearch) return true;
@@ -168,20 +179,16 @@ export default function TeamDetailPage() {
       .includes(addSearch.toLowerCase());
   });
 
-  const players = teamMembers.filter((m) =>
-    m.teamRoles.some((tr) => tr.teamId === id && tr.roles.includes("player")),
-  );
-  const staffMembers = teamMembers.filter((m) =>
-    m.teamRoles.some(
-      (tr) => tr.teamId === id && tr.roles.some((r) => r !== "player"),
-    ),
-  );
+  const players = teamAssignments.filter((a) => a.role === "player");
+  const staffMembers = teamAssignments.filter((a) => a.role !== "player");
 
   // ── Load ──────────────────────────────────────────────────────────────────
-  const refreshMembers = React.useCallback(async () => {
-    const data = await apiFetch<Member[]>("/api/members");
-    setAllClubMembers(data);
-  }, []);
+  const refreshAssignments = React.useCallback(async () => {
+    const data = await apiFetch<TeamAssignment[]>(
+      `/api/team-assignments?teamId=${id}&seasonId=${sid}`,
+    );
+    setTeamAssignments(data);
+  }, [id, sid]);
 
   React.useEffect(() => {
     if (!id) return;
@@ -190,20 +197,32 @@ export default function TeamDetailPage() {
       apiFetch<Standing[]>(`/api/standings?teamId=${id}`),
       apiFetch<Member[]>("/api/members"),
       apiFetch<Match[]>(`/api/matches?teamId=${id}`),
+      apiFetch<TeamAssignment[]>(
+        `/api/team-assignments?teamId=${id}&seasonId=${sid}`,
+      ),
     ])
-      .then(([teamData, standingsData, membersData, matchesData]) => {
-        setTeam(teamData);
-        setForm({
-          ...teamData,
-          trainingSchedule: teamData.trainingSchedule ?? [],
-        });
-        setStandings(standingsData);
-        setAllClubMembers(membersData);
-        setMatches(matchesData);
-      })
+      .then(
+        ([
+          teamData,
+          standingsData,
+          membersData,
+          matchesData,
+          assignmentsData,
+        ]) => {
+          setTeam(teamData);
+          setForm({
+            ...teamData,
+            trainingSchedule: teamData.trainingSchedule ?? [],
+          });
+          setStandings(standingsData);
+          setAllClubMembers(membersData);
+          setMatches(matchesData);
+          setTeamAssignments(assignmentsData);
+        },
+      )
       .catch(() => alert("Erreur lors du chargement"))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, sid]);
 
   // ── Team save ─────────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -230,11 +249,22 @@ export default function TeamDetailPage() {
     if (!addSelected) return;
     setAddSaving(true);
     try {
-      await apiFetch(`/api/members/${addSelected._id}/roles`, {
+      await apiFetch("/api/team-assignments", {
         method: "POST",
-        body: JSON.stringify({ teamId: id, seasonId: sid, ...addForm }),
+        body: JSON.stringify({
+          memberId: addSelected._id,
+          teamId: id,
+          seasonId: sid,
+          role: addForm.role,
+          position: posToDb(addForm.position) || undefined,
+          isCaptain: addForm.isCaptain,
+          jerseyNumber:
+            addForm.jerseyNumber !== ""
+              ? Number(addForm.jerseyNumber)
+              : undefined,
+        }),
       });
-      await refreshMembers();
+      await refreshAssignments();
       setShowAdd(false);
       setAddSelected(null);
       setAddSearch("");
@@ -246,31 +276,40 @@ export default function TeamDetailPage() {
     }
   };
 
-  // ── Edit member role ──────────────────────────────────────────────────────
-  const openEdit = (m: Member) => {
-    const role = m.teamRoles.find((tr) => tr.teamId === id);
-    setEditingMember(m);
-    setEditRoleId(role?._id ?? "");
+  // ── Edit assignment ───────────────────────────────────────────────────────
+  const openEdit = (a: TeamAssignment) => {
+    setEditingAssignment(a);
     setEditForm({
-      roles: role?.roles ?? ["player"],
-      position: role?.position ?? "",
-      isCaptain: role?.isCaptain ?? false,
+      role: a.role,
+      position: posToUi(a.position),
+      isCaptain: a.isCaptain ?? false,
+      jerseyNumber: a.jerseyNumber ?? "",
     });
   };
 
   const handleEditSave = async () => {
-    if (!editingMember || !editRoleId) return;
+    if (!editingAssignment) return;
     setEditSaving(true);
     try {
-      await apiFetch(`/api/members/${editingMember._id}/roles/${editRoleId}`, {
-        method: "PUT",
-        body: JSON.stringify(editForm),
-      });
-      await refreshMembers();
-      // Keep modal open so admin can also change photo
-      const refreshed: Member[] = await apiFetch("/api/members");
-      const updated = refreshed.find((m) => m._id === editingMember._id);
-      if (updated) setEditingMember(updated);
+      const updated = await apiFetch<TeamAssignment>(
+        `/api/team-assignments/${editingAssignment._id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            role: editForm.role,
+            position: posToDb(editForm.position) || undefined,
+            isCaptain: editForm.isCaptain,
+            jerseyNumber:
+              editForm.jerseyNumber !== ""
+                ? Number(editForm.jerseyNumber)
+                : undefined,
+          }),
+        },
+      );
+      setTeamAssignments((prev) =>
+        prev.map((a) => (a._id === updated._id ? { ...a, ...updated } : a)),
+      );
+      setEditingAssignment((prev) => prev && { ...prev, ...updated });
     } catch {
       alert("Erreur lors de la sauvegarde");
     } finally {
@@ -281,8 +320,7 @@ export default function TeamDetailPage() {
   // ── Photo upload ──────────────────────────────────────────────────────────
   const handlePhotoUpload = async (
     file: File,
-    memberId: string,
-    roleId: string,
+    assignmentId: string,
     oldPhoto?: string,
   ) => {
     setPhotoUploading(true);
@@ -296,16 +334,12 @@ export default function TeamDetailPage() {
         body: fd,
       });
       const { fileUrl } = await res.json();
-      // Sauvegarder la photo sur le rôle (affectation équipe), pas sur le membre global
-      await apiFetch(`/api/members/${memberId}/roles/${roleId}`, {
+      await apiFetch(`/api/team-assignments/${assignmentId}`, {
         method: "PUT",
         body: JSON.stringify({ photo: fileUrl }),
       });
-      await refreshMembers();
-      // Mettre à jour le membre dans la modal
-      const refreshed: Member[] = await apiFetch("/api/members");
-      const updated = refreshed.find((m) => m._id === memberId);
-      if (updated) setEditingMember(updated);
+      await refreshAssignments();
+      setEditingAssignment((prev) => prev && { ...prev, photo: fileUrl });
     } catch {
       alert("Erreur lors de l'upload de la photo");
     } finally {
@@ -313,16 +347,13 @@ export default function TeamDetailPage() {
     }
   };
 
-  // ── Remove member from team ───────────────────────────────────────────────
-  const handleRemove = async (m: Member) => {
-    if (!confirm(`Retirer ${m.firstName} ${m.lastName} de l'équipe ?`)) return;
-    const role = m.teamRoles.find((tr) => tr.teamId === id);
-    if (!role) return;
+  // ── Remove from team ──────────────────────────────────────────────────────
+  const handleRemove = async (a: TeamAssignment) => {
+    const name = `${a.memberId.firstName} ${a.memberId.lastName}`;
+    if (!confirm(`Retirer ${name} de l'équipe ?`)) return;
     try {
-      await apiFetch(`/api/members/${m._id}/roles/${role._id}`, {
-        method: "DELETE",
-      });
-      await refreshMembers();
+      await apiFetch(`/api/team-assignments/${a._id}`, { method: "DELETE" });
+      setTeamAssignments((prev) => prev.filter((x) => x._id !== a._id));
     } catch {
       alert("Erreur lors du retrait");
     }
@@ -363,13 +394,13 @@ export default function TeamDetailPage() {
       return { ...p, trainingSchedule: slots };
     });
 
-  // ── Render helpers ────────────────────────────────────────────────────────
+  // ── Avatar helper ─────────────────────────────────────────────────────────
   const Avatar = ({
     member,
     photo,
     size = "md",
   }: {
-    member: Member;
+    member: { firstName: string; lastName: string };
     photo?: string;
     size?: "sm" | "md" | "lg";
   }) => {
@@ -380,9 +411,10 @@ export default function TeamDetailPage() {
           ? "h-7 w-7 text-xs"
           : "h-10 w-10 text-sm";
     if (photo) {
+      const src = photo.startsWith("http") ? photo : `${API}${photo}`;
       return (
         <Image
-          src={`${API}${photo}`}
+          src={src}
           alt={`${member.firstName} ${member.lastName}`}
           width={64}
           height={64}
@@ -503,7 +535,7 @@ export default function TeamDetailPage() {
       {matches.length > 0 && (
         <section className="border rounded-lg p-6 flex flex-col gap-4">
           <h2 className="text-lg font-semibold">
-            Matches
+            Matches{" "}
             <span className="ml-2 text-sm font-normal text-muted-foreground">
               ({matches.length})
             </span>
@@ -539,22 +571,14 @@ export default function TeamDetailPage() {
                       <td className="p-2 font-medium">{m.opponentName}</td>
                       <td className="p-2 text-center">
                         <span
-                          className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            m.homeAway === "home"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-purple-100 text-purple-700"
-                          }`}
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${m.homeAway === "home" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}
                         >
                           {m.homeAway === "home" ? "Dom." : "Ext."}
                         </span>
                       </td>
                       <td className="p-2 text-center">
                         <span
-                          className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            m.status === "played"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${m.status === "played" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
                         >
                           {m.status === "played" ? "Joué" : "Prévu"}
                         </span>
@@ -576,9 +600,10 @@ export default function TeamDetailPage() {
       <section className="border rounded-lg p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            Joueurs & Staff
+            Joueurs & Staff{" "}
             <span className="ml-2 text-sm font-normal text-muted-foreground">
-              {teamMembers.length} membre{teamMembers.length !== 1 ? "s" : ""}
+              {teamAssignments.length} membre
+              {teamAssignments.length !== 1 ? "s" : ""}
             </span>
           </h2>
           <Button
@@ -594,56 +619,45 @@ export default function TeamDetailPage() {
           </Button>
         </div>
 
-        {teamMembers.length === 0 ? (
+        {teamAssignments.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Aucun membre assigné à cette équipe.
           </p>
         ) : (
           <div className="flex flex-col gap-5">
-            {/* Joueurs */}
             {players.length > 0 && (
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                   Joueurs ({players.length})
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {players.map((m) => {
-                    const role = m.teamRoles.find((tr) => tr.teamId === id);
-                    return (
-                      <MemberCard
-                        key={m._id}
-                        member={m}
-                        role={role}
-                        Avatar={<Avatar member={m} photo={role?.photo} />}
-                        onEdit={() => openEdit(m)}
-                        onRemove={() => handleRemove(m)}
-                      />
-                    );
-                  })}
+                  {players.map((a) => (
+                    <AssignmentCard
+                      key={a._id}
+                      assignment={a}
+                      Avatar={<Avatar member={a.memberId} photo={a.photo} />}
+                      onEdit={() => openEdit(a)}
+                      onRemove={() => handleRemove(a)}
+                    />
+                  ))}
                 </div>
               </div>
             )}
-
-            {/* Staff */}
             {staffMembers.length > 0 && (
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                   Staff ({staffMembers.length})
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {staffMembers.map((m) => {
-                    const role = m.teamRoles.find((tr) => tr.teamId === id);
-                    return (
-                      <MemberCard
-                        key={m._id}
-                        member={m}
-                        role={role}
-                        Avatar={<Avatar member={m} photo={role?.photo} />}
-                        onEdit={() => openEdit(m)}
-                        onRemove={() => handleRemove(m)}
-                      />
-                    );
-                  })}
+                  {staffMembers.map((a) => (
+                    <AssignmentCard
+                      key={a._id}
+                      assignment={a}
+                      Avatar={<Avatar member={a.memberId} photo={a.photo} />}
+                      onEdit={() => openEdit(a)}
+                      onRemove={() => handleRemove(a)}
+                    />
+                  ))}
                 </div>
               </div>
             )}
@@ -860,7 +874,6 @@ export default function TeamDetailPage() {
             </div>
 
             {!addSelected ? (
-              /* Step 1 — pick from roster */
               <>
                 <div className="p-4 border-b shrink-0">
                   <Input
@@ -904,53 +917,84 @@ export default function TeamDetailPage() {
                 </div>
               </>
             ) : (
-              /* Step 2 — configure role */
               <div className="p-5 flex flex-col gap-4 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <Label className="text-xs">Rôle *</Label>
                     <Select
-                      value={addForm.roles[0]}
+                      value={addForm.role}
                       onValueChange={(v) =>
-                        setAddForm((p) => ({ ...p, roles: [v] }))
+                        setAddForm((p) => ({ ...p, role: v }))
                       }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {ROLES.map((r) => (
+                        {TEAM_ROLES.map((r) => (
                           <SelectItem key={r} value={r}>
-                            {ROLE_LABELS[r]}
+                            {TEAM_ROLE_LABELS[r]}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs">Poste</Label>
-                    <Input
-                      placeholder="Ex: Libéro"
-                      value={addForm.position}
-                      onChange={(e) =>
-                        setAddForm((p) => ({ ...p, position: e.target.value }))
-                      }
-                    />
-                  </div>
+                  {addForm.role === "player" && (
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs">Poste</Label>
+                      <Select
+                        value={posToUi(addForm.position)}
+                        onValueChange={(v) =>
+                          setAddForm((p) => ({ ...p, position: v }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {POSITIONS.map((pos) => (
+                            <SelectItem key={pos.value} value={pos.value}>
+                              {pos.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="addCaptain"
-                    checked={addForm.isCaptain}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs">Numéro de maillot</Label>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 10"
+                    value={addForm.jerseyNumber}
                     onChange={(e) =>
-                      setAddForm((p) => ({ ...p, isCaptain: e.target.checked }))
+                      setAddForm((p) => ({
+                        ...p,
+                        jerseyNumber: e.target.value,
+                      }))
                     }
-                    className="h-4 w-4"
                   />
-                  <Label htmlFor="addCaptain">Capitaine de l&apos;équipe</Label>
                 </div>
-
+                {addForm.role === "player" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="addCaptain"
+                      checked={addForm.isCaptain}
+                      onChange={(e) =>
+                        setAddForm((p) => ({
+                          ...p,
+                          isCaptain: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="addCaptain">
+                      Capitaine de l&apos;équipe
+                    </Label>
+                  </div>
+                )}
                 <div className="flex justify-between gap-3 pt-2">
                   <Button
                     variant="outline"
@@ -969,16 +1013,17 @@ export default function TeamDetailPage() {
         </div>
       )}
 
-      {/* ══ Modal : Modifier membre dans l'équipe ══ */}
-      {editingMember && (
+      {/* ══ Modal : Modifier une affectation ══ */}
+      {editingAssignment && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4">
           <div className="bg-background rounded-xl shadow-xl w-full max-w-md flex flex-col max-h-[85vh]">
             <div className="p-5 border-b flex items-center justify-between shrink-0">
               <h2 className="text-lg font-semibold">
-                {editingMember.firstName} {editingMember.lastName}
+                {editingAssignment.memberId.firstName}{" "}
+                {editingAssignment.memberId.lastName}
               </h2>
               <button
-                onClick={() => setEditingMember(null)}
+                onClick={() => setEditingAssignment(null)}
                 className="text-muted-foreground hover:text-foreground text-xl leading-none"
               >
                 ×
@@ -996,31 +1041,27 @@ export default function TeamDetailPage() {
                   saison à l&apos;autre)
                 </p>
                 <div className="flex items-center gap-4">
-                  {(() => {
-                    const role = editingMember.teamRoles.find(
-                      (tr) => tr.teamId === id,
-                    );
-                    const rolePhoto = role?.photo;
-                    return (
-                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-lg font-bold overflow-hidden shrink-0">
-                        {rolePhoto ? (
-                          <Image
-                            src={`${API}${rolePhoto}`}
-                            width={64}
-                            height={64}
-                            unoptimized
-                            className="h-full w-full object-cover"
-                            alt=""
-                          />
-                        ) : (
-                          <>
-                            {editingMember.firstName[0]}
-                            {editingMember.lastName[0]}
-                          </>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-lg font-bold overflow-hidden shrink-0">
+                    {editingAssignment.photo ? (
+                      <Image
+                        src={
+                          editingAssignment.photo.startsWith("http")
+                            ? editingAssignment.photo
+                            : `${API}${editingAssignment.photo}`
+                        }
+                        width={64}
+                        height={64}
+                        unoptimized
+                        className="h-full w-full object-cover"
+                        alt=""
+                      />
+                    ) : (
+                      <>
+                        {editingAssignment.memberId.firstName[0]}
+                        {editingAssignment.memberId.lastName[0]}
+                      </>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-1">
                     <label className="cursor-pointer">
                       <span
@@ -1037,17 +1078,12 @@ export default function TeamDetailPage() {
                         disabled={photoUploading}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            const role = editingMember.teamRoles.find(
-                              (tr) => tr.teamId === id,
-                            );
+                          if (file)
                             handlePhotoUpload(
                               file,
-                              editingMember._id,
-                              editRoleId,
-                              role?.photo,
+                              editingAssignment._id,
+                              editingAssignment.photo,
                             );
-                          }
                           e.target.value = "";
                         }}
                       />
@@ -1059,63 +1095,88 @@ export default function TeamDetailPage() {
                 </div>
               </div>
 
-              {/* Rôle dans l'équipe */}
+              {/* Rôle */}
               <div className="flex flex-col gap-3 border-t pt-4">
                 <Label className="text-xs font-semibold uppercase tracking-wide">
                   Rôle dans l&apos;équipe
                 </Label>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <Label className="text-xs">Rôle</Label>
                     <Select
-                      value={editForm.roles[0]}
+                      value={editForm.role}
                       onValueChange={(v) =>
-                        setEditForm((p) => ({ ...p, roles: [v] }))
+                        setEditForm((p) => ({ ...p, role: v }))
                       }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {ROLES.map((r) => (
+                        {TEAM_ROLES.map((r) => (
                           <SelectItem key={r} value={r}>
-                            {ROLE_LABELS[r]}
+                            {TEAM_ROLE_LABELS[r]}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs">Poste</Label>
-                    <Input
-                      placeholder="Ex: Libéro"
-                      value={editForm.position}
-                      onChange={(e) =>
-                        setEditForm((p) => ({ ...p, position: e.target.value }))
-                      }
-                    />
-                  </div>
+                  {editForm.role === "player" && (
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs">Poste</Label>
+                      <Select
+                        value={posToUi(editForm.position)}
+                        onValueChange={(v) =>
+                          setEditForm((p) => ({ ...p, position: v }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {POSITIONS.map((pos) => (
+                            <SelectItem key={pos.value} value={pos.value}>
+                              {pos.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="editCaptain"
-                    checked={editForm.isCaptain}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs">Numéro de maillot</Label>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 10"
+                    value={editForm.jerseyNumber}
                     onChange={(e) =>
                       setEditForm((p) => ({
                         ...p,
-                        isCaptain: e.target.checked,
+                        jerseyNumber: e.target.value,
                       }))
                     }
-                    className="h-4 w-4"
                   />
-                  <Label htmlFor="editCaptain">
-                    Capitaine de l&apos;équipe
-                  </Label>
                 </div>
-
+                {editForm.role === "player" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="editCaptain"
+                      checked={editForm.isCaptain}
+                      onChange={(e) =>
+                        setEditForm((p) => ({
+                          ...p,
+                          isCaptain: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="editCaptain">
+                      Capitaine de l&apos;équipe
+                    </Label>
+                  </div>
+                )}
                 <div className="flex justify-end gap-3 pt-1">
                   <Button onClick={handleEditSave} disabled={editSaving}>
                     {editSaving ? "Sauvegarde..." : "Sauvegarder"}
@@ -1130,54 +1191,40 @@ export default function TeamDetailPage() {
   );
 }
 
-// ─── Member Card Component ─────────────────────────────────────────────────────
+// ─── Assignment Card Component ─────────────────────────────────────────────────
 
-function MemberCard({
-  member,
-  role,
+function AssignmentCard({
+  assignment,
   Avatar,
   onEdit,
   onRemove,
 }: {
-  member: Member;
-  role?: TeamRole;
+  assignment: TeamAssignment;
   Avatar: React.ReactNode;
   onEdit: () => void;
   onRemove: () => void;
 }) {
+  const label =
+    assignment.position || TEAM_ROLE_LABELS[assignment.role] || assignment.role;
+
   return (
     <div className="flex items-center gap-3 border rounded-lg p-3 hover:bg-muted/30 transition-colors">
       {Avatar}
       <div className="flex-1 min-w-0">
         <div className="font-medium text-sm truncate flex items-center gap-1.5">
-          {member.firstName} {member.lastName}
-          {role?.isCaptain && (
+          {assignment.memberId.firstName} {assignment.memberId.lastName}
+          {assignment.isCaptain && (
             <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-normal">
               C
             </span>
           )}
-          {!member.isActive && (
+          {assignment.jerseyNumber && (
             <span className="text-xs text-muted-foreground font-normal">
-              · Inactif
+              #{assignment.jerseyNumber}
             </span>
           )}
         </div>
-        <div className="text-xs text-muted-foreground">
-          {role?.position ||
-            role?.roles
-              .map(
-                (r) =>
-                  ({
-                    player: "Joueur",
-                    coach: "Entraîneur",
-                    staff: "Staff",
-                    referee: "Arbitre",
-                    volunteer: "Bénévole",
-                    owner: "Dirigeant",
-                  })[r] ?? r,
-              )
-              .join(", ")}
-        </div>
+        <div className="text-xs text-muted-foreground">{label}</div>
       </div>
       <div className="flex gap-1 shrink-0">
         <Button
