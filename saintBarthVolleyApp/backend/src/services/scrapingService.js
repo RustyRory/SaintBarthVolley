@@ -1,6 +1,5 @@
 // src/services/scrapingService.js
 // Scraping FFVB — utilise Team.federationUrl directement (pas de collection Championship)
-import puppeteer from 'puppeteer';
 import * as cheerio from 'cheerio';
 import Team from '../models/Team.js';
 import Match from '../models/Match.js';
@@ -49,14 +48,12 @@ async function scrapeTeam(team, log) {
 
     log(`🏐 Scraping ${team.name} → ${team.federationUrl}`);
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    const response = await fetch(team.federationUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SBV-scraper/1.0)' },
+      signal: AbortSignal.timeout(30000),
     });
-    const page = await browser.newPage();
-    await page.goto(team.federationUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-    const html = await page.content();
-    await browser.close();
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const html = await response.text();
 
     const $ = cheerio.load(html);
     const now = new Date();
