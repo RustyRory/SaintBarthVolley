@@ -25,7 +25,7 @@ jobs:
           fi
 
           # Regex pour le titre PR : type(nom): Fixes #<num> - message
-          TITLE_REGEX='^(feat|feature|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\): Fixes #[0-9]+ - .+'
+          TITLE_REGEX='^(feat|feature|fix|docs|chore|refactor|test|hotfix)\([a-zA-Z0-9_-]+\): [Ff]ixes #[0-9]+ - .+'
           if [[ "$PR_TITLE" =~ $TITLE_REGEX ]]; then
             echo "✅ Titre de PR valide avec référence au ticket"
             exit 0

@@ -8,6 +8,8 @@ import Match from '../../models/Match.js';
 import Season from '../../models/Season.js';
 import News from '../../models/News.js';
 import Partner from '../../models/Partner.js';
+import Event from '../../models/Event.js';
+import Album from '../../models/Album.js';
 
 const router = express.Router();
 
@@ -25,6 +27,9 @@ router.get('/', authMiddleware, async (req, res) => {
       upcomingMatches,
       publishedNews,
       activePartners,
+      totalEvents,
+      upcomingEvents,
+      totalAlbums,
     ] = await Promise.all([
       User.countDocuments(),
       Member.countDocuments(),
@@ -34,6 +39,9 @@ router.get('/', authMiddleware, async (req, res) => {
       Match.countDocuments({ status: 'scheduled', date: { $gte: now } }),
       News.countDocuments({ isPublished: true }),
       Partner.countDocuments({ isActive: true }),
+      Event.countDocuments(),
+      Event.countDocuments({ date: { $gte: now } }),
+      Album.countDocuments(),
     ]);
 
     // Équipes de la saison active (ou total)
@@ -50,6 +58,9 @@ router.get('/', authMiddleware, async (req, res) => {
       upcomingMatches,
       publishedNews,
       activePartners,
+      totalEvents,
+      upcomingEvents,
+      totalAlbums,
     });
   } catch (err) {
     console.error('Stats error:', err);

@@ -25,6 +25,17 @@ const deleteOldFile = (url) => {
   }
 };
 
+// 🔹 GET public club info (no auth required)
+router.get('/public', async (req, res) => {
+  try {
+    const club = await Club.findOne().select('-legal_info -__v');
+    if (!club) return res.status(404).json({ message: 'Club non trouvé' });
+    res.json(club);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // 🔹 GET all clubs
 router.get('/', authMiddleware, requireRole('admin'), getAllClubs);
 

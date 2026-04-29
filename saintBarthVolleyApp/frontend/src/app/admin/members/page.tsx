@@ -15,76 +15,86 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface TeamRole {
-  _id: string; // subdoc ObjectId
-  teamId?: string; // optionnel : absent = bénévole saison sans équipe
-  seasonId: string;
-  roles: string[];
-  isCaptain: boolean;
-  position?: string;
-  photo?: string;
-}
-
 interface Member {
   _id: string;
   firstName: string;
   lastName: string;
   birthDate?: string;
-  height?: number;
-  weight?: number;
   bio?: string;
   isActive: boolean;
-  teamRoles: TeamRole[];
 }
 
 interface Season {
   _id: string;
   name: string;
-  isActive: boolean;
 }
 
-interface Team {
+interface ClubAssignment {
   _id: string;
-  name: string;
-  seasonId: string;
+  memberId: string;
+  seasonId: { _id: string; name: string } | string;
+  role: string;
+  customTitle?: string;
+}
+
+interface TeamAssignment {
+  _id: string;
+  teamId: { _id: string; name: string } | string;
+  seasonId: { _id: string; name: string } | string;
+  role: string;
+  position?: string;
+  isCaptain?: boolean;
+  jerseyNumber?: number;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ROLES = [
-  "player",
-  "coach",
-  "staff",
+const CLUB_ROLES = [
+  "president",
+  "vice_president",
+  "secretary",
+  "treasurer",
+  "communication",
+  "sport_manager",
+  "event_manager",
+  "equipment_manager",
   "referee",
   "volunteer",
-  "owner",
+  "other",
 ] as const;
-const ROLE_LABELS: Record<string, string> = {
-  player: "Joueur",
-  coach: "Entraîneur",
-  staff: "Staff",
+
+const CLUB_ROLE_LABELS: Record<string, string> = {
+  president: "Président",
+  vice_president: "Vice-président",
+  secretary: "Secrétaire",
+  treasurer: "Trésorier",
+  communication: "Responsable communication",
+  sport_manager: "Responsable sportif",
+  event_manager: "Responsable événements",
+  equipment_manager: "Responsable matériel",
   referee: "Arbitre",
   volunteer: "Bénévole",
-  owner: "Dirigeant",
+  other: "Autre",
+};
+
+const TEAM_ROLE_LABELS: Record<string, string> = {
+  player: "Joueur",
+  coach: "Entraîneur",
+  assistant_coach: "Assistant entraîneur",
 };
 
 const EMPTY_MEMBER: Omit<Member, "_id"> = {
   firstName: "",
   lastName: "",
   birthDate: "",
-  height: undefined,
-  weight: undefined,
   bio: "",
   isActive: true,
-  teamRoles: [],
 };
 
-const EMPTY_NEW_ROLE = {
+const EMPTY_CLUB_ASSIGNMENT = {
   seasonId: "",
-  teamId: "",
-  roles: ["player"] as string[],
-  isCaptain: false,
-  position: "",
+  role: "volunteer" as string,
+  customTitle: "",
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -94,15 +104,19 @@ export default function AdminMembersPage() {
   const [filtered, setFiltered] = React.useState<Member[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState("");
-
   const [seasons, setSeasons] = React.useState<Season[]>([]);
-  const [allTeams, setAllTeams] = React.useState<Team[]>([]);
 
   const [editing, setEditing] = React.useState<Partial<Member> | null>(null);
   const [saving, setSaving] = React.useState(false);
 
-  const [addingRole, setAddingRole] = React.useState(false);
-  const [newRole, setNewRole] = React.useState(EMPTY_NEW_ROLE);
+  const [clubAssignments, setClubAssignments] = React.useState<
+    ClubAssignment[]
+  >([]);
+  const [teamAssignments, setTeamAssignments] = React.useState<
+    TeamAssignment[]
+  >([]);
+  const [addingClubRole, setAddingClubRole] = React.useState(false);
+  const [newClubRole, setNewClubRole] = React.useState(EMPTY_CLUB_ASSIGNMENT);
 
   // ── Load ──────────────────────────────────────────────────────────────────
   React.useEffect(() => {
@@ -115,13 +129,6 @@ export default function AdminMembersPage() {
       .catch(() => alert("Erreur lors du chargement"))
       .finally(() => setLoading(false));
   }, []);
-
-  React.useEffect(() => {
-    if (seasons.length === 0) return;
-    Promise.all(seasons.map((s) => apiFetch(`/api/teams?seasonId=${s._id}`)))
-      .then((results) => setAllTeams(results.flat() as Team[]))
-      .catch(() => {});
-  }, [seasons]);
 
   React.useEffect(() => {
     if (!search) return setFiltered(members);
@@ -140,6 +147,28 @@ export default function AdminMembersPage() {
     return data;
   };
 
+  const fetchMemberAssignments = async (memberId: string) => {
+    const [club, team] = await Promise.all([
+      apiFetch<ClubAssignment[]>(
+        `/api/club-assignments?memberId=${memberId}`,
+      ).catch(() => [] as ClubAssignment[]),
+      apiFetch<TeamAssignment[]>(
+        `/api/team-assignments?memberId=${memberId}`,
+      ).catch(() => [] as TeamAssignment[]),
+    ]);
+    setClubAssignments(club);
+    setTeamAssignments(team);
+  };
+
+  const openEdit = (m: Member | Partial<Member>) => {
+    setEditing(m);
+    setAddingClubRole(false);
+    setNewClubRole(EMPTY_CLUB_ASSIGNMENT);
+    setClubAssignments([]);
+    setTeamAssignments([]);
+    if ((m as Member)._id) fetchMemberAssignments((m as Member)._id);
+  };
+
   // ── CRUD membres ──────────────────────────────────────────────────────────
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ce membre ?")) return;
@@ -155,9 +184,8 @@ export default function AdminMembersPage() {
     if (!editing) return;
     setSaving(true);
     try {
-      let updated: Member;
       if (editing._id) {
-        updated = await apiFetch(`/api/members/${editing._id}`, {
+        const updated: Member = await apiFetch(`/api/members/${editing._id}`, {
           method: "PUT",
           body: JSON.stringify(editing),
         });
@@ -166,12 +194,13 @@ export default function AdminMembersPage() {
         );
         setEditing(updated);
       } else {
-        updated = await apiFetch("/api/members", {
+        const created: Member = await apiFetch("/api/members", {
           method: "POST",
           body: JSON.stringify(editing),
         });
-        setMembers((prev) => [updated, ...prev]);
-        setEditing(null);
+        await fetchMembers();
+        setEditing(created);
+        fetchMemberAssignments(created._id);
       }
     } catch {
       alert("Erreur lors de la sauvegarde");
@@ -180,58 +209,44 @@ export default function AdminMembersPage() {
     }
   };
 
-  // ── Gestion des rôles ─────────────────────────────────────────────────────
-  const handleAddRole = async () => {
-    if (!editing?._id || !newRole.seasonId) return;
-    // teamId optionnel : absent pour les bénévoles sans équipe
-    const payload = {
-      seasonId: newRole.seasonId,
-      teamId: newRole.teamId || undefined,
-      roles: newRole.roles,
-      isCaptain: newRole.isCaptain,
-      position: newRole.position,
-    };
+  // ── Club assignments ───────────────────────────────────────────────────────
+  const handleAddClubRole = async () => {
+    if (!editing?._id || !newClubRole.seasonId) return;
     try {
-      await apiFetch(`/api/members/${editing._id}/roles`, {
+      await apiFetch("/api/club-assignments", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          memberId: editing._id,
+          seasonId: newClubRole.seasonId,
+          role: newClubRole.role,
+          customTitle: newClubRole.customTitle || undefined,
+        }),
       });
-      const data = await fetchMembers();
-      const refreshed = data.find((m) => m._id === editing._id);
-      if (refreshed) setEditing(refreshed);
-      setAddingRole(false);
-      setNewRole(EMPTY_NEW_ROLE);
+      await fetchMemberAssignments(editing._id);
+      setAddingClubRole(false);
+      setNewClubRole(EMPTY_CLUB_ASSIGNMENT);
     } catch {
       alert("Erreur lors de l'ajout");
     }
   };
 
-  const handleRemoveRole = async (memberId: string, roleId: string) => {
+  const handleRemoveClubRole = async (assignmentId: string) => {
     if (!confirm("Retirer cette affectation ?")) return;
     try {
-      await apiFetch(`/api/members/${memberId}/roles/${roleId}`, {
+      await apiFetch(`/api/club-assignments/${assignmentId}`, {
         method: "DELETE",
       });
-      const data = await fetchMembers();
-      const refreshed = data.find((m) => m._id === memberId);
-      if (refreshed) setEditing(refreshed);
+      setClubAssignments((prev) => prev.filter((a) => a._id !== assignmentId));
     } catch {
       alert("Erreur lors de la suppression");
     }
   };
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  const getTeamName = (teamId?: string) =>
-    teamId
-      ? (allTeams.find((t) => t._id === teamId)?.name ?? "Équipe inconnue")
-      : "—";
-  const getSeasonName = (seasonId: string) =>
-    seasons.find((s) => s._id === seasonId)?.name ?? seasonId;
-  const teamsForSeason = (seasonId: string) =>
-    allTeams.filter((t) => t.seasonId === seasonId);
-
-  // Rôle est "sans équipe" si volunteer/owner/staff sans teamId
-  const isSeasonOnlyRole = (tr: TeamRole) => !tr.teamId;
+  const getLabel = (
+    obj: { _id: string; name: string } | string,
+    fallback: string,
+  ) => (typeof obj === "object" ? obj.name : fallback);
 
   if (loading) return <div className="p-6">Chargement...</div>;
 
@@ -244,7 +259,7 @@ export default function AdminMembersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Button onClick={() => setEditing({ ...EMPTY_MEMBER })}>
+        <Button onClick={() => openEdit({ ...EMPTY_MEMBER })}>
           + Nouveau membre
         </Button>
       </div>
@@ -271,13 +286,8 @@ export default function AdminMembersPage() {
                 {new Date(m.birthDate).toLocaleDateString("fr-FR")}
               </div>
             )}
-            {m.teamRoles?.length > 0 && (
-              <div className="text-xs text-muted-foreground">
-                {m.teamRoles.map((tr) => getTeamName(tr.teamId)).join(", ")}
-              </div>
-            )}
             <div className="flex gap-2 mt-1">
-              <Button size="sm" variant="outline" onClick={() => setEditing(m)}>
+              <Button size="sm" variant="outline" onClick={() => openEdit(m)}>
                 Modifier
               </Button>
               <Button
@@ -304,8 +314,7 @@ export default function AdminMembersPage() {
             <tr>
               <th className="p-3 text-left">Nom</th>
               <th className="p-3 text-left">Naissance</th>
-              <th className="p-3 text-left">Taille / Poids</th>
-              <th className="p-3 text-left">Affectations</th>
+              <th className="p-3 text-left">Bio</th>
               <th className="p-3 text-left">Statut</th>
               <th className="p-3 text-left">Actions</th>
             </tr>
@@ -322,27 +331,8 @@ export default function AdminMembersPage() {
                       ? new Date(m.birthDate).toLocaleDateString("fr-FR")
                       : "-"}
                   </td>
-                  <td className="p-3 text-muted-foreground">
-                    {m.height ? `${m.height} cm` : "-"} /{" "}
-                    {m.weight ? `${m.weight} kg` : "-"}
-                  </td>
-                  <td className="p-3">
-                    {m.teamRoles?.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {m.teamRoles.map((tr) => (
-                          <span
-                            key={tr._id}
-                            className={`px-1.5 py-0.5 rounded text-xs ${tr.teamId ? "bg-blue-50 text-blue-700" : "bg-orange-50 text-orange-700"}`}
-                          >
-                            {tr.teamId
-                              ? getTeamName(tr.teamId)
-                              : `Bénévole · ${getSeasonName(tr.seasonId)}`}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
+                  <td className="p-3 text-muted-foreground max-w-xs truncate">
+                    {m.bio || "-"}
                   </td>
                   <td className="p-3">
                     <span
@@ -355,7 +345,7 @@ export default function AdminMembersPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setEditing(m)}
+                      onClick={() => openEdit(m)}
                     >
                       Modifier
                     </Button>
@@ -372,7 +362,7 @@ export default function AdminMembersPage() {
             ) : (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={5}
                   className="h-40 text-center text-muted-foreground"
                 >
                   Aucun membre trouvé
@@ -386,7 +376,7 @@ export default function AdminMembersPage() {
       {/* ══ Modal édition / création ══ */}
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg shadow-xl w-full max-w-2xl flex flex-col gap-5 max-h-[90vh]">
+          <div className="bg-background rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
             <div className="p-6 pb-0 shrink-0">
               <h2 className="text-xl font-bold">
                 {editing._id
@@ -395,13 +385,12 @@ export default function AdminMembersPage() {
               </h2>
             </div>
 
-            <div className="flex flex-col gap-5 overflow-y-auto px-6 pb-6">
-              {/* Infos de base */}
+            <div className="flex flex-col gap-5 overflow-y-auto px-6 pb-6 mt-5">
+              {/* ── Informations ── */}
               <section className="flex flex-col gap-3">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Informations
                 </h3>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <Label>Prénom *</Label>
@@ -426,7 +415,6 @@ export default function AdminMembersPage() {
                     />
                   </div>
                 </div>
-
                 <div className="flex flex-col gap-1">
                   <Label>Date de naissance</Label>
                   <Input
@@ -439,46 +427,6 @@ export default function AdminMembersPage() {
                     }
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <Label>Taille (cm)</Label>
-                    <Input
-                      type="number"
-                      value={editing.height || ""}
-                      onChange={(e) =>
-                        setEditing(
-                          (p) =>
-                            p && {
-                              ...p,
-                              height: e.target.value
-                                ? Number(e.target.value)
-                                : undefined,
-                            },
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label>Poids (kg)</Label>
-                    <Input
-                      type="number"
-                      value={editing.weight || ""}
-                      onChange={(e) =>
-                        setEditing(
-                          (p) =>
-                            p && {
-                              ...p,
-                              weight: e.target.value
-                                ? Number(e.target.value)
-                                : undefined,
-                            },
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-
                 <div className="flex flex-col gap-1">
                   <Label>Bio</Label>
                   <textarea
@@ -489,7 +437,6 @@ export default function AdminMembersPage() {
                     }
                   />
                 </div>
-
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -506,220 +453,202 @@ export default function AdminMembersPage() {
                 </div>
               </section>
 
-              {/* Affectations — seulement si membre existant */}
+              {/* ── Rôles au club (ClubAssignment) — après création uniquement ── */}
               {editing._id && (
-                <section className="flex flex-col gap-3 border-t pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Affectations
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Équipe ou bénévolat pour une saison
-                      </p>
-                    </div>
-                    {!addingRole && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setAddingRole(true)}
-                      >
-                        + Ajouter
-                      </Button>
-                    )}
-                  </div>
-
-                  {(editing.teamRoles ?? []).length === 0 && !addingRole && (
-                    <p className="text-sm text-muted-foreground">
-                      Aucune affectation.
-                    </p>
-                  )}
-
-                  {(editing.teamRoles ?? []).map((tr) => (
-                    <div
-                      key={tr._id}
-                      className="flex items-start justify-between border rounded p-3 gap-3"
-                    >
-                      <div className="flex flex-col gap-0.5 text-sm min-w-0">
-                        <div className="font-medium">
-                          {isSeasonOnlyRole(tr) ? (
-                            <span className="text-orange-700">
-                              Club (sans équipe)
-                            </span>
-                          ) : (
-                            getTeamName(tr.teamId)
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {getSeasonName(tr.seasonId)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {tr.roles.map((r) => ROLE_LABELS[r] ?? r).join(", ")}
-                          {tr.isCaptain && " · Capitaine"}
-                          {tr.position && ` · ${tr.position}`}
-                        </div>
+                <>
+                  <section className="flex flex-col gap-3 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Rôles au club
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Fonctions au sein du club (hors équipe)
+                        </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-500 hover:text-red-700 shrink-0"
-                        onClick={() => handleRemoveRole(editing._id!, tr._id)}
-                      >
-                        Retirer
-                      </Button>
-                    </div>
-                  ))}
-
-                  {addingRole && (
-                    <div className="border rounded p-4 flex flex-col gap-3 bg-muted/20">
-                      {/* Saison */}
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Saison *</Label>
-                        <Select
-                          value={newRole.seasonId}
-                          onValueChange={(v) =>
-                            setNewRole((p) => ({
-                              ...p,
-                              seasonId: v,
-                              teamId: "",
-                            }))
-                          }
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Choisir une saison..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {seasons.map((s) => (
-                              <SelectItem key={s._id} value={s._id}>
-                                {s.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Équipe — optionnelle */}
-                      {newRole.seasonId && (
-                        <div className="flex flex-col gap-1">
-                          <Label className="text-xs">
-                            Équipe{" "}
-                            <span className="text-muted-foreground">
-                              (laisser vide si bénévole sans équipe)
-                            </span>
-                          </Label>
-                          <Select
-                            value={newRole.teamId || "__none__"}
-                            onValueChange={(v) =>
-                              setNewRole((p) => ({
-                                ...p,
-                                teamId: v === "__none__" ? "" : v,
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="h-9">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="__none__">
-                                — Sans équipe (bénévole club) —
-                              </SelectItem>
-                              {teamsForSeason(newRole.seasonId).map((t) => (
-                                <SelectItem key={t._id} value={t._id}>
-                                  {t.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1">
-                          <Label className="text-xs">Rôle *</Label>
-                          <Select
-                            value={newRole.roles[0]}
-                            onValueChange={(v) =>
-                              setNewRole((p) => ({ ...p, roles: [v] }))
-                            }
-                          >
-                            <SelectTrigger className="h-9">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {ROLES.map((r) => (
-                                <SelectItem key={r} value={r}>
-                                  {ROLE_LABELS[r]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <Label className="text-xs">Poste</Label>
-                          <Input
-                            className="h-9"
-                            placeholder="Ex: Libéro"
-                            value={newRole.position}
-                            onChange={(e) =>
-                              setNewRole((p) => ({
-                                ...p,
-                                position: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      {newRole.teamId && (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="isCaptain"
-                            checked={newRole.isCaptain}
-                            onChange={(e) =>
-                              setNewRole((p) => ({
-                                ...p,
-                                isCaptain: e.target.checked,
-                              }))
-                            }
-                            className="h-4 w-4"
-                          />
-                          <Label htmlFor="isCaptain" className="text-sm">
-                            Capitaine de l&apos;équipe
-                          </Label>
-                        </div>
-                      )}
-
-                      <div className="flex justify-end gap-2">
+                      {!addingClubRole && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            setAddingRole(false);
-                            setNewRole(EMPTY_NEW_ROLE);
-                          }}
+                          onClick={() => setAddingClubRole(true)}
                         >
-                          Annuler
+                          + Ajouter
                         </Button>
+                      )}
+                    </div>
+
+                    {clubAssignments.length === 0 && !addingClubRole && (
+                      <p className="text-sm text-muted-foreground">
+                        Aucun rôle au club.
+                      </p>
+                    )}
+
+                    {clubAssignments.map((a) => (
+                      <div
+                        key={a._id}
+                        className="flex items-start justify-between border rounded p-3 gap-3"
+                      >
+                        <div className="flex flex-col gap-0.5 text-sm min-w-0">
+                          <div className="font-medium">
+                            {a.role === "other" && a.customTitle
+                              ? a.customTitle
+                              : (CLUB_ROLE_LABELS[a.role] ?? a.role)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {getLabel(
+                              a.seasonId as
+                                | { _id: string; name: string }
+                                | string,
+                              String(a.seasonId),
+                            )}
+                          </div>
+                        </div>
                         <Button
                           size="sm"
-                          onClick={handleAddRole}
-                          disabled={!newRole.seasonId}
+                          variant="ghost"
+                          className="text-red-500 hover:text-red-700 shrink-0"
+                          onClick={() => handleRemoveClubRole(a._id)}
                         >
-                          Ajouter
+                          Retirer
                         </Button>
                       </div>
-                    </div>
+                    ))}
+
+                    {addingClubRole && (
+                      <div className="border rounded p-4 flex flex-col gap-3 bg-muted/20">
+                        <div className="flex flex-col gap-1">
+                          <Label className="text-xs">Saison *</Label>
+                          <Select
+                            value={newClubRole.seasonId}
+                            onValueChange={(v) =>
+                              setNewClubRole((p) => ({ ...p, seasonId: v }))
+                            }
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Choisir une saison..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {seasons.map((s) => (
+                                <SelectItem key={s._id} value={s._id}>
+                                  {s.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <Label className="text-xs">Rôle *</Label>
+                          <Select
+                            value={newClubRole.role}
+                            onValueChange={(v) =>
+                              setNewClubRole((p) => ({ ...p, role: v }))
+                            }
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CLUB_ROLES.map((r) => (
+                                <SelectItem key={r} value={r}>
+                                  {CLUB_ROLE_LABELS[r]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {newClubRole.role === "other" && (
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-xs">
+                              Titre personnalisé
+                            </Label>
+                            <Input
+                              className="h-9"
+                              placeholder="Ex: Responsable transport"
+                              value={newClubRole.customTitle}
+                              onChange={(e) =>
+                                setNewClubRole((p) => ({
+                                  ...p,
+                                  customTitle: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                        )}
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setAddingClubRole(false);
+                              setNewClubRole(EMPTY_CLUB_ASSIGNMENT);
+                            }}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleAddClubRole}
+                            disabled={!newClubRole.seasonId}
+                          >
+                            Ajouter
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  {/* ── Affectations équipe (lecture seule) ── */}
+                  {teamAssignments.length > 0 && (
+                    <section className="flex flex-col gap-3 border-t pt-4">
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Affectations équipe
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Gérez ces affectations depuis la page de
+                          l&apos;équipe.
+                        </p>
+                      </div>
+                      {teamAssignments.map((a) => (
+                        <div
+                          key={a._id}
+                          className="border rounded p-3 text-sm bg-muted/10"
+                        >
+                          <div className="font-medium">
+                            {getLabel(
+                              a.teamId as
+                                | { _id: string; name: string }
+                                | string,
+                              "Équipe",
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {getLabel(
+                              a.seasonId as
+                                | { _id: string; name: string }
+                                | string,
+                              "",
+                            )}
+                            {" · "}
+                            {TEAM_ROLE_LABELS[a.role] ?? a.role}
+                            {a.position && ` · ${a.position}`}
+                            {a.jerseyNumber ? ` · #${a.jerseyNumber}` : ""}
+                            {a.isCaptain && " · Capitaine"}
+                          </div>
+                        </div>
+                      ))}
+                    </section>
                   )}
-                </section>
+                </>
               )}
 
+              {/* ── Actions ── */}
               <div className="flex justify-end gap-3 pt-2 border-t">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setEditing(null);
-                    setAddingRole(false);
+                    setAddingClubRole(false);
                   }}
                 >
                   {editing._id ? "Fermer" : "Annuler"}

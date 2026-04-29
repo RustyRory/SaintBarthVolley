@@ -1,57 +1,285 @@
-## Classes principales du système
+# UML — Diagramme de classes
 
-### Cœur du système
+---
 
-- User
-- Club
-- Season
-- Team
-- Member
+## Vue d'ensemble des classes
 
-### Contenus
+```mermaid
+classDiagram
+    class User {
+        +ObjectId _id
+        +String email
+        +String passwordHash
+        +String role
+        +String firstName
+        +String lastName
+        +Boolean isActive
+        +Boolean isVerified
+        +Date lastLoginAt
+        +Date passwordUpdatedAt
+        +Date createdAt
+        +Date updatedAt
+        +setPassword(password) void
+        +comparePassword(password) Boolean
+    }
 
-- News
-- Album
-- Media
-- Partner
+    class Club {
+        +ObjectId _id
+        +String name
+        +String subtitle
+        +String homeDescription
+        +String clubDescription
+        +String ownerDescription
+        +String logo
+        +String photo
+        +String email
+        +String phone
+        +String address
+        +SocialLink social_links
+        +LegalInfo legal_info
+        +Date createdAt
+        +Date updatedAt
+    }
 
-### FFVB / Automatisation
+    class SocialLink {
+        +String facebook
+        +String instagram
+        +String youtube
+        +String sporteasy
+        +String clubMerch
+        +String clubRegistration
+        +String website
+        +String other
+    }
 
-- ChampionshipFFVB
-- StandingFFVB
-- MatchFFVB
-- ScrapingLog
+    class LegalInfo {
+        +String associationName
+        +String legalForm
+        +String siret
+        +String rna
+        +String headOffice
+        +Date publicationDate
+        +String responsible
+        +String hostingProvider
+        +Date updatedAt
+    }
 
-### Objets embarqués (composition)
+    class Season {
+        +ObjectId _id
+        +String name
+        +Date startDate
+        +Date endDate
+        +String status
+        +Date createdAt
+        +Date updatedAt
+        +archive() void
+    }
 
-- SocialLink
-- LegalInfo
+    class Team {
+        +ObjectId _id
+        +String name
+        +String category
+        +String gender
+        +String level
+        +ObjectId seasonId
+        +String trainingSchedule
+        +ObjectId[] coachIds
+        +String photo
+        +String ffvbTeamCode
+        +Boolean isArchived
+        +Date createdAt
+        +Date updatedAt
+        +archive() void
+        +duplicate() Team
+    }
 
-## Relations clés (vue globale)
+    class Member {
+        +ObjectId _id
+        +String firstName
+        +String lastName
+        +String type
+        +String role
+        +ObjectId teamId
+        +ObjectId seasonId
+        +Date birthDate
+        +String position
+        +Number height
+        +Number weight
+        +String photo
+        +String bio
+        +Boolean isActive
+        +Date createdAt
+        +Date updatedAt
+    }
 
-| Relation | Type |
-| --- | --- |
-| Club ◼─ SocialLink | Composition |
-| Club ◼─ LegalInfo | Composition |
-| Season ─ Team | 1 → * |
-| Team ─ Member | 1 → * |
-| User ─ News | 1 → * |
-| Album ─ Media | 1 → * |
-| Team ─ ChampionshipFFVB | 1 → 1 |
-| ChampionshipFFVB ─ StandingFFVB | 1 → * |
-| ChampionshipFFVB ─ MatchFFVB | 1 → * |
-| Season ─ ScrapingLog | 1 → * |
+    class News {
+        +ObjectId _id
+        +String title
+        +String slug
+        +String content
+        +ObjectId albumId
+        +ObjectId authorId
+        +Boolean isPublished
+        +Boolean isFeatured
+        +Date publishedAt
+        +Date createdAt
+        +Date updatedAt
+        +publish() void
+    }
 
-## Diagramme de classes UML (PlantUML)
+    class Album {
+        +ObjectId _id
+        +String title
+        +String description
+        +Date eventDate
+        +Boolean isPublic
+        +Date createdAt
+        +Date updatedAt
+    }
 
-[UML](/docs/uml/images/)
+    class Media {
+        +ObjectId _id
+        +ObjectId albumId
+        +String url
+        +String type
+        +Number order
+        +Date createdAt
+        +Date updatedAt
+    }
 
+    class Partner {
+        +ObjectId _id
+        +String name
+        +String description
+        +String logo
+        +String website
+        +Number priority
+        +Boolean isActive
+        +Date createdAt
+        +Date updatedAt
+    }
 
-<img src="./images/classes.png" />
+    class Championship {
+        +ObjectId _id
+        +ObjectId seasonId
+        +ObjectId teamId
+        +String federationUrl
+        +Date createdAt
+        +Date updatedAt
+    }
 
+    class Standing {
+        +ObjectId _id
+        +ObjectId championshipId
+        +String teamName
+        +Number rank
+        +Number points
+        +Number played
+        +Number wins
+        +Number losses
+        +Number setsFor
+        +Number setsAgainst
+        +Date createdAt
+        +Date updatedAt
+    }
+
+    class Match {
+        +ObjectId _id
+        +ObjectId championshipId
+        +String federationMatchId
+        +String opponentName
+        +Date date
+        +String homeAway
+        +String status
+        +Number scoreFor
+        +Number scoreAgainst
+        +String setsDetail
+        +Date createdAt
+        +Date updatedAt
+    }
+
+    class ScrapingLog {
+        +ObjectId _id
+        +ObjectId seasonId
+        +String source
+        +String status
+        +String message
+        +Date runAt
+        +Date createdAt
+        +Date updatedAt
+    }
+
+    %% Compositions (objets embarqués)
+    Club *-- SocialLink : social_links
+    Club *-- LegalInfo : legal_info
+
+    %% Relations référencées
+    Season "1" --> "0..*" Team : seasonId
+    Season "1" --> "0..*" Member : seasonId
+    Season "1" --> "0..*" ScrapingLog : seasonId
+    Team "1" --> "0..*" Member : teamId
+    Team "1" --> "0..1" Championship : teamId
+    Championship "1" --> "1..*" Standing : championshipId
+    Championship "1" --> "0..*" Match : championshipId
+    User "1" --> "0..*" News : authorId
+    News "0..1" --> "0..1" Album : albumId
+    Album "1" --> "1..*" Media : albumId
 ```
+
+---
+
+## Relations clés
+
+| Relation | Type | Cardinalité |
+|---|---|---|
+| `Club` ◆─ `SocialLink` | Composition (embedded) | 1 — 1 |
+| `Club` ◆─ `LegalInfo` | Composition (embedded) | 1 — 1 |
+| `Season` → `Team` | Référence (seasonId) | 1 — 0..* |
+| `Season` → `Member` | Référence (seasonId) | 1 — 0..* |
+| `Team` → `Member` | Référence (teamId) | 1 — 0..* |
+| `Team` → `Championship` | Référence (teamId) | 1 — 0..1 |
+| `Championship` → `Standing` | Référence (championshipId) | 1 — 1..* |
+| `Championship` → `Match` | Référence (championshipId) | 1 — 0..* |
+| `User` → `News` | Référence (authorId) | 1 — 0..* |
+| `News` → `Album` | Référence optionnelle (albumId) | 0..1 — 0..1 |
+| `Album` → `Media` | Référence (albumId) | 1 — 1..* |
+| `Season` → `ScrapingLog` | Référence (seasonId) | 1 — 0..* |
+
+---
+
+## Énumérations
+
+### User.role
+- `admin` — accès complet
+- `editor` — gestion des contenus
+- `user` — compte standard (non utilisé en back-office)
+
+### Season.status
+- `active` — saison en cours
+- `archived` — saison terminée
+- `future` — saison à venir
+
+### Member.type
+- `player` — joueur
+- `staff` — entraîneur / encadrement
+- `dirigeant` — dirigeant du club
+- `benevole` — bénévole
+
+### Match.homeAway
+- `home` — à domicile
+- `away` — à l'extérieur
+
+### Match.status
+- `scheduled` — match à venir
+- `played` — match joué
+
+---
+
+## PlantUML — Source (pour génération PNG)
+
+```plantuml
 @startuml
-title Diagramme de classes - Club de Volley (relations corrigées)
+title Diagramme de classes — Club de Volley SB d'Anjou
 
 class User {
   _id: ObjectId
@@ -61,13 +289,13 @@ class User {
   firstName: String
   lastName: String
   isActive: Boolean
+  isVerified: Boolean
   lastLoginAt: Date
   passwordUpdatedAt: Date
   createdAt: Date
   updatedAt: Date
-
-  login()
-  logout()
+  setPassword()
+  comparePassword()
 }
 
 class Club {
@@ -113,9 +341,6 @@ class Season {
   startDate: Date
   endDate: Date
   status: String
-  createdAt: Date
-  updatedAt: Date
-
   archive()
 }
 
@@ -128,9 +353,6 @@ class Team {
   trainingSchedule: String
   ffvbTeamCode: String
   isArchived: Boolean
-  createdAt: Date
-  updatedAt: Date
-
   archive()
   duplicate()
 }
@@ -145,11 +367,7 @@ class Member {
   position: String
   height: Number
   weight: Number
-  photo: String
-  bio: Text
   isActive: Boolean
-  createdAt: Date
-  updatedAt: Date
 }
 
 class News {
@@ -160,9 +378,6 @@ class News {
   isPublished: Boolean
   isFeatured: Boolean
   publishedAt: Date
-  createdAt: Date
-  updatedAt: Date
-
   publish()
 }
 
@@ -172,8 +387,6 @@ class Album {
   description: String
   eventDate: Date
   isPublic: Boolean
-  createdAt: Date
-  updatedAt: Date
 }
 
 class Media {
@@ -181,30 +394,23 @@ class Media {
   url: String
   type: String
   order: Number
-  createdAt: Date
-  updatedAt: Date
 }
 
 class Partner {
   _id: ObjectId
   name: String
-  description: String
   logo: String
   website: String
   priority: Number
   isActive: Boolean
-  createdAt: Date
-  updatedAt: Date
 }
 
-class ChampionshipFFVB {
+class Championship {
   _id: ObjectId
   federationUrl: String
-  createdAt: Date
-  updatedAt: Date
 }
 
-class StandingFFVB {
+class Standing {
   _id: ObjectId
   teamName: String
   rank: Number
@@ -214,11 +420,9 @@ class StandingFFVB {
   losses: Number
   setsFor: Number
   setsAgainst: Number
-  createdAt: Date
-  updatedAt: Date
 }
 
-class MatchFFVB {
+class Match {
   _id: ObjectId
   federationMatchId: String
   opponentName: String
@@ -227,9 +431,6 @@ class MatchFFVB {
   status: String
   scoreFor: Number
   scoreAgainst: Number
-  setsDetail: String
-  createdAt: Date
-  updatedAt: Date
 }
 
 class ScrapingLog {
@@ -238,31 +439,23 @@ class ScrapingLog {
   status: String
   message: String
   runAt: Date
-  createdAt: Date
-  updatedAt: Date
 }
 
-' Compositions
 Club *-- SocialLink
 Club *-- LegalInfo
 
-' Relations référencées
-Season "1" -- "*" Team : seasonId
-Team "1" -- "*" Member : teamId
-Season "1" -- "*" Member : seasonId
+Season "1" -- "*" Team
+Season "1" -- "*" Member
+Team "1" -- "*" Member
+Team "1" -- "0..1" Championship
 
-User "1" -- "*" News : authorId
-Album "1" -- "*" Media : albumId
-Album "1" -- "0..1" News : albumId
+Championship "1" -- "*" Standing
+Championship "1" -- "*" Match
+Season "1" -- "*" ScrapingLog
 
-Season "1" -- "*" ChampionshipFFVB : seasonId
-Team "1" -- "*" ChampionshipFFVB : teamId
-
-ChampionshipFFVB "1" -- "*" StandingFFVB : championshipId
-ChampionshipFFVB "1" -- "*" MatchFFVB : championshipId
-
-Season "1" -- "*" ScrapingLog : seasonId
+User "1" -- "*" News
+News "0..1" -- "0..1" Album
+Album "1" -- "*" Media
 
 @enduml
-
 ```

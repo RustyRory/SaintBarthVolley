@@ -7,6 +7,8 @@ import {
   IconNews,
   IconChartBar,
   IconUserCheck,
+  IconConfetti,
+  IconPhoto,
 } from "@tabler/icons-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +23,9 @@ interface Stats {
   upcomingMatches: number;
   publishedNews: number;
   activePartners: number;
+  totalEvents: number;
+  upcomingEvents: number;
+  totalAlbums: number;
 }
 
 interface CardDef {
@@ -112,6 +117,20 @@ export function SectionAdminCards({
       sub: "Articles en ligne",
       icon: IconNews,
       color: "bg-purple-500",
+    },
+    {
+      title: "Événements à venir",
+      value: stats.upcomingEvents,
+      sub: `${stats.totalEvents} événements au total`,
+      icon: IconConfetti,
+      color: "bg-yellow-500",
+    },
+    {
+      title: "Albums photo",
+      value: stats.totalAlbums,
+      sub: "Albums en ligne",
+      icon: IconPhoto,
+      color: "bg-teal-500",
     },
     {
       title: "Partenaires actifs",

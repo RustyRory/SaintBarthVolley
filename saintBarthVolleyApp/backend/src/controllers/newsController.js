@@ -17,6 +17,7 @@ export const getNews = async (req, res) => {
     const filter = {};
     if (req.query.published === 'true') filter.isPublished = true;
     if (req.query.featured === 'true') filter.isFeatured = true;
+    if (req.query.teamId) filter.teamId = req.query.teamId;
 
     const news = await News.find(filter).populate('authorId', 'firstName lastName').sort({ createdAt: -1 });
     res.json(news);
