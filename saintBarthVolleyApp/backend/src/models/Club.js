@@ -1,5 +1,14 @@
 import mongoose from 'mongoose';
 
+const valueSchema = new mongoose.Schema(
+  {
+    emoji: { type: String, default: '🏐' },
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+  },
+  { _id: true },
+);
+
 const ClubSchema = new mongoose.Schema(
   {
     name: {
@@ -9,13 +18,12 @@ const ClubSchema = new mongoose.Schema(
     },
     subtitle: {
       type: String,
-      default: 'Passion, Performance, Partage', // Slogan plus dynamique
+      default: 'Passion, Performance, Partage',
       required: true,
     },
     homeDescription: {
       type: String,
-      default:
-        'Bienvenue sur le site officiel du Saint Barthélémy Volley-Ball, le club où la passion du volley rencontre l’esprit d’équipe et la convivialité.',
+      default: 'Bienvenue sur le site officiel du Saint Barthélémy Volley-Ball.',
     },
     clubDescription: {
       type: String,
@@ -29,17 +37,44 @@ const ClubSchema = new mongoose.Schema(
     },
     logo: {
       type: String,
-      default: '/assets/images/default_logo.png', // chemin local par défaut
+      default: '/assets/images/default_logo.png',
     },
     photo: {
       type: String,
-      default: '/assets/images/default_club_photo.png', // chemin local par défaut
+      default: '/assets/images/default_club_photo.png',
+    },
+    aboutPhoto: {
+      type: String,
+      default: '',
     },
     email: { type: String, default: 'contact@saintbarthvolley.fr' },
-    phone: { type: String, default: '(+33) 02 41 XX XX XX' },
+    phone: { type: String, default: '' },
     address: { type: String, default: 'Saint-Barthélemy, Caraïbes' },
 
-    // Liens sociaux
+    values: {
+      type: [valueSchema],
+      default: [
+        {
+          emoji: '❤️',
+          title: 'Passion',
+          description:
+            'Le volley-ball est avant tout une passion partagée. Nous transmettons cet amour du sport à chaque entraînement.',
+        },
+        {
+          emoji: '🏆',
+          title: 'Performance',
+          description:
+            "Nous accompagnons chaque joueur vers l'excellence, quel que soit son niveau, avec un encadrement de qualité.",
+        },
+        {
+          emoji: '🤝',
+          title: 'Partage',
+          description:
+            'Le collectif est notre force. Ensemble, nous construisons une communauté soudée et bienveillante.',
+        },
+      ],
+    },
+
     social_links: {
       facebook: { type: String, default: '' },
       instagram: { type: String, default: '' },
@@ -51,7 +86,6 @@ const ClubSchema = new mongoose.Schema(
       other: { type: String, default: '' },
     },
 
-    // Informations légales
     legal_info: {
       associationName: { type: String, default: 'Saint Barth Volley-Ball' },
       legalForm: { type: String, default: 'Association loi 1901' },

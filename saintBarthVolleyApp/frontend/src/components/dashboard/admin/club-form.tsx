@@ -4,8 +4,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/dashboard/admin/file-upload";
 import Image from "next/image";
+import { Plus, Trash2 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
@@ -38,8 +40,29 @@ export function ClubForm({ club, onChange }: Props) {
     }
   };
 
+  const handleValueChange = (index: number, key: string, value: string) => {
+    const values = [...(club.values ?? [])];
+    values[index] = { ...values[index], [key]: value };
+    onChange({ ...club, values });
+  };
+
+  const addValue = () => {
+    const values = [
+      ...(club.values ?? []),
+      { emoji: "🏐", title: "", description: "" },
+    ];
+    onChange({ ...club, values });
+  };
+
+  const removeValue = (index: number) => {
+    const values = (club.values ?? []).filter(
+      (_: any, i: number) => i !== index,
+    );
+    onChange({ ...club, values });
+  };
+
   const handleFileUpload = async (
-    field: "logo" | "photo",
+    field: "logo" | "photo" | "aboutPhoto",
     file: File,
     oldFileUrl?: string,
   ) => {
@@ -154,6 +177,85 @@ export function ClubForm({ club, onChange }: Props) {
             )}
           </div>
         </div>
+        <div>
+          <Label>Photo À propos</Label>
+          <FileUpload
+            onUpload={(file) =>
+              handleFileUpload("aboutPhoto", file, club.aboutPhoto)
+            }
+          />
+          {club.aboutPhoto && (
+            <Image
+              src={club.aboutPhoto}
+              alt="À propos"
+              width={200}
+              height={100}
+              unoptimized
+              className="mt-2 h-24 object-cover rounded"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* VALEURS */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Nos valeurs</h2>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={addValue}
+            className="flex items-center gap-1.5"
+          >
+            <Plus size={14} />
+            Ajouter
+          </Button>
+        </div>
+        {(club.values ?? []).map((v: any, i: number) => (
+          <div
+            key={v._id ?? i}
+            className="grid grid-cols-[3rem_1fr_1fr_auto] gap-3 items-start p-3 border border-gray-200 rounded-lg"
+          >
+            <div>
+              <Label className="text-xs">Emoji</Label>
+              <Input
+                value={v.emoji}
+                onChange={(e) => handleValueChange(i, "emoji", e.target.value)}
+                className="text-center text-lg px-1"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Titre</Label>
+              <Input
+                value={v.title}
+                onChange={(e) => handleValueChange(i, "title", e.target.value)}
+                placeholder="Titre"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Description</Label>
+              <Textarea
+                value={v.description}
+                onChange={(e) =>
+                  handleValueChange(i, "description", e.target.value)
+                }
+                placeholder="Description"
+                className="h-20 resize-none"
+              />
+            </div>
+            <div className="pt-5">
+              <button
+                type="button"
+                onClick={() => removeValue(i)}
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                aria-label="Supprimer"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* CONTACT */}

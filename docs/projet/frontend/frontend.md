@@ -1,150 +1,206 @@
-# Frontend – Architecture Générale (Next.js)
+# Frontend — Architecture (Next.js)
 
-## Objectif
+> Next.js 16 — App Router — TypeScript — Tailwind CSS — shadcn/ui
 
-Le frontend doit :
+---
 
-- Afficher le site vitrine
-- Communiquer avec l’API Express
-- Gérer l’authentification
-- Protéger certaines pages
-- Être structuré, propre et scalable
+## Stack
 
-# Initialisation
+| Technologie | Rôle |
+|---|---|
+| Next.js 16 (App Router) | Framework React SSR/SSG |
+| TypeScript | Typage statique |
+| Tailwind CSS | Styles utilitaires |
+| shadcn/ui | Composants UI accessibles |
+| @tabler/icons-react | Icônes |
 
-```bash
-npx create-next-app@latest frontend
-```
+---
 
-Options recommandées :
-
-- TypeScript
-- App Router
-- Tailwind
-- ESLint
-- src directory
-- Import alias
-
-Puis :
+## Structure `src/`
 
 ```
-cd frontend
-npm run dev
+src/
+├── app/                            ← Pages App Router
+│   ├── layout.tsx                  ← Layout racine
+│   ├── page.tsx                    ← Page d'accueil (vitrine)
+│   ├── login/page.tsx
+│   ├── register/page.tsx
+│   ├── forgot-password/page.tsx
+│   ├── reset-password/page.tsx
+│   ├── verify-email/page.tsx
+│   └── admin/                      ← Back-office (protégé)
+│       ├── layout.tsx              ← Layout admin (sidebar)
+│       ├── page.tsx                ← Dashboard
+│       ├── club/page.tsx
+│       ├── seasons/
+│       │   ├── page.tsx
+│       │   └── [seasonId]/teams/
+│       │       ├── page.tsx
+│       │       └── [teamId]/page.tsx
+│       ├── members/page.tsx
+│       ├── news/page.tsx
+│       ├── partners/page.tsx
+│       └── users/page.tsx
+├── components/
+│   ├── ui/                         ← shadcn/ui (Button, Input, Card…)
+│   ├── dashboard/admin/            ← Composants back-office
+│   │   ├── app-sidebar.tsx
+│   │   ├── nav-main.tsx
+│   │   ├── nav-user.tsx
+│   │   ├── club-form.tsx
+│   │   ├── file-upload.tsx
+│   │   └── ...
+│   └── auth/                       ← Formulaires auth
+│       ├── login-form.tsx
+│       ├── register-form.tsx
+│       └── ...
+└── lib/
+    ├── api.ts                      ← apiFetch<T> centralisé
+    └── auth.ts                     ← Types AuthUser + authApi
 ```
 
-Frontend : [http://localhost:3000](http://localhost:3000/)
+---
 
-Backend : [http://localhost:5000](http://localhost:5000/)
+## Helper API — `src/lib/api.ts`
 
-# Structure
+Toutes les requêtes passent par `apiFetch<T>` :
 
-Dans `src/` :
-
-```
-app/
-components/
-features/
-lib/
-services/
-hooks/
-types/
-utils/
-```
-
-## Rôle des dossiers
-
-| Dossier | Rôle |
-| --- | --- |
-| app | Pages (App Router) |
-| components | UI réutilisable |
-| features | Logique métier |
-| lib | Config globale |
-| services | Appels API |
-| hooks | Hooks personnalisés |
-| types | Types TypeScript |
-| utils | Fonctions utilitaires |
-
-# Connexion au Backend
-
-## Variable d’environnement
-
-`.env.local`
-
-```
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
-```
-
-## Helper API centralisé
-
-`src/lib/api.ts`
-
-```tsx
-constAPI_URL=process.env.NEXT_PUBLIC_API_URL;
-
-exportasyncfunctionapiFetch(endpoint:string,options:RequestInit= {}) {
-constres=awaitfetch(`${API_URL}${endpoint}`, {
-    credentials:"include",
+```ts
+export async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    credentials: "include",       // envoie le cookie JWT
     headers: {
-"Content-Type":"application/json",
+      "Content-Type": "application/json",
       ...options.headers,
     },
     ...options,
   });
 
-if (!res.ok) {
-consterror=awaitres.json();
-thrownewError(error.message||"Erreur API");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Erreur API");
   }
 
-returnres.json();
+  return res.json() as Promise<T>;
 }
 ```
 
-## 🧼 Bonnes pratiques
+Usage :
 
-- Centraliser les appels API
-- Ne pas dupliquer le code fetch
-- Gérer les erreurs proprement
-- Structurer par feature
-- Préparer le projet à la scalabilité
+```ts
+const user = await apiFetch<AuthUser>("/api/auth/me");
+const news = await apiFetch<News[]>("/api/news");
+```
 
-# Architecture & Workflow Global
+---
 
-## Architecture technique
+## Types principaux — `src/lib/auth.ts`
 
-Frontend (Next.js)
-↕
-API Routes Next (proxy auth)
-↕
-Backend Express
-↕
-MongoDB
+```ts
+export interface AuthUser {
+  _id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: "admin" | "editor" | "user";
+  isActive: boolean;
+  isVerified: boolean;
+}
 
-### Flow Inscription
+export interface ApiMessage {
+  message: string;
+}
+```
 
-1. User register
-2. Compte inactif
-3. Admin valide
-4. Admin attribue rôle
+---
 
-### Flow Connexion
+## Variables d'environnement
 
-1. Login
-2. JWT généré
-3. Cookie httpOnly
-4. `/auth/me` hydrate session
+| Variable | Environnement | Valeur dev | Valeur prod |
+|---|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Build + Runtime | `http://localhost:5000` | `/saintbarth` |
+| `NEXT_BASE_PATH` | Build | — | `/saintbarth` |
 
-### Flow Admin
+---
 
-1. Admin login
-2. Accès dashboard
-3. Gestion utilisateurs
-4. Modification rôles
+## Routing & protection
 
-## Objectif global
+### Structure App Router
 
-- Séparation front/back claire
-- Auth sécurisée
-- Gestion des rôles
-- Architecture scalable
-- Production ready
+| Route | Type | Protection |
+|---|---|---|
+| `/` | Public | — |
+| `/login`, `/register` | Public | — |
+| `/forgot-password`, `/reset-password` | Public | — |
+| `/verify-email` | Public | — |
+| `/admin` | Privé | Middleware JWT + rôle |
+| `/admin/*` | Privé | Middleware JWT + rôle |
+
+### Middleware `middleware.ts`
+
+Intercepte toutes les requêtes vers `/admin/*` et vérifie le cookie JWT via `/api/auth/me`.
+
+---
+
+## Architecture globale
+
+```mermaid
+graph TB
+    subgraph BROWSER["Navigateur"]
+        PAGE[Page Next.js]
+        COMP[Composants UI]
+    end
+
+    subgraph NEXT["Next.js Server"]
+        LAYOUT[Layouts]
+        MW[Middleware auth]
+        FETCH[apiFetch helper]
+    end
+
+    subgraph API["Express API :5000"]
+        ROUTES[Routes REST]
+    end
+
+    PAGE --> COMP
+    PAGE --> FETCH
+    FETCH -->|cookie JWT| ROUTES
+    MW -->|vérif session| ROUTES
+```
+
+---
+
+## Flow d'authentification
+
+```
+1. Utilisateur → POST /api/auth/login
+2. Backend → Set-Cookie: token=jwt (httpOnly, SameSite)
+3. Middleware Next.js → GET /api/auth/me (cookie envoyé auto)
+4. Si 200 → accès autorisé
+5. Si 401 → redirection /login
+```
+
+---
+
+## Lancement en développement
+
+```bash
+cd saintBarthVolleyApp/frontend
+npm install
+npm run dev
+```
+
+Frontend disponible sur `http://localhost:3000`
+
+---
+
+## Build de production
+
+```bash
+npm run build   # next build
+npm start       # next start
+```
+
+Les variables `NEXT_BASE_PATH` et `NEXT_PUBLIC_API_URL` doivent être définies au moment du build.

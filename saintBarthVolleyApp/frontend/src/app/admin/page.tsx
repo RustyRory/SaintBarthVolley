@@ -17,6 +17,9 @@ interface Stats {
   upcomingMatches: number;
   publishedNews: number;
   activePartners: number;
+  totalEvents: number;
+  upcomingEvents: number;
+  totalAlbums: number;
 }
 
 interface ScrapingResult {
@@ -33,31 +36,76 @@ interface QuickLink {
   description: string;
 }
 
-const QUICK_LINKS: QuickLink[] = [
+interface QuickGroup {
+  label: string;
+  links: QuickLink[];
+}
+
+const QUICK_GROUPS: QuickGroup[] = [
   {
-    label: "Gérer les saisons",
-    href: "/admin/seasons",
-    description: "Créer ou modifier les saisons et équipes",
+    label: "Site public",
+    links: [
+      {
+        label: "Infos du club",
+        href: "/admin/club",
+        description: "Modifier les informations générales du club",
+      },
+      {
+        label: "Actualités",
+        href: "/admin/news",
+        description: "Rédiger et publier des articles",
+      },
+      {
+        label: "Albums & Médias",
+        href: "/admin/albums",
+        description: "Mettre en ligne des albums et photos",
+      },
+      {
+        label: "Événements",
+        href: "/admin/events",
+        description: "Gérer les événements du club (loto, AG, tournois…)",
+      },
+      {
+        label: "Partenaires",
+        href: "/admin/partners",
+        description: "Gérer les sponsors et partenaires",
+      },
+    ],
   },
   {
-    label: "Gérer les membres",
-    href: "/admin/members",
-    description: "Ajouter ou mettre à jour les joueurs",
+    label: "Sportif",
+    links: [
+      {
+        label: "Saisons & Équipes",
+        href: "/admin/seasons",
+        description: "Créer ou modifier les saisons et équipes",
+      },
+      {
+        label: "Membres",
+        href: "/admin/members",
+        description: "Ajouter ou mettre à jour les joueurs",
+      },
+      {
+        label: "Matchs",
+        href: "/admin/matches",
+        description: "Consulter et saisir les résultats",
+      },
+      {
+        label: "Championnats",
+        href: "/admin/championships",
+        description: "Gérer les championnats et poules",
+      },
+    ],
   },
   {
-    label: "Actualités",
-    href: "/admin/news",
-    description: "Rédiger et publier des articles",
-  },
-  {
-    label: "Partenaires",
-    href: "/admin/partners",
-    description: "Gérer les sponsors et partenaires",
-  },
-  {
-    label: "Infos du club",
-    href: "/admin/club",
-    description: "Modifier les informations du club",
+    label: "Administration",
+    links: [
+      {
+        label: "Utilisateurs",
+        href: "/admin/users",
+        description: "Gérer les comptes et droits d'accès",
+      },
+    ],
   },
 ];
 
@@ -163,33 +211,40 @@ export default function AdminDashboardPage() {
       <SectionAdminCards stats={stats} loading={loading} />
 
       {/* Accès rapides */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Accès rapides</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {QUICK_LINKS.map((link) => (
-            <Card
-              key={link.href}
-              className="hover:border-primary/50 transition-colors"
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{link.label}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                <p className="text-sm text-muted-foreground">
-                  {link.description}
-                </p>
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="self-start"
+      <div className="flex flex-col gap-6">
+        <h2 className="text-lg font-semibold">Accès rapides</h2>
+        {QUICK_GROUPS.map((group) => (
+          <div key={group.label}>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              {group.label}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {group.links.map((link) => (
+                <Card
+                  key={link.href}
+                  className="hover:border-primary/50 transition-colors"
                 >
-                  <Link href={link.href}>Accéder →</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">{link.label}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      {link.description}
+                    </p>
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="self-start"
+                    >
+                      <Link href={link.href}>Accéder →</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

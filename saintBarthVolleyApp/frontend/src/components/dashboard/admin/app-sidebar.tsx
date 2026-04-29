@@ -12,6 +12,10 @@ import {
   IconSettings,
   IconHelp,
   IconInnerShadowTop,
+  IconPhoto,
+  IconConfetti,
+  IconTrophy,
+  IconRun,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/dashboard/admin/nav-main";
@@ -30,14 +34,37 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import type { AuthUser } from "@/lib/auth";
 
-const navMain = [
-  { title: "Dashboard", url: "/admin", icon: IconDashboard },
-  { title: "Club", url: "/admin/club", icon: IconBuildingCommunity },
-  { title: "Saisons & Équipes", url: "/admin/seasons", icon: IconCalendar },
-  { title: "Membres", url: "/admin/members", icon: IconUsersGroup },
-  { title: "Actualités", url: "/admin/news", icon: IconNews },
-  { title: "Partenaires", url: "/admin/partners", icon: IconStar },
-  { title: "Utilisateurs", url: "/admin/users", icon: IconUsers },
+const navGroups = [
+  {
+    items: [{ title: "Dashboard", url: "/admin", icon: IconDashboard }],
+  },
+  {
+    label: "Site public",
+    items: [
+      {
+        title: "Infos du club",
+        url: "/admin/club",
+        icon: IconBuildingCommunity,
+      },
+      { title: "Actualités", url: "/admin/news", icon: IconNews },
+      { title: "Albums & Médias", url: "/admin/albums", icon: IconPhoto },
+      { title: "Événements", url: "/admin/events", icon: IconConfetti },
+      { title: "Partenaires", url: "/admin/partners", icon: IconStar },
+    ],
+  },
+  {
+    label: "Sportif",
+    items: [
+      { title: "Saisons & Équipes", url: "/admin/seasons", icon: IconCalendar },
+      { title: "Membres", url: "/admin/members", icon: IconUsersGroup },
+      { title: "Matchs", url: "/admin/matches", icon: IconRun },
+      { title: "Championnats", url: "/admin/championships", icon: IconTrophy },
+    ],
+  },
+  {
+    label: "Administration",
+    items: [{ title: "Utilisateurs", url: "/admin/users", icon: IconUsers }],
+  },
 ];
 
 const navSecondary = [
@@ -69,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link href="/admin">
                 <IconInnerShadowTop className="size-5!" />
-                <span className="text-base font-semibold">Admin</span>
+                <span className="text-base font-semibold">Admin SBV</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -77,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain groups={navGroups} />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
 
