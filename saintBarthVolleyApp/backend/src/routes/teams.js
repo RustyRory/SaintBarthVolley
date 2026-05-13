@@ -1,7 +1,14 @@
 // src/routes/teams.js
 import express from 'express';
 import Team from '../models/Team.js';
-import { getTeamById, getTeamsBySeason, createTeam, updateTeam, deleteTeam } from '../controllers/teamsController.js';
+import {
+  getTeamById,
+  getTeamsBySeason,
+  createTeam,
+  createTeamForSeason,
+  updateTeam,
+  deleteTeam,
+} from '../controllers/teamsController.js';
 
 const router = express.Router();
 
@@ -10,7 +17,8 @@ router.get('/', async (req, res) => {
   try {
     const { seasonId } = req.query;
     if (!seasonId) return res.status(400).json({ message: 'seasonId requis' });
-    const teams = await Team.find({ seasonId });
+    const filter = seasonId === 'all' ? {} : { seasonId };
+    const teams = await Team.find(filter).sort({ name: 1 });
     res.json(teams);
   } catch (err) {
     console.error(err);
@@ -25,24 +33,7 @@ router.get('/:id', getTeamById);
 router.post('/', createTeam);
 
 // 🔹 Créer une équipe pour une saison spécifique
-router.post('/seasons/:seasonId/teams', async (req, res) => {
-  try {
-    const { seasonId } = req.params;
-    const { name, category, gender, level } = req.body;
-
-    if (!name || !category || !gender) {
-      return res.status(400).json({ message: 'Champs obligatoires manquants' });
-    }
-
-    const newTeam = new Team({ name, category, gender, level, seasonId });
-    await newTeam.save();
-
-    res.status(201).json(newTeam);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-});
+router.post('/seasons/:seasonId/teams', createTeamForSeason);
 
 // 🔹 Mettre à jour une équipe
 router.put('/:id', updateTeam);

@@ -17,6 +17,7 @@ const trainingScheduleSchema = new mongoose.Schema(
 const teamSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    slug: { type: String, trim: true, index: true },
     category: { type: String, enum: ['Young', 'Senior', 'Veteran'], required: true },
     gender: { type: String, enum: ['Male', 'Female', 'Mixed'], required: true },
     level: { type: String, trim: true },

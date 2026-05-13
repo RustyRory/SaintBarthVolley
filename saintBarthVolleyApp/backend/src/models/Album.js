@@ -11,6 +11,7 @@ const albumSchema = new mongoose.Schema(
     // Associations optionnelles (un album peut être lié à plusieurs contextes)
     seasonId: { type: mongoose.Schema.Types.ObjectId, ref: 'Season', default: null },
     teamIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
+    eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', default: null },
     matchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Match', default: null },
     newsId: { type: mongoose.Schema.Types.ObjectId, ref: 'News', default: null },
   },

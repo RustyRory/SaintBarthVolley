@@ -12,6 +12,7 @@ export const getAlbums = async (req, res) => {
 
     const albums = await Album.find(filter)
       .populate('teamIds', 'name category gender')
+      .populate('eventId', 'title date')
       .populate('matchId', 'opponentName date homeAway')
       .populate('newsId', 'title slug')
       .populate('seasonId', 'name')
@@ -27,6 +28,7 @@ export const getAlbumById = async (req, res) => {
   try {
     const album = await Album.findById(req.params.id)
       .populate('teamIds', 'name category gender')
+      .populate('eventId', 'title date')
       .populate('matchId', 'opponentName date homeAway')
       .populate('newsId', 'title slug')
       .populate('seasonId', 'name');

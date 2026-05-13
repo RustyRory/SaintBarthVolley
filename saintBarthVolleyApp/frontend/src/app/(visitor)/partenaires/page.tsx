@@ -34,7 +34,7 @@ export default async function PartenairesPage() {
   const partners = await getPartners();
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
+    <div className="flex flex-col flex-1 bg-white text-gray-900 font-sans">
       <Navbar />
 
       <PageHero

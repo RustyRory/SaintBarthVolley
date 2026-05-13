@@ -1,4 +1,27 @@
 {
+  "/(visitor)/actualites/[slug]/page": "app/(visitor)/actualites/[slug]/page.js",
+  "/(visitor)/actualites/page": "app/(visitor)/actualites/page.js",
+  "/(visitor)/albums/[id]/page": "app/(visitor)/albums/[id]/page.js",
+  "/(visitor)/albums/page": "app/(visitor)/albums/page.js",
+  "/(visitor)/club/page": "app/(visitor)/club/page.js",
+  "/(visitor)/equipes/[id]/page": "app/(visitor)/equipes/[id]/page.js",
+  "/(visitor)/equipes/[slug]/page": "app/(visitor)/equipes/[slug]/page.js",
+  "/(visitor)/equipes/page": "app/(visitor)/equipes/page.js",
+  "/(visitor)/page": "app/(visitor)/page.js",
   "/(visitor)/partenaires/page": "app/(visitor)/partenaires/page.js",
-  "/admin/news/page": "app/admin/news/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/albums/[id]/page": "app/admin/albums/[id]/page.js",
+  "/admin/albums/page": "app/admin/albums/page.js",
+  "/admin/championships/page": "app/admin/championships/page.js",
+  "/admin/club/page": "app/admin/club/page.js",
+  "/admin/events/page": "app/admin/events/page.js",
+  "/admin/matches/page": "app/admin/matches/page.js",
+  "/admin/news/[id]/page": "app/admin/news/[id]/page.js",
+  "/admin/news/page": "app/admin/news/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/partners/page": "app/admin/partners/page.js",
+  "/admin/seasons/page": "app/admin/seasons/page.js",
+  "/admin/sportif/page": "app/admin/sportif/page.js",
+  "/admin/users/page": "app/admin/users/page.js",
+  "/login/page": "app/login/page.js"
 }

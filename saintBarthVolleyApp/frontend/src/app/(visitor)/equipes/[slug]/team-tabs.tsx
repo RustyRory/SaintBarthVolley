@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Users,
   Trophy,
@@ -574,9 +575,10 @@ function MediaTab({ albums, news }: { albums: Album[]; news: NewsArticle[] }) {
             {albums.map((album) => {
               const cover = resolveAlbumCover(album.coverPhoto);
               return (
-                <div
+                <Link
                   key={album._id}
-                  className="group rounded-xl overflow-hidden border border-gray-100 hover:border-green-200 transition-colors shadow-sm"
+                  href={`/albums/${album._id}`}
+                  className="group rounded-xl overflow-hidden border border-gray-100 hover:border-green-200 hover:shadow-md transition-all shadow-sm"
                 >
                   <div className="relative h-32 bg-gradient-to-br from-green-900 to-gray-900">
                     {cover ? (
@@ -584,7 +586,7 @@ function MediaTab({ albums, news }: { albums: Album[]; news: NewsArticle[] }) {
                       <img
                         src={cover}
                         alt={album.title}
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -601,7 +603,7 @@ function MediaTab({ albums, news }: { albums: Album[]; news: NewsArticle[] }) {
                     )}
                   </div>
                   <div className="p-3">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
+                    <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-green-700 transition-colors">
                       {album.title}
                     </p>
                     {album.eventDate && (
@@ -615,7 +617,7 @@ function MediaTab({ albums, news }: { albums: Album[]; news: NewsArticle[] }) {
                       </p>
                     )}
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

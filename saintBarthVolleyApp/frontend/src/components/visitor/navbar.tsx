@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/club", label: "Club" },
   { href: "/equipes", label: "Équipes" },
   { href: "/actualites", label: "Actualités" },
+  { href: "/albums", label: "Galerie" },
   { href: "/partenaires", label: "Partenaires" },
   { href: "/contact", label: "Contact" },
 ];
@@ -20,6 +21,7 @@ const DARK_HERO_PATHS = [
   "/club",
   "/actualites",
   "/equipes",
+  "/albums",
   "/partenaires",
   "/contact",
 ];

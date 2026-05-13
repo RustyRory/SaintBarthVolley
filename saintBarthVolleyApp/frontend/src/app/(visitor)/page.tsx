@@ -95,7 +95,7 @@ export default async function HomePage() {
   const aboutPhotoUrl = resolveImg(club?.aboutPhoto) ?? resolveImg(club?.photo);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
+    <div className="flex flex-col flex-1 bg-white text-gray-900 font-sans">
       <Navbar />
 
       {/* ── HERO ── */}

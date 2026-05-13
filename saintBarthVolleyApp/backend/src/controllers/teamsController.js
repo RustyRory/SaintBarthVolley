@@ -1,10 +1,33 @@
 // src/controllers/teamsController.js
-import Team from '../models/Team.js'; // ton modèle Mongoose pour Team
+import Team from '../models/Team.js';
 
-// 🔹 Récupérer une équipe par son ID
+function generateSlug(name) {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function uniqueSlug(base, excludeId = null) {
+  let slug = base;
+  let i = 1;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const query = { slug };
+    if (excludeId) query._id = { $ne: excludeId };
+    const exists = await Team.findOne(query);
+    if (!exists) return slug;
+    slug = `${base}-${i++}`;
+  }
+}
+
 export const getTeamById = async (req, res) => {
   try {
-    const team = await Team.findById(req.params.id);
+    const { id } = req.params;
+    const isObjectId = /^[a-f\d]{24}$/i.test(id);
+    const team = isObjectId ? await Team.findById(id) : await Team.findOne({ slug: id });
     if (!team) return res.status(404).json({ message: 'Équipe non trouvée' });
     res.json(team);
   } catch (err) {
@@ -13,13 +36,14 @@ export const getTeamById = async (req, res) => {
   }
 };
 
-// 🔹 GET /api/teams?seasonId=xxx  OR  /api/seasons/:seasonId/teams
+// GET /api/teams?seasonId=xxx  OR  /api/seasons/:seasonId/teams
 export const getTeamsBySeason = async (req, res) => {
   try {
     const seasonId = req.params.seasonId ?? req.query.seasonId;
     if (!seasonId) return res.status(400).json({ message: 'seasonId requis' });
 
-    const teams = await Team.find({ seasonId });
+    const filter = seasonId === 'all' ? {} : { seasonId };
+    const teams = await Team.find(filter).sort({ name: 1 });
     res.json(teams);
   } catch (err) {
     console.error(err);
@@ -27,7 +51,7 @@ export const getTeamsBySeason = async (req, res) => {
   }
 };
 
-// 🔹 POST /api/teams
+// POST /api/teams
 export const createTeam = async (req, res) => {
   try {
     const { name, category, gender, level, seasonId } = req.body;
@@ -36,7 +60,8 @@ export const createTeam = async (req, res) => {
       return res.status(400).json({ message: 'Champs obligatoires manquants' });
     }
 
-    const newTeam = new Team({ name, category, gender, level, seasonId });
+    const slug = await uniqueSlug(generateSlug(name));
+    const newTeam = new Team({ name, slug, category, gender, level, seasonId });
     await newTeam.save();
     res.status(201).json(newTeam);
   } catch (err) {
@@ -54,7 +79,8 @@ export const createTeamForSeason = async (req, res) => {
       return res.status(400).json({ message: 'Champs obligatoires manquants' });
     }
 
-    const newTeam = new Team({ name, category, gender, level, seasonId });
+    const slug = await uniqueSlug(generateSlug(name));
+    const newTeam = new Team({ name, slug, category, gender, level, seasonId });
     await newTeam.save();
     res.status(201).json(newTeam);
   } catch (err) {
@@ -63,11 +89,15 @@ export const createTeamForSeason = async (req, res) => {
   }
 };
 
-// 🔹 PUT /api/teams/:id
+// PUT /api/teams/:id
 export const updateTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const updated = await Team.findByIdAndUpdate(id, req.body, { new: true });
+    const update = { ...req.body };
+    if (update.name) {
+      update.slug = await uniqueSlug(generateSlug(update.name), id);
+    }
+    const updated = await Team.findByIdAndUpdate(id, update, { new: true });
     if (!updated) return res.status(404).json({ message: 'Équipe introuvable' });
     res.json(updated);
   } catch (err) {
@@ -76,7 +106,7 @@ export const updateTeam = async (req, res) => {
   }
 };
 
-// 🔹 DELETE /api/teams/:id
+// DELETE /api/teams/:id
 export const deleteTeam = async (req, res) => {
   try {
     const { id } = req.params;

@@ -14,6 +14,7 @@ type Season = {
 
 type Team = {
   _id: string;
+  slug: string;
   name: string;
   category: "Young" | "Senior" | "Veteran";
   gender: "Male" | "Female" | "Mixed";
@@ -59,7 +60,7 @@ export default async function EquipesPage() {
   const { seasons, teams, activeSeasonId } = await getData();
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
+    <div className="flex flex-col flex-1 bg-white text-gray-900 font-sans">
       <Navbar />
 
       <PageHero

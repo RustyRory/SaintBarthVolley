@@ -143,31 +143,35 @@ function resolveImageUrl(src?: string): string | null {
 export default async function TeamDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
 
-  const [team, championships, matches, standings, cupPhases, albums, news] =
-    await Promise.all([
-      apiFetch<Team>(`/api/teams/${id}`).catch(() => null),
-      apiFetch<Championship[]>(`/api/championships?teamId=${id}`).catch(
-        () => [],
-      ),
-      apiFetch<Match[]>(`/api/matches?teamId=${id}`).catch(() => []),
-      apiFetch<Standing[]>(`/api/standings?teamId=${id}`).catch(() => []),
-      apiFetch<CupPhase[]>(`/api/cup-phases?teamId=${id}`).catch(() => []),
-      apiFetch<Album[]>(`/api/albums?teamId=${id}&public=true`).catch(() => []),
-      apiFetch<NewsArticle[]>(`/api/news?teamId=${id}&published=true`).catch(
-        () => [],
-      ),
-    ]);
-
+  const team = await apiFetch<Team>(`/api/teams/${slug}`).catch(() => null);
   if (!team) notFound();
+
+  const teamId = team._id;
+
+  const [championships, matches, standings, cupPhases, albums, news] =
+    await Promise.all([
+      apiFetch<Championship[]>(`/api/championships?teamId=${teamId}`).catch(
+        () => [],
+      ),
+      apiFetch<Match[]>(`/api/matches?teamId=${teamId}`).catch(() => []),
+      apiFetch<Standing[]>(`/api/standings?teamId=${teamId}`).catch(() => []),
+      apiFetch<CupPhase[]>(`/api/cup-phases?teamId=${teamId}`).catch(() => []),
+      apiFetch<Album[]>(`/api/albums?teamId=${teamId}&public=true`).catch(
+        () => [],
+      ),
+      apiFetch<NewsArticle[]>(
+        `/api/news?teamId=${teamId}&published=true`,
+      ).catch(() => []),
+    ]);
 
   const [season, assignments] = await Promise.all([
     apiFetch<Season>(`/api/seasons/${team.seasonId}`).catch(() => null),
     apiFetch<TeamAssignment[]>(
-      `/api/team-assignments?teamId=${id}&seasonId=${team.seasonId}`,
+      `/api/team-assignments?teamId=${teamId}&seasonId=${team.seasonId}`,
     ).catch(() => []),
   ]);
 

@@ -93,7 +93,7 @@ export default async function ContactPage() {
   ].filter(Boolean) as { href: string; label: string; icon: React.ReactNode }[];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
+    <div className="flex flex-col flex-1 bg-white text-gray-900 font-sans">
       <Navbar />
 
       <PageHero

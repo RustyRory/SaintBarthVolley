@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Calendar,
@@ -9,7 +10,16 @@ import {
   ChevronDown,
   Dumbbell,
   Clock,
+  Images,
 } from "lucide-react";
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+function resolveUrl(src: string) {
+  if (!src) return "";
+  if (src.startsWith("http")) return src;
+  if (src.startsWith("/uploads/")) return `${API}${src}`;
+  return src;
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -73,10 +83,24 @@ type NewsItem = {
   title: string;
   slug: string;
   content: string;
+  excerpt?: string;
+  coverImage?: string;
   isFeatured: boolean;
   publishedAt: string | null;
   createdAt: string;
   authorId: { firstName: string; lastName: string } | null;
+  teamId: { _id: string; name: string } | null;
+};
+
+type Album = {
+  _id: string;
+  title: string;
+  description: string;
+  coverPhoto: string;
+  eventDate: string | null;
+  createdAt: string;
+  teamIds: { _id: string; name: string }[];
+  seasonId: { _id: string; name: string } | null;
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -325,37 +349,122 @@ function TrainingCard({ training }: { training: TrainingEvent }) {
   );
 }
 
-function NewsCard({ item }: { item: NewsItem }) {
-  const excerpt = item.content.replace(/<[^>]*>/g, "").slice(0, 160);
-  const date = item.publishedAt ?? item.createdAt;
+function AlbumCard({ album }: { album: Album }) {
+  const cover = resolveUrl(album.coverPhoto);
+  const date = album.eventDate ?? album.createdAt;
   return (
-    <Card className="border-0 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 bg-white overflow-hidden">
-      {item.isFeatured && (
-        <div className="h-1 bg-gradient-to-r from-green-500 to-green-700" />
-      )}
-      <CardContent className="p-5">
-        {item.isFeatured && (
-          <span className="inline-block mb-2 text-xs font-semibold text-green-700 uppercase tracking-wider">
-            À la une
-          </span>
-        )}
-        <h3 className="font-bold text-gray-900 text-base leading-snug line-clamp-2 mb-2">
-          {item.title}
-        </h3>
-        <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed mb-4">
-          {excerpt}
-          {item.content.length > 160 && "…"}
-        </p>
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <span>{fDate(date)}</span>
-          {item.authorId && (
-            <span>
-              {item.authorId.firstName} {item.authorId.lastName}
-            </span>
+    <Link href={`/albums/${album._id}`} className="group block">
+      <Card className="border-0 shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-0.5 bg-white overflow-hidden">
+        <div className="aspect-video bg-gray-100 overflow-hidden relative">
+          {cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={cover}
+              alt={album.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Images size={32} className="text-gray-300" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+        </div>
+        <CardContent className="p-4">
+          <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-green-700 transition-colors">
+            {album.title}
+          </h3>
+          {album.description && (
+            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+              {album.description}
+            </p>
+          )}
+          <div className="flex items-center justify-between text-xs text-gray-400 mt-auto">
+            <span>{fDate(date)}</span>
+            {album.teamIds.length > 0 && (
+              <span className="truncate ml-2 text-right">
+                {album.teamIds.map((t) => t.name).join(", ")}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+function NewsCard({ item }: { item: NewsItem }) {
+  const excerpt =
+    item.excerpt || item.content.replace(/<[^>]*>/g, "").slice(0, 160);
+  const date = item.publishedAt ?? item.createdAt;
+  const cover = item.coverImage ? resolveUrl(item.coverImage) : null;
+
+  return (
+    <a href={`/actualites/${item.slug}`} className="group block">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 transition-all overflow-hidden flex gap-0 sm:gap-5">
+        {/* Couverture */}
+        <div className="hidden sm:block shrink-0 w-48 lg:w-56 relative overflow-hidden bg-gray-100">
+          {cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={cover}
+              alt={item.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 absolute inset-0"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+              <Newspaper size={28} className="text-green-300" />
+            </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Texte */}
+        <div className="flex-1 min-w-0 p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {item.isFeatured && (
+              <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                ★ À la une
+              </span>
+            )}
+            {item.teamId && (
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                🏐 {item.teamId.name}
+              </span>
+            )}
+            <span className="text-xs text-gray-400 ml-auto">
+              {new Date(date).toLocaleDateString("fr-FR", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+
+          <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-snug group-hover:text-green-700 transition-colors line-clamp-2">
+            {item.title}
+          </h3>
+
+          {excerpt && (
+            <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 flex-1">
+              {excerpt}
+            </p>
+          )}
+
+          <div className="flex items-center justify-between mt-1 pt-3 border-t border-gray-50">
+            {item.authorId ? (
+              <span className="text-xs text-gray-400">
+                {item.authorId.firstName} {item.authorId.lastName}
+              </span>
+            ) : (
+              <span />
+            )}
+            <span className="text-sm font-semibold text-green-700 flex items-center gap-1 group-hover:gap-2 transition-all">
+              Lire l&apos;article <span className="inline-block">→</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </a>
   );
 }
 
@@ -365,14 +474,50 @@ interface Props {
   matches: Match[];
   events: ClubEvent[];
   news: NewsItem[];
+  albums: Album[];
 }
 
 const NOW = new Date();
 
-export default function ActualitesClient({ matches, events, news }: Props) {
-  const [tab, setTab] = useState<"calendrier" | "articles">("articles");
+export default function ActualitesClient({
+  matches,
+  events,
+  news,
+  albums,
+}: Props) {
+  const [tab, setTab] = useState<"articles" | "calendrier" | "albums">(
+    "articles",
+  );
   const [view, setView] = useState<ViewKey>("upcoming_all");
   const [teamId, setTeamId] = useState<string>("all");
+
+  // Filtres articles
+  const [newsSearch, setNewsSearch] = useState("");
+  const [newsTeamFilter, setNewsTeamFilter] = useState("all");
+  const [newsFeaturedOnly, setNewsFeaturedOnly] = useState(false);
+
+  // Équipes disponibles dans les articles
+  const newsTeams = useMemo(() => {
+    const map = new Map<string, string>();
+    news.forEach((n) => {
+      if (n.teamId) map.set(n.teamId._id, n.teamId.name);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [news]);
+
+  const filteredNews = useMemo(() => {
+    return news.filter((n) => {
+      if (
+        newsSearch &&
+        !n.title.toLowerCase().includes(newsSearch.toLowerCase())
+      )
+        return false;
+      if (newsTeamFilter !== "all" && n.teamId?._id !== newsTeamFilter)
+        return false;
+      if (newsFeaturedOnly && !n.isFeatured) return false;
+      return true;
+    });
+  }, [news, newsSearch, newsTeamFilter, newsFeaturedOnly]);
 
   // Équipes uniques extraites des matchs (avec trainingSchedule)
   const teams = useMemo(() => {
@@ -507,8 +652,9 @@ export default function ActualitesClient({ matches, events, news }: Props) {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex gap-1">
           {(
             [
-              { key: "articles", label: "Articles", icon: Newspaper },
+              { key: "articles", label: "Actualités", icon: Newspaper },
               { key: "calendrier", label: "Calendrier", icon: Calendar },
+              { key: "albums", label: "Albums photo", icon: Images },
             ] as const
           ).map(({ key, label, icon: Icon }) => (
             <button
@@ -650,19 +796,131 @@ export default function ActualitesClient({ matches, events, news }: Props) {
         )}
 
         {/* ── ARTICLES ── */}
-        {tab === "articles" &&
-          (news.length === 0 ? (
+        {tab === "articles" && (
+          <>
+            {/* Filtres */}
+            {news.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-6 items-center">
+                <div className="relative flex-1 min-w-[180px] max-w-xs">
+                  <input
+                    type="text"
+                    placeholder="Rechercher un article…"
+                    value={newsSearch}
+                    onChange={(e) => setNewsSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.35-4.35" />
+                    </svg>
+                  </span>
+                </div>
+
+                {newsTeams.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => setNewsTeamFilter("all")}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${newsTeamFilter === "all" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                    >
+                      Toutes les équipes
+                    </button>
+                    {newsTeams.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() =>
+                          setNewsTeamFilter(
+                            newsTeamFilter === t.id ? "all" : t.id,
+                          )
+                        }
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${newsTeamFilter === t.id ? "bg-green-700 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                      >
+                        🏐 {t.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setNewsFeaturedOnly((v) => !v)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${newsFeaturedOnly ? "bg-green-100 text-green-700 ring-1 ring-green-300" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                >
+                  ★ À la une
+                </button>
+
+                {(newsSearch ||
+                  newsTeamFilter !== "all" ||
+                  newsFeaturedOnly) && (
+                  <button
+                    onClick={() => {
+                      setNewsSearch("");
+                      setNewsTeamFilter("all");
+                      setNewsFeaturedOnly(false);
+                    }}
+                    className="text-xs text-gray-400 hover:text-gray-700 underline"
+                  >
+                    Effacer les filtres
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Liste */}
+            {news.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                <Newspaper size={40} className="mb-4 opacity-30" />
+                <p className="font-medium text-gray-500">
+                  Aucun article publié pour le moment.
+                </p>
+                <p className="text-sm mt-1">Revenez bientôt !</p>
+              </div>
+            ) : filteredNews.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <p className="font-medium text-gray-500">
+                  Aucun article ne correspond à ces filtres.
+                </p>
+                <button
+                  onClick={() => {
+                    setNewsSearch("");
+                    setNewsTeamFilter("all");
+                    setNewsFeaturedOnly(false);
+                  }}
+                  className="text-sm text-green-700 mt-2 hover:underline"
+                >
+                  Effacer les filtres
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {filteredNews.map((item) => (
+                  <NewsCard key={item._id} item={item} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── ALBUMS ── */}
+        {tab === "albums" &&
+          (albums.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-              <Newspaper size={40} className="mb-4 opacity-30" />
+              <Images size={40} className="mb-4 opacity-30" />
               <p className="font-medium text-gray-500">
-                Aucun article publié pour le moment.
+                Aucun album photo pour le moment.
               </p>
               <p className="text-sm mt-1">Revenez bientôt !</p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {news.map((item) => (
-                <NewsCard key={item._id} item={item} />
+              {albums.map((album) => (
+                <AlbumCard key={album._id} album={album} />
               ))}
             </div>
           ))}

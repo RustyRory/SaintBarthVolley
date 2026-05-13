@@ -5,23 +5,25 @@ import PageHero from "@/components/visitor/page-hero";
 import ActualitesClient from "./actualites-client";
 
 async function getData() {
-  const [matches, events, news] = await Promise.all([
+  const [matches, events, news, albums] = await Promise.all([
     apiFetch<unknown[]>("/api/matches").catch(() => []),
     apiFetch<unknown[]>("/api/events?public=true").catch(() => []),
     apiFetch<unknown[]>("/api/news?published=true").catch(() => []),
+    apiFetch<unknown[]>("/api/albums?public=true").catch(() => []),
   ]);
   return {
     matches: matches ?? [],
     events: events ?? [],
     news: news ?? [],
+    albums: albums ?? [],
   };
 }
 
 export default async function ActualitesPage() {
-  const { matches, events, news } = await getData();
+  const { matches, events, news, albums } = await getData();
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="flex flex-col flex-1 bg-gray-50 text-gray-900 font-sans">
       <Navbar />
 
       <PageHero
@@ -34,6 +36,7 @@ export default async function ActualitesPage() {
         matches={matches as never}
         events={events as never}
         news={news as never}
+        albums={albums as never}
       />
 
       <VisitorFooter />

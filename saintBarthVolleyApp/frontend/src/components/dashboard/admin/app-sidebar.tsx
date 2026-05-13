@@ -6,7 +6,6 @@ import {
   IconUsers,
   IconBuildingCommunity,
   IconNews,
-  IconCalendar,
   IconUsersGroup,
   IconStar,
   IconSettings,
@@ -14,8 +13,6 @@ import {
   IconInnerShadowTop,
   IconPhoto,
   IconConfetti,
-  IconTrophy,
-  IconRun,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/dashboard/admin/nav-main";
@@ -55,10 +52,11 @@ const navGroups = [
   {
     label: "Sportif",
     items: [
-      { title: "Saisons & Équipes", url: "/admin/seasons", icon: IconCalendar },
-      { title: "Membres", url: "/admin/members", icon: IconUsersGroup },
-      { title: "Matchs", url: "/admin/matches", icon: IconRun },
-      { title: "Championnats", url: "/admin/championships", icon: IconTrophy },
+      {
+        title: "Gestion sportive",
+        url: "/admin/sportif",
+        icon: IconUsersGroup,
+      },
     ],
   },
   {

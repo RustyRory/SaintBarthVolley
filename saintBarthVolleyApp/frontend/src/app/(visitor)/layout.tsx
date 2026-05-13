@@ -17,5 +17,9 @@ export default async function VisitorLayout({
   children: React.ReactNode;
 }) {
   const club = await getClub();
-  return <ClubProvider club={club}>{children}</ClubProvider>;
+  return (
+    <ClubProvider club={club}>
+      <div className="min-h-screen flex flex-col">{children}</div>
+    </ClubProvider>
+  );
 }

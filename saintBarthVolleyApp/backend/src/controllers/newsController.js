@@ -19,17 +19,26 @@ export const getNews = async (req, res) => {
     if (req.query.featured === 'true') filter.isFeatured = true;
     if (req.query.teamId) filter.teamId = req.query.teamId;
 
-    const news = await News.find(filter).populate('authorId', 'firstName lastName').sort({ createdAt: -1 });
+    const news = await News.find(filter)
+      .populate('authorId', 'firstName lastName')
+      .populate('teamId', 'name')
+      .sort({ createdAt: -1 });
     res.json(news);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// GET single news by ID
+// GET single news by ID or slug
 export const getNewsById = async (req, res) => {
   try {
-    const newsItem = await News.findById(req.params.id).populate('authorId', 'firstName lastName');
+    const { id } = req.params;
+    const isObjectId = /^[a-f\d]{24}$/i.test(id);
+    const newsItem = await (isObjectId ? News.findById(id) : News.findOne({ slug: id }))
+      .populate('authorId', 'firstName lastName')
+      .populate('teamId', 'name slug _id')
+      .populate('eventId', 'title date location')
+      .populate('albumId', 'title coverPhoto');
     if (!newsItem) return res.status(404).json({ message: 'News non trouvée' });
     res.json(newsItem);
   } catch (error) {
@@ -40,7 +49,7 @@ export const getNewsById = async (req, res) => {
 // CREATE news — authorId depuis JWT
 export const createNews = async (req, res) => {
   try {
-    const { title, content, isPublished, isFeatured } = req.body;
+    const { title, content, excerpt, coverImage, isPublished, isFeatured, teamId, eventId } = req.body;
 
     const slug = generateSlug(title);
     const publishedAt = isPublished ? new Date() : null;
@@ -49,6 +58,10 @@ export const createNews = async (req, res) => {
       title,
       slug,
       content,
+      excerpt: excerpt || '',
+      coverImage: coverImage || '',
+      teamId: teamId || null,
+      eventId: eventId || null,
       isPublished: !!isPublished,
       isFeatured: !!isFeatured,
       publishedAt,

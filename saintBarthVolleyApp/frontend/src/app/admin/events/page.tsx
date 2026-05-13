@@ -1,17 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,11 +24,6 @@ interface ClubEvent {
   teamId: Team | null;
   isPublic: boolean;
 }
-
-type EditingEvent = Partial<Omit<ClubEvent, "_id" | "teamId">> & {
-  _id?: string;
-  teamId?: string | null;
-};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -67,91 +55,20 @@ const TYPE_LABEL: Record<string, string> = Object.fromEntries(
   EVENT_TYPES.map((t) => [t.value, t.label]),
 );
 
-const EMPTY: EditingEvent = {
-  title: "",
-  type: "other",
-  description: "",
-  date: new Date().toISOString().slice(0, 16),
-  endDate: null,
-  location: "",
-  teamId: null,
-  isPublic: true,
-};
-
-function toInputDatetime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  return iso.slice(0, 16);
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function EventsPage() {
   const [events, setEvents] = React.useState<ClubEvent[]>([]);
-  const [teams, setTeams] = React.useState<Team[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState("");
   const [filterType, setFilterType] = React.useState("all");
 
-  const [editing, setEditing] = React.useState<EditingEvent | null>(null);
-  const [saving, setSaving] = React.useState(false);
-
   React.useEffect(() => {
-    Promise.all([
-      apiFetch<ClubEvent[]>("/api/events"),
-      apiFetch<Team[]>("/api/teams"),
-    ])
-      .then(([evts, tms]) => {
-        setEvents(evts);
-        setTeams(tms);
-      })
+    apiFetch<ClubEvent[]>("/api/events")
+      .then(setEvents)
       .catch(() => alert("Erreur lors du chargement"))
       .finally(() => setLoading(false));
   }, []);
-
-  const handleSave = async () => {
-    if (!editing) return;
-    setSaving(true);
-    try {
-      const payload = {
-        ...editing,
-        teamId: editing.teamId || null,
-        endDate: editing.endDate || null,
-      };
-      let result: ClubEvent;
-      if (editing._id) {
-        result = await apiFetch(`/api/events/${editing._id}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-        setEvents((prev) =>
-          prev.map((e) => (e._id === result._id ? result : e)),
-        );
-      } else {
-        result = await apiFetch("/api/events", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        setEvents((prev) => [result, ...prev]);
-      }
-      setEditing(null);
-    } catch (err) {
-      alert(
-        err instanceof Error ? err.message : "Erreur lors de la sauvegarde",
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer cet événement ?")) return;
-    try {
-      await apiFetch(`/api/events/${id}`, { method: "DELETE" });
-      setEvents((prev) => prev.filter((e) => e._id !== id));
-    } catch {
-      alert("Erreur lors de la suppression");
-    }
-  };
 
   const handleTogglePublic = async (evt: ClubEvent) => {
     try {
@@ -165,14 +82,29 @@ export default function EventsPage() {
     }
   };
 
-  const filtered = React.useMemo(() => {
-    return events
-      .filter((e) => filterType === "all" || e.type === filterType)
-      .filter(
-        (e) => !search || e.title.toLowerCase().includes(search.toLowerCase()),
-      )
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [events, filterType, search]);
+  const handleDelete = async (id: string) => {
+    if (!confirm("Supprimer cet événement ?")) return;
+    try {
+      await apiFetch(`/api/events/${id}`, { method: "DELETE" });
+      setEvents((prev) => prev.filter((e) => e._id !== id));
+    } catch {
+      alert("Erreur lors de la suppression");
+    }
+  };
+
+  const filtered = React.useMemo(
+    () =>
+      events
+        .filter((e) => filterType === "all" || e.type === filterType)
+        .filter(
+          (e) =>
+            !search || e.title.toLowerCase().includes(search.toLowerCase()),
+        )
+        .sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        ),
+    [events, filterType, search],
+  );
 
   const upcoming = events.filter((e) => new Date(e.date) >= new Date()).length;
 
@@ -181,21 +113,24 @@ export default function EventsPage() {
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full flex-1">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Événements du club</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {events.length} événement{events.length !== 1 ? "s" : ""} ·{" "}
-            {upcoming} à venir
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {events.length} événement{events.length !== 1 ? "s" : ""}
+            {" · "}
+            <span className="text-green-600 font-medium">
+              {upcoming} à venir
+            </span>
           </p>
         </div>
-        <Button onClick={() => setEditing({ ...EMPTY })}>
-          + Nouvel événement
-        </Button>
+        <Link href="/admin/events/new">
+          <Button>+ Nouvel événement</Button>
+        </Link>
       </div>
 
       {/* Filtres */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-center">
         <Input
           placeholder="Rechercher..."
           value={search}
@@ -223,109 +158,68 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Liste mobile */}
-      <div className="flex flex-col gap-3 md:hidden">
-        {filtered.length === 0 ? (
-          <div className="text-center text-muted-foreground py-10">
-            Aucun événement
-          </div>
-        ) : (
-          filtered.map((evt) => (
-            <div
-              key={evt._id}
-              className="border rounded-lg p-4 flex flex-col gap-2"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold">{evt.title}</p>
-                <span
-                  className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLOR[evt.type] ?? "bg-gray-100 text-gray-600"}`}
-                >
-                  {TYPE_LABEL[evt.type] ?? evt.type}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {new Date(evt.date).toLocaleString("fr-FR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-                {evt.location && ` · ${evt.location}`}
-              </p>
-              {evt.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {evt.description}
-                </p>
-              )}
-              <div className="flex gap-2 mt-1 flex-wrap">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setEditing({ ...evt, teamId: evt.teamId?._id ?? null })
-                  }
-                >
-                  Modifier
-                </Button>
-                <Button
-                  size="sm"
-                  variant={evt.isPublic ? "secondary" : "outline"}
-                  onClick={() => handleTogglePublic(evt)}
-                >
-                  {evt.isPublic ? "Public" : "Privé"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(evt._id)}
-                >
-                  Supprimer
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      {/* Liste */}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+          <div className="text-5xl">📅</div>
+          <p className="font-medium">
+            {events.length === 0
+              ? "Aucun événement pour le moment."
+              : "Aucun résultat."}
+          </p>
+          {events.length === 0 && (
+            <Link href="/admin/events/new">
+              <Button>Créer le premier événement</Button>
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filtered.map((evt) => {
+            const isPast = new Date(evt.date) < new Date();
+            return (
+              <div
+                key={evt._id}
+                className={`border rounded-xl bg-background flex gap-4 p-4 hover:shadow-sm transition-shadow ${isPast ? "opacity-70" : ""}`}
+              >
+                {/* Pastille type */}
+                <div className="shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-muted text-center">
+                  <span className="text-xl">
+                    {evt.type === "loto"
+                      ? "🎲"
+                      : evt.type === "ag"
+                        ? "🗳"
+                        : evt.type === "tournament"
+                          ? "🏆"
+                          : evt.type === "partner"
+                            ? "🤝"
+                            : evt.type === "team"
+                              ? "🏐"
+                              : "📌"}
+                  </span>
+                </div>
 
-      {/* Table desktop */}
-      <div className="hidden md:block rounded-lg border overflow-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="p-3 text-left">Événement</th>
-              <th className="p-3 text-left">Type</th>
-              <th className="p-3 text-left">Date</th>
-              <th className="p-3 text-left">Lieu</th>
-              <th className="p-3 text-left">Statut</th>
-              <th className="p-3 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length > 0 ? (
-              filtered.map((evt) => {
-                const isPast = new Date(evt.date) < new Date();
-                return (
-                  <tr
-                    key={evt._id}
-                    className={`border-t ${isPast ? "opacity-60" : ""}`}
-                  >
-                    <td className="p-3 max-w-xs">
-                      <p className="font-medium truncate">{evt.title}</p>
-                      {evt.description && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {evt.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="p-3">
+                {/* Contenu */}
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLOR[evt.type] ?? "bg-gray-100 text-gray-600"}`}
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLOR[evt.type] ?? "bg-gray-100 text-gray-600"}`}
                       >
                         {TYPE_LABEL[evt.type] ?? evt.type}
                       </span>
-                    </td>
-                    <td className="p-3 whitespace-nowrap text-muted-foreground text-xs">
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${evt.isPublic ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"}`}
+                      >
+                        {evt.isPublic ? "Public" : "Privé"}
+                      </span>
+                      {isPast && (
+                        <span className="text-xs text-muted-foreground">
+                          Passé
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(evt.date).toLocaleString("fr-FR", {
                         day: "2-digit",
                         month: "short",
@@ -333,220 +227,53 @@ export default function EventsPage() {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                    </td>
-                    <td className="p-3 text-muted-foreground text-sm">
-                      {evt.location || "—"}
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${evt.isPublic ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"}`}
-                      >
-                        {evt.isPublic ? "Public" : "Privé"}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setEditing({
-                              ...evt,
-                              teamId: evt.teamId?._id ?? null,
-                            })
-                          }
-                        >
-                          Modifier
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={evt.isPublic ? "secondary" : "outline"}
-                          onClick={() => handleTogglePublic(evt)}
-                        >
-                          {evt.isPublic ? "Dépublier" : "Publier"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(evt._id)}
-                        >
-                          Supprimer
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="h-40 text-center text-muted-foreground"
-                >
-                  Aucun événement. Créez le premier !
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                    </span>
+                  </div>
 
-      {/* Modal */}
-      {editing && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-background rounded-xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b flex items-center justify-between shrink-0">
-              <h2 className="text-lg font-semibold">
-                {editing._id ? "Modifier l'événement" : "Nouvel événement"}
-              </h2>
-              <button
-                onClick={() => setEditing(null)}
-                className="text-muted-foreground hover:text-foreground text-xl leading-none"
-              >
-                ×
-              </button>
-            </div>
+                  <p className="font-semibold text-sm sm:text-base line-clamp-1">
+                    {evt.title}
+                  </p>
 
-            <div className="p-5 flex flex-col gap-4 overflow-y-auto flex-1">
-              <div className="flex flex-col gap-1">
-                <Label>Titre *</Label>
-                <Input
-                  value={editing.title ?? ""}
-                  onChange={(e) =>
-                    setEditing((p) => p && { ...p, title: e.target.value })
-                  }
-                  placeholder="Nom de l'événement"
-                />
-              </div>
+                  {(evt.location || evt.teamId) && (
+                    <p className="text-xs text-muted-foreground">
+                      {evt.location && `📍 ${evt.location}`}
+                      {evt.location && evt.teamId && " · "}
+                      {evt.teamId && `🏐 ${evt.teamId.name}`}
+                    </p>
+                  )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
-                  <Label>Type</Label>
-                  <Select
-                    value={editing.type ?? "other"}
-                    onValueChange={(v) =>
-                      setEditing(
-                        (p) => p && { ...p, type: v as ClubEvent["type"] },
-                      )
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EVENT_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Équipe liée</Label>
-                  <Select
-                    value={editing.teamId ?? "__none__"}
-                    onValueChange={(v) =>
-                      setEditing(
-                        (p) =>
-                          p && { ...p, teamId: v === "__none__" ? null : v },
-                      )
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Aucune" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">— Aucune —</SelectItem>
-                      {teams.map((t) => (
-                        <SelectItem key={t._id} value={t._id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {evt.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {evt.description}
+                    </p>
+                  )}
+
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    <Link href={`/admin/events/${evt._id}`}>
+                      <Button size="sm" variant="outline">
+                        Modifier
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant={evt.isPublic ? "secondary" : "outline"}
+                      onClick={() => handleTogglePublic(evt)}
+                    >
+                      {evt.isPublic ? "Dépublier" : "Publier"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => handleDelete(evt._id)}
+                    >
+                      Supprimer
+                    </Button>
+                  </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
-                  <Label>Date de début *</Label>
-                  <Input
-                    type="datetime-local"
-                    value={toInputDatetime(editing.date)}
-                    onChange={(e) =>
-                      setEditing((p) => p && { ...p, date: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Date de fin</Label>
-                  <Input
-                    type="datetime-local"
-                    value={toInputDatetime(editing.endDate)}
-                    onChange={(e) =>
-                      setEditing(
-                        (p) => p && { ...p, endDate: e.target.value || null },
-                      )
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Lieu</Label>
-                <Input
-                  value={editing.location ?? ""}
-                  onChange={(e) =>
-                    setEditing((p) => p && { ...p, location: e.target.value })
-                  }
-                  placeholder="Gymnase, salle des fêtes..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Description</Label>
-                <textarea
-                  className="border rounded px-3 py-2 text-sm resize-y min-h-24 bg-background"
-                  value={editing.description ?? ""}
-                  onChange={(e) =>
-                    setEditing(
-                      (p) => p && { ...p, description: e.target.value },
-                    )
-                  }
-                  placeholder="Détails de l'événement..."
-                />
-              </div>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editing.isPublic ?? true}
-                  onChange={(e) =>
-                    setEditing((p) => p && { ...p, isPublic: e.target.checked })
-                  }
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Visible sur le site public</span>
-              </label>
-            </div>
-
-            <div className="p-5 border-t flex justify-end gap-3 shrink-0">
-              <Button variant="outline" onClick={() => setEditing(null)}>
-                Annuler
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving || !editing.title?.trim() || !editing.date}
-              >
-                {saving
-                  ? "Sauvegarde..."
-                  : editing._id
-                    ? "Mettre à jour"
-                    : "Créer"}
-              </Button>
-            </div>
-          </div>
+            );
+          })}
         </div>
       )}
     </div>

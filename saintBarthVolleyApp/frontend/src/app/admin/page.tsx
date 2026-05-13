@@ -76,24 +76,9 @@ const QUICK_GROUPS: QuickGroup[] = [
     label: "Sportif",
     links: [
       {
-        label: "Saisons & Équipes",
-        href: "/admin/seasons",
-        description: "Créer ou modifier les saisons et équipes",
-      },
-      {
-        label: "Membres",
-        href: "/admin/members",
-        description: "Ajouter ou mettre à jour les joueurs",
-      },
-      {
-        label: "Matchs",
-        href: "/admin/matches",
-        description: "Consulter et saisir les résultats",
-      },
-      {
-        label: "Championnats",
-        href: "/admin/championships",
-        description: "Gérer les championnats et poules",
+        label: "Gestion sportive",
+        href: "/admin/sportif",
+        description: "Saisons, équipes, membres et planning en un seul endroit",
       },
     ],
   },

@@ -23,6 +23,7 @@ type TrainingSlot = {
 
 type Team = {
   _id: string;
+  slug: string;
   name: string;
   category: "Young" | "Senior" | "Veteran";
   gender: "Male" | "Female" | "Mixed";
@@ -370,7 +371,7 @@ function TeamCard({ team }: { team: Team }) {
             </a>
           )}
           <Link
-            href={`/equipes/${team._id}`}
+            href={`/equipes/${team.slug || team._id}`}
             className="flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-green-700 hover:bg-green-600 rounded-xl py-2.5 transition-colors"
           >
             Voir l&apos;équipe
